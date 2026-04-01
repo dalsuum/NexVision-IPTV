@@ -22,5 +22,5 @@ app/build/
 *.jks
 *.keystore
 
-# Gradle cache
-gradle-wrapper.jar
+# Gradle user cache (NOT the wrapper jar — that must be committed)
+.gradle/
