@@ -270,7 +270,7 @@ sudo certbot renew --dry-run
 
 ## 5. SERVICE CONFIGURATION
 
-# 5.1 Log Directory
+### 5.1 Log Directory
 ```
 # 1. Create the log directory
 sudo mkdir -p /var/log/nexvision
@@ -323,7 +323,7 @@ sudo systemctl status nexvision
 ```bash
 # Create logrotate configuration
 sudo tee /etc/logrotate.d/nexvision << 'EOF'
-/opt/nexvision/logs/*.log {
+/var/log/nexvision/*.log {
     daily
     rotate 30
     compress
