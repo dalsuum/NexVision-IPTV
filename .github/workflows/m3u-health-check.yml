@@ -1,0 +1,44 @@
+name: M3U Health Check
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run M3U health check
+        env:
+          M3U_URL: ${{ secrets.M3U_HEALTHCHECK_URL }}
+          M3U_TIMEOUT: '8'
+          M3U_MAX_STREAMS: '25'
+        run: python scripts/check_m3u_health.py
+
+      - name: Commit status file
+        run: |
+          if git diff --quiet -- monitoring/m3u-last-checked.json; then
+            echo "No status changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add monitoring/m3u-last-checked.json
+          git commit -m "chore: update daily M3U health status"
+          git push
