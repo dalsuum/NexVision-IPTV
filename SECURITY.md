@@ -233,4 +233,4 @@ For security issues:
 
 **Last Updated:** April 2026  
 **Repository:** NexVision  
-**Maintainer:** [Your Name/Organization]
+**Maintainer:** [dalsuum/nexvision]
