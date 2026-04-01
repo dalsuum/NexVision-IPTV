@@ -296,7 +296,8 @@ X-Room-Token: <room_token>
 | `GET` | `/api/messages/inbox` | Full message inbox |
 | `GET` | `/api/rss/public` | RSS feed items (cached 300s) |
 | `GET` | `/api/slides/public` | Promo slides list |
-| `POST` | `/api/login` | Room login, returns token |
+| `POST` | `/api/rooms/register` | Register device by room/screen number, returns room token |
+| `GET` | `/api/auth/login` | Admin login (username + password), returns JWT — **admin panel only** |
 
 ### HLS Streaming Endpoints
 | Endpoint | Served By | Description |
@@ -381,20 +382,22 @@ cd /opt/nexvision/nexvision-apk
 > **Note:** `local.properties` is gitignored — each machine needs its own copy with the correct `sdk.dir` path.
 
 ### APK Features
-- **Login screen** — enter server URL, username, and password at runtime (no rebuild needed)
-- **Channel list** — fetches live channels from `/api/channels` with live search/filter
+- **Room/Screen registration** — enter server URL + room number (e.g. `101`), same as the browser TV client — no username or password needed
+- **Auto mode detection** — detects hotel vs commercial mode from `/api/settings`, labels show "Room 101" or "Screen 101" accordingly
+- **Channel list** — fetches live channels from `/api/channels` via `X-Room-Token` header, with live search/filter
 - **VLCPlayerActivity** — native fullscreen video player (libVLC 3.6)
   - Hardware-accelerated decoding
   - 1.5-second network buffer
   - Sensor-based screen orientation
-- **Session persistence** — credentials and token stored in SharedPreferences
+- **Session persistence** — room token stored in SharedPreferences, auto-reconnects on relaunch
 - **Dark theme** — full black UI optimised for TV screens
 
 ### First-Time Use
 1. Install the APK and open it
-2. Enter your **Server URL** (e.g. `http://192.168.1.100:5000`), username, and password
-3. Tap **Connect** — channels load automatically
+2. Enter your **Server URL** (e.g. `http://192.168.1.100`) and **Room/Screen number** (e.g. `101`)
+3. Tap **Connect** — app registers with the server and loads channels automatically
 4. Tap any channel to play it full-screen
+5. On next launch, the app reconnects automatically — no re-entry needed
 
 ### Installing on Devices
 1. Transfer `app-debug.apk` to Android device
@@ -572,7 +575,7 @@ For detailed guides, see the [docs/](docs/) directory:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/nexvision.git
+git clone https://github.com/dalsuum/NexVision-IPTV.git
 cd nexvision
 
 # 2. Setup configuration (copy templates and edit)
