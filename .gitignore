@@ -81,3 +81,10 @@ node_modules/
 
 # VOD runtime data
 vod_data/
+
+
+# EPG
+epg/sites/tv.yandex.ru/__data__/
+
+# Local secret-scanning tooling
+git-secrets/
