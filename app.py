@@ -5461,6 +5461,10 @@ def sync_epg_now():
         # Parse XML
         root = ET.fromstring(raw)
         conn = get_db()
+        
+        # Clear old EPG data (older than 1 day)
+        conn.execute("DELETE FROM epg_entries WHERE end_time < datetime('now', '-1 day')")
+        
         imported = 0
         unmatched = 0
 
@@ -5486,23 +5490,38 @@ def sync_epg_now():
 
             total_parsed += 1
 
-            # Parse EPG datetime (format: "20260401120000 +0200")
+            # Parse EPG datetime (supports multiple formats)
             try:
-                start_dt = datetime.strptime(start.split()[0], '%Y%m%d%H%M%S')
-                stop_dt = datetime.strptime(stop.split()[0], '%Y%m%d%H%M%S')
+                # Try standard XMLTV format first: "20260401120000 +0200"
+                ts = start.split()[0] if ' ' in start else start
+                if 'T' in ts:
+                    # ISO format with or without decimals: "20260401T060452.288550" or "20260401T060452"
+                    ts = ts.replace('T', '')[:14]  # Extract first 14 chars
+                start_dt = datetime.strptime(ts, '%Y%m%d%H%M%S')
+                
+                ts_stop = stop.split()[0] if ' ' in stop else stop
+                if 'T' in ts_stop:
+                    ts_stop = ts_stop.replace('T', '')[:14]
+                stop_dt = datetime.strptime(ts_stop, '%Y%m%d%H%M%S')
             except:
                 continue
 
-            # Get channel display name from XML mapping
-            display_name = channel_names.get(channel_id, '')
-            if not display_name:
-                unmatched += 1
-                continue
-
-            # Find channel in database by display name
-            ch = conn.execute("SELECT id FROM channels WHERE name=? LIMIT 1",
-                            (display_name,)).fetchone()
-
+            # For external EPG, match by default channel ID pattern
+            # Try to find channel by tvg_id first, then by name
+            ch = None
+            
+            # Extract channel number from nexvision-NNNN format
+            if 'nexvision-' in channel_id:
+                ch_num = channel_id.replace('nexvision-', '')
+                ch = conn.execute("SELECT id FROM channels WHERE id=? LIMIT 1", (int(ch_num),)).fetchone()
+            
+            # If not found, try finding by display name
+            if not ch:
+                display_name = channel_names.get(channel_id, '')
+                if display_name:
+                    ch = conn.execute("SELECT id FROM channels WHERE name=? LIMIT 1",
+                                    (display_name,)).fetchone()
+            
             if ch:
                 try:
                     conn.execute("""
