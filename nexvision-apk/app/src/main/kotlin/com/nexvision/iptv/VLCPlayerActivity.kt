@@ -19,43 +19,51 @@ class VLCPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     private lateinit var binding: ActivityVlcplayerBinding
-    private lateinit var libVLC: LibVLC
-    private lateinit var mediaPlayer: MediaPlayer
+    private var libVLC: LibVLC? = null
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityVlcplayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val streamUrl = intent.getStringExtra(EXTRA_STREAM_URL)
         val channelName = intent.getStringExtra(EXTRA_CHANNEL_NAME) ?: "Playing"
-        if (intent.getStringExtra(EXTRA_STREAM_URL) == null) {
+
+        if (streamUrl.isNullOrEmpty()) {
             Toast.makeText(this, "No stream URL provided", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
+
         binding.tvChannelName.text = channelName
-
-        val options = arrayListOf(
-            "--no-drop-late-frames",
-            "--no-skip-frames",
-            "--rtsp-tcp",
-            "--network-caching=1500"
-        )
-        libVLC = LibVLC(this, options)
-        mediaPlayer = MediaPlayer(libVLC)
-
-        binding.surfaceView.holder.addCallback(this)
-
         binding.btnBack.setOnClickListener { finish() }
+
+        try {
+            val options = arrayListOf(
+                "--no-drop-late-frames",
+                "--no-skip-frames",
+                "--rtsp-tcp",
+                "--network-caching=1500"
+            )
+            libVLC = LibVLC(this, options)
+            mediaPlayer = MediaPlayer(libVLC)
+            binding.surfaceView.holder.addCallback(this)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to initialize player: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 
     private fun playStream(url: String) {
+        val player = mediaPlayer ?: return
+        val vlc = libVLC ?: return
         binding.progressBar.visibility = View.VISIBLE
-        val media = Media(libVLC, Uri.parse(url))
-        mediaPlayer.media = media
+        val media = Media(vlc, Uri.parse(url))
+        player.media = media
         media.release()
 
-        mediaPlayer.setEventListener { event ->
+        player.setEventListener { event ->
             when (event.type) {
                 MediaPlayer.Event.Playing -> runOnUiThread {
                     binding.progressBar.visibility = View.GONE
@@ -69,11 +77,12 @@ class VLCPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
                 }
             }
         }
-        mediaPlayer.play()
+        player.play()
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        val vout = mediaPlayer.vlcVout
+        val player = mediaPlayer ?: return
+        val vout = player.vlcVout
         vout.setVideoSurface(holder.surface, holder)
         vout.attachViews()
         val url = intent.getStringExtra(EXTRA_STREAM_URL) ?: return
@@ -81,17 +90,19 @@ class VLCPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        mediaPlayer.vlcVout.setWindowSize(width, height)
+        mediaPlayer?.vlcVout?.setWindowSize(width, height)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        mediaPlayer.stop()
-        mediaPlayer.vlcVout.detachViews()
+        mediaPlayer?.stop()
+        mediaPlayer?.vlcVout?.detachViews()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer.release()
-        libVLC.release()
+        mediaPlayer?.release()
+        libVLC?.release()
+        mediaPlayer = null
+        libVLC = null
     }
 }

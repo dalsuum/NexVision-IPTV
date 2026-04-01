@@ -123,8 +123,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadSettingsThenChannels() {
         executor.execute {
-            val settings = ApiClient.getSettings(serverUrl)
-            isCommercialMode = settings.deployment_mode == "commercial"
+            try {
+                val settings = ApiClient.getSettings(serverUrl)
+                isCommercialMode = settings.deployment_mode == "commercial"
+            } catch (e: Exception) {
+                // settings failure is non-fatal, continue with defaults
+            }
             runOnUiThread {
                 val label = if (roomNumber.isNotEmpty()) "$unitLabel $roomNumber" else unitLabel
                 supportActionBar?.subtitle = label
@@ -154,6 +158,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        executor.shutdownNow()
     }
 
     private fun showRegisterForm() {
