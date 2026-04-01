@@ -11,7 +11,9 @@
 - [Features](#features)
 - [Architecture](#architecture)
 - [Quick Start (Development)](#quick-start-development)
+- [Quick Start (Docker)](#quick-start-docker)
 - [Production Deployment](#production-deployment)
+- [Automation & Monitoring](#automation--monitoring)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Android APK](#android-apk)
@@ -146,6 +148,35 @@ Access from phone/TV: `http://YOUR_IP:5000/`
 
 ---
 
+## Quick Start (Docker)
+
+If you want one-command local deployment:
+
+1. Ensure Docker and Docker Compose are installed.
+2. Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+3. Build and run:
+
+```bash
+docker compose up -d --build
+```
+
+4. Open:
+- TV Client: http://localhost:5000/
+- Admin Panel: http://localhost:5000/admin/
+- VOD Dashboard: http://localhost:5000/vod/
+
+Container files:
+- `Dockerfile`
+- `docker-compose.yml`
+- `.dockerignore`
+
+---
+
 ## Production Deployment
 
 For a production environment serving 500+ concurrent users:
@@ -177,6 +208,31 @@ sudo systemctl start nexvision nginx redis mysql
 - **Gunicorn + gevent** — Async workers (2×CPU+1), 1000 connections/worker
 - **Redis** — API response cache (settings 60s, channels 30s, RSS 300s)
 - **MySQL** — Production database (replaces SQLite)
+
+---
+
+## Automation & Monitoring
+
+### Daily M3U Health Check (GitHub Actions)
+
+This repository includes a scheduled workflow:
+- Workflow file: `.github/workflows/m3u-health-check.yml`
+- Script: `scripts/check_m3u_health.py`
+- Status output: `monitoring/m3u-last-checked.json`
+
+Schedule:
+- Runs daily at 02:15 UTC
+- Can also be started manually from the Actions tab
+
+Required repository secret:
+- `M3U_HEALTHCHECK_URL` (your M3U playlist URL)
+
+### HLS Playback Optimization
+
+The TV player includes adaptive HLS handling with improved resilience:
+- Uses hls.js adaptive quality selection for compatible browsers
+- Adds network/media error recovery before declaring fatal playback failure
+- Falls back to native HLS where available (for example, Safari/iOS)
 
 ---
 
