@@ -5442,6 +5442,80 @@ def clear_old_epg():
     conn.commit(); conn.close()
     return jsonify({'ok': True})
 
+@app.route('/api/epg/sync-now', methods=['POST'])
+@admin_required
+def sync_epg_now():
+    """Fetch EPG from URL and import to database."""
+    import xml.etree.ElementTree as ET
+    url = request.json.get('url', '').strip()
+
+    if not url:
+        return jsonify({'ok': False, 'error': 'URL required'}), 400
+
+    try:
+        # Fetch guide.xml
+        req = urllib.request.Request(url, headers={'User-Agent': 'NexVision/6.0'})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+
+        # Parse XML
+        root = ET.fromstring(raw)
+        conn = get_db()
+        added = 0
+
+        # Build channel name map from XML
+        channel_names = {}
+        for ch_elem in root.findall('.//channel'):
+            ch_id = ch_elem.get('id', '').strip()
+            display_name = ch_elem.findtext('display-name', '').strip()
+            if ch_id and display_name:
+                channel_names[ch_id] = display_name
+
+        # Extract programmes
+        for prog in root.findall('.//programme'):
+            channel_id = prog.get('channel', '').strip()
+            title = prog.findtext('title', '').strip()
+            start = prog.get('start', '').strip()
+            stop = prog.get('stop', '').strip()
+            desc = prog.findtext('desc', '').strip()
+
+            if not (channel_id and title and start and stop):
+                continue
+
+            # Parse EPG datetime (format: "20260401120000 +0200")
+            try:
+                start_dt = datetime.strptime(start.split()[0], '%Y%m%d%H%M%S')
+                stop_dt = datetime.strptime(stop.split()[0], '%Y%m%d%H%M%S')
+            except:
+                continue
+
+            # Get channel display name from XML mapping
+            display_name = channel_names.get(channel_id, '')
+            if not display_name:
+                continue
+
+            # Find channel in database by display name
+            ch = conn.execute("SELECT id FROM channels WHERE name=? LIMIT 1",
+                            (display_name,)).fetchone()
+
+            if ch:
+                try:
+                    conn.execute("""
+                        INSERT INTO epg_entries
+                        (channel_id, title, description, start_time, end_time, category)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (ch[0], title, desc, start_dt.isoformat(), stop_dt.isoformat(), ''))
+                    added += 1
+                except:
+                    pass
+
+        conn.commit()
+        conn.close()
+        return jsonify({'ok': True, 'added': added})
+
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # V7 — SETTINGS
