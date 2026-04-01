@@ -51,9 +51,14 @@ yarn.lock
 .env.local
 .env.*.local
 
-# Database backups
+# Database files (contain live data)
+*.db
 *.db-journal
 local_backups/
+
+# EPG generated files
+epg/public/
+guide.xml
 
 # Temporary files
 *.tmp
