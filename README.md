@@ -607,8 +607,10 @@ python app.py
 
 ## License
 
-Proprietary — NexVision IPTV Platform.
-For hotel internal use only. Not for redistribution.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+> The NexVision IPTV platform is intended for hotel/commercial internal use.
+> Third-party components (libVLC, FFmpeg, Flask, etc.) retain their own respective licenses.
 
 ---
 
