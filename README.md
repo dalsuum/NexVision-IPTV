@@ -129,9 +129,9 @@ python app.py
 ### 3. Access the Interfaces
 | Interface | URL |
 |---|---|
-| TV Client (guests) | http://localhost:5000/ |
-| Admin Panel (staff) | http://localhost:5000/admin/ |
-| VOD Dashboard | http://localhost:5000/vod/ |
+| TV Client (guests) | http://localhost/ |
+| Admin Panel (staff) | http://localhost/admin/ |
+| VOD Dashboard | http://localhost/vod/ |
 
 > **Default admin PIN:** Check `settings` table in `nexvision.db` after first run.
 
@@ -145,7 +145,7 @@ ipconfig
 ip a
 ```
 
-Access from phone/TV: `http://YOUR_IP:5000/`
+Access from phone/TV: `http://YOUR_IP/`
 
 ---
 
@@ -167,9 +167,9 @@ docker compose up -d --build
 ```
 
 4. Open:
-- TV Client: http://localhost:5000/
-- Admin Panel: http://localhost:5000/admin/
-- VOD Dashboard: http://localhost:5000/vod/
+- TV Client: http://localhost/
+- Admin Panel: http://localhost/admin/
+- VOD Dashboard: http://localhost/vod/
 
 Container files:
 - `Dockerfile`
@@ -596,7 +596,7 @@ pip install -r requirements.txt
 
 # 4. Run the application
 python app.py
-# Visit: http://localhost:5000
+# Visit: http://localhost
 ```
 
 ### Important Security Notes
