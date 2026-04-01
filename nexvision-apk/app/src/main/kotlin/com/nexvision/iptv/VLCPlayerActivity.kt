@@ -27,12 +27,12 @@ class VLCPlayerActivity : AppCompatActivity(), SurfaceHolder.Callback {
         binding = ActivityVlcplayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val streamUrl = intent.getStringExtra(EXTRA_STREAM_URL) ?: run {
+        val channelName = intent.getStringExtra(EXTRA_CHANNEL_NAME) ?: "Playing"
+        if (intent.getStringExtra(EXTRA_STREAM_URL) == null) {
             Toast.makeText(this, "No stream URL provided", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-        val channelName = intent.getStringExtra(EXTRA_CHANNEL_NAME) ?: "Playing"
         binding.tvChannelName.text = channelName
 
         val options = arrayListOf(
