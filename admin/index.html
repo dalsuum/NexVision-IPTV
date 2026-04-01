@@ -369,8 +369,16 @@ updateThemeButton(localStorage.getItem(THEME_KEY)||'dark');
 async function req(path,opts={}){
   const h={'Content-Type':'application/json'};
   if(jwt)h['Authorization']='Bearer '+jwt;
-  try{const r=await fetch(API+path,{...opts,headers:{...h,...(opts.headers||{})}});
-  if(r.status===401){logout();return null;}return r.json();}catch(e){return null;}
+  try{
+    const r=await fetch(API+path,{...opts,headers:{...h,...(opts.headers||{})}});
+    if(r.status===401){logout();return null;}
+    const ct=(r.headers.get('content-type')||'').toLowerCase();
+    if(ct.includes('application/json')) return await r.json();
+    const txt=await r.text();
+    return {error: txt || ('HTTP '+r.status), status: r.status};
+  }catch(e){
+    return {error:'Network request failed'};
+  }
 }
 function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),dur);}
 function fmtMin(m){if(!m)return'0m';const h=Math.floor(m/60),mn=m%60;return h>0?h+'h '+mn+'m':mn+'m';}
@@ -3040,12 +3048,12 @@ async function syncEpgNow(){
 async function generateEpgGuideXml(){
   const msg = document.getElementById('epg-monitor-msg');
   msg.innerHTML='Generating guide.xml...';
-  const r = await req('/epg/generate-guide',{method:'POST',body:JSON.stringify({days:2,path:'/opt/nexvision/guide.xml'})});
+  const r = await req('/epg/generate-guide',{method:'POST',body:JSON.stringify({days:2,path:'/opt/nexvision/epg/public/guide.xml'})});
   if(!r || r.error){
     msg.innerHTML='<span style="color:var(--red)">Generate failed: '+esc(r?.error||'unknown error')+'</span>';
     return;
   }
-  msg.innerHTML='<span style="color:var(--green)">✅ Generated '+esc(r.path)+' ('+fmtNum(r.size_bytes||0)+' bytes). Use URL: local://iptv-org-epg or http://172.17.13.50/guide.xml</span>';
+  msg.innerHTML='<span style="color:var(--green)">✅ Generated '+esc(r.path)+' ('+fmtNum(r.size_bytes||0)+' bytes). Use URL: http://172.17.13.50:3000/guide.xml</span>';
 }
 
 

@@ -5530,7 +5530,7 @@ def generate_epg_guide():
     import xml.etree.ElementTree as ET
 
     days = int(request.json.get('days', 2))
-    path = request.json.get('path', '/opt/nexvision/guide.xml').strip()
+    path = request.json.get('path', '/opt/nexvision/epg/public/guide.xml').strip()
 
     try:
         conn = get_db()
@@ -5566,9 +5566,16 @@ def generate_epg_guide():
             if row['description']:
                 ET.SubElement(prog, 'desc').text = row['description']
 
-        # Write to file
+        # Write to file (fallback to EPG public dir if requested path is not writable)
         tree = ET.ElementTree(tv)
-        tree.write(path, encoding='UTF-8', xml_declaration=True)
+        try:
+            out_dir = os.path.dirname(path) or '.'
+            os.makedirs(out_dir, exist_ok=True)
+            tree.write(path, encoding='UTF-8', xml_declaration=True)
+        except PermissionError:
+            path = '/opt/nexvision/epg/public/guide.xml'
+            os.makedirs('/opt/nexvision/epg/public', exist_ok=True)
+            tree.write(path, encoding='UTF-8', xml_declaration=True)
 
         size = os.path.getsize(path)
         return jsonify({'path': path, 'size_bytes': size})
