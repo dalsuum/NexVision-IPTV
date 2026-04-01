@@ -7,7 +7,6 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [Screenshots & Interfaces](#screenshots--interfaces)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Quick Start (Development)](#quick-start-development)
@@ -116,7 +115,7 @@ See full architecture diagram: [`docs/nexvision-architecture.drawio`](docs/nexvi
 
 ### 1. Install Dependencies
 ```bash
-cd oneviosn-iptv-v8.9
+cd nexvision-iptv
 pip install flask werkzeug feedparser requests
 ```
 
@@ -183,7 +182,7 @@ For a production environment serving 500+ concurrent users:
 
 ```bash
 # Full step-by-step guide
-docs/Deployment-Procedure.md
+docs/DEPLOYMENT-GUIDE.md
 ```
 
 **Quick summary:**
@@ -322,44 +321,50 @@ X-Room-Token: <room_token>
 
 ## Android APK
 
-The NexVision Android app is a hotel-branded app that wraps the TV client with a native **libVLC 3.6** video player.
+The NexVision Android app is a native Kotlin IPTV client with a **libVLC 3.6** video player. It connects directly to the NexVision REST API — no WebView, no hardcoded server URLs.
 
 ### Building the APK
 
-**Requirements:**
-- Java 21+
-- Android SDK (command-line tools)
-- Gradle 8.4
+**Option 1 — Android Studio (recommended)**
+1. Install [Android Studio](https://developer.android.com/studio)
+2. Open the `nexvision-apk/` folder
+3. Wait for Gradle sync → **Build → Build APK(s)**
+4. Output: `app/build/outputs/apk/debug/app-debug.apk`
+
+**Option 2 — Command line**
+
+Requirements: JDK 17+, Android SDK (command-line tools), Gradle 8.4
 
 ```bash
 cd nexvision-apk
 
-# Set server IP before building
-# Edit: app/src/main/java/com/nexvision/iptv/MainActivity.java
-# Change: static final String SERVER_URL = "http://YOUR_SERVER_IP";
-
 # Build debug APK
-gradle assembleDebug --no-daemon
+./gradlew assembleDebug
 
 # Output
-app/build/outputs/apk/debug/app-debug.apk   (~86MB)
+app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ### APK Features
-- Full-screen WebView loading the TV client
-- **NexVisionBridge** — JavaScript ↔ Java interface
-- **VLCPlayerActivity** — native fullscreen video player
-  - Hardware decoding with software fallback
-  - 5-second network buffer (hotel WiFi optimised)
-  - Auto-reconnect on network drops (`--http-reconnect`)
-  - Seek bar, play/pause, ±10s skip, close button
-  - Auto-hide controls after 4 seconds
+- **Login screen** — enter server URL, username, and password at runtime (no rebuild needed)
+- **Channel list** — fetches live channels from `/api/channels` with live search/filter
+- **VLCPlayerActivity** — native fullscreen video player (libVLC 3.6)
+  - Hardware-accelerated decoding
+  - 1.5-second network buffer
+  - Sensor-based screen orientation
+- **Session persistence** — credentials and token stored in SharedPreferences
+- **Dark theme** — full black UI optimised for TV screens
+
+### First-Time Use
+1. Install the APK and open it
+2. Enter your **Server URL** (e.g. `http://192.168.1.100:5000`), username, and password
+3. Tap **Connect** — channels load automatically
+4. Tap any channel to play it full-screen
 
 ### Installing on Devices
 1. Transfer `app-debug.apk` to Android device
 2. Enable **Install from unknown sources** in Android settings
 3. Open the APK file to install
-4. Connect to hotel WiFi — app loads automatically
 
 ---
 
@@ -414,7 +419,7 @@ app/build/outputs/apk/debug/app-debug.apk   (~86MB)
 | **TV Client** | Vanilla JS + CSS | Single-page TV interface |
 | **Video Player** | hls.js 1.5 | Browser HLS playback |
 | **Mobile Player** | libVLC Android 3.6 | APK native HLS player |
-| **Android** | Java + WebView | Android APK wrapper |
+| **Android** | Kotlin + RecyclerView | Android APK native client |
 | **Build** | Gradle 8.4 + Android SDK 34 | APK compilation |
 
 ---
@@ -424,7 +429,7 @@ app/build/outputs/apk/debug/app-debug.apk   (~86MB)
 | Document | Location | Description |
 |---|---|---|
 | **System Operations Book** | [`docs/SOB-System-Operations-Book.md`](docs/SOB-System-Operations-Book.md) | Operations reference, monitoring, incident response |
-| **Deployment Procedure** | [`docs/Deployment-Procedure.md`](docs/Deployment-Procedure.md) | Step-by-step production deployment |
+| **Deployment Guide** | [`docs/DEPLOYMENT-GUIDE.md`](docs/DEPLOYMENT-GUIDE.md) | Step-by-step production deployment |
 | **Server Hardening** | [`docs/Server-Hardening-Procedure.md`](docs/Server-Hardening-Procedure.md) | Security hardening guide |
 | **Architecture Diagram** | [`docs/nexvision-architecture.drawio`](docs/nexvision-architecture.drawio) | Full system architecture (draw.io) |
 | **VOD Streaming Diagram** | [`docs/vod-streaming-diagram.drawio`](docs/vod-streaming-diagram.drawio) | HLS streaming flow (draw.io) |
@@ -434,7 +439,7 @@ app/build/outputs/apk/debug/app-debug.apk   (~86MB)
 ## Project Structure
 
 ```
-oneviosn-iptv-v8.9/
+nexvision-iptv/
 │
 ├── app.py                    # Main Flask application (~8000 lines)
 ├── db_mysql.py               # MySQL compatibility wrapper (sqlite3 API)
@@ -478,11 +483,21 @@ oneviosn-iptv-v8.9/
 │   ├── nexvision-architecture.drawio
 │   └── vod-streaming-diagram.drawio
 │
-└── nexvision-apk/            # Android APK project
-    └── app/src/main/java/com/nexvision/iptv/
-        ├── MainActivity.java         # WebView host
-        ├── NexVisionBridge.java      # JS ↔ Java interface
-        └── VLCPlayerActivity.java    # Native VLC player
+└── nexvision-apk/            # Android APK project (Kotlin, minSdk 21)
+    ├── settings.gradle
+    ├── build.gradle
+    └── app/src/main/
+        ├── AndroidManifest.xml
+        ├── kotlin/com/nexvision/iptv/
+        │   ├── MainActivity.kt       # Login + channel list + search
+        │   ├── VLCPlayerActivity.kt  # Native fullscreen VLC player
+        │   ├── ChannelAdapter.kt     # RecyclerView adapter
+        │   └── ApiClient.kt         # REST API calls (login, channels)
+        └── res/layout/
+            ├── activity_main.xml
+            ├── activity_vlcplayer.xml
+            ├── item_channel.xml
+            └── dialog_server_config.xml
 ```
 
 ---
@@ -511,7 +526,7 @@ For detailed guides, see the [docs/](docs/) directory:
 | [docs/DEPLOYMENT-GUIDE.md](docs/DEPLOYMENT-GUIDE.md) | Production deployment step-by-step |
 | [docs/NEXVISION-ARCHITECTURE.md](docs/NEXVISION-ARCHITECTURE.md) | System architecture deep dive |
 | [docs/SOB-System-Operations-Book.md](docs/SOB-System-Operations-Book.md) | Operations manual for admins |
-| [docs/API-INTEGRATION-CODE.md](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
+| [docs/APP-INTEGRATION-CODE.md](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
 | [docs/STORAGE-QUICK-REFERENCE.md](docs/STORAGE-QUICK-REFERENCE.md) | Storage backend comparison |
 
 ---
@@ -560,7 +575,4 @@ For hotel internal use only. Not for redistribution.
 ---
 
 *NexVision IPTV v8.9 — Built with Flask · Nginx · FFmpeg · libVLC*
-*Last updated: 2026-03-20*
-#   N e x V i s i o n - I P T V 
- 
- 
+*Last updated: 2026-04-01*
