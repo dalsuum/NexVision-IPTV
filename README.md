@@ -446,6 +446,56 @@ oneviosn-iptv-v8.9/
 
 ---
 
+## 📖 Documentation
+
+For detailed guides, see the [docs/](docs/) directory:
+
+| Guide | Purpose |
+|-------|---------|
+| [docs/DEPLOYMENT-GUIDE.md](docs/DEPLOYMENT-GUIDE.md) | Production deployment step-by-step |
+| [docs/NEXVISION-ARCHITECTURE.md](docs/NEXVISION-ARCHITECTURE.md) | System architecture deep dive |
+| [docs/SOB-System-Operations-Book.md](docs/SOB-System-Operations-Book.md) | Operations manual for admins |
+| [docs/API-INTEGRATION-CODE.md](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
+| [docs/STORAGE-QUICK-REFERENCE.md](docs/STORAGE-QUICK-REFERENCE.md) | Storage backend comparison |
+
+---
+
+## 🚀 GitHub Setup
+
+### First-Time Setup (Clone & Run Locally)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/nexvision.git
+cd nexvision
+
+# 2. Setup configuration (copy templates and edit)
+cp .env.example .env
+nano .env  # Add your database and API credentials
+
+cp epg/.env.example epg/.env
+nano epg/.env
+
+# 3. Install dependencies
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+
+# 4. Run the application
+python app.py
+# Visit: http://localhost:5000
+```
+
+### Important Security Notes
+
+- **Never commit `.env` files** - Always use `.env.example` templates
+- **See [SECURITY.md](SECURITY.md)** for environment setup and best practices
+- Database (`*.db`) and virtual environment (`venv/`) are ignored by `.gitignore`
+
+---
+
 ## License
 
 Proprietary — NexVision IPTV Platform.
@@ -455,5 +505,6 @@ For hotel internal use only. Not for redistribution.
 
 *NexVision IPTV v8.9 — Built with Flask · Nginx · FFmpeg · libVLC*
 *Last updated: 2026-03-20*
-#   N e x V i s i o n - I P T V  
+#   N e x V i s i o n - I P T V 
+ 
  
