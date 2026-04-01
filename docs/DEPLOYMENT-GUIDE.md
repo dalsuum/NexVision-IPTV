@@ -64,6 +64,7 @@ sudo reboot
 ```bash
 # Create nexvision system user
 sudo useradd -r -m -s /bin/bash nexvision
+sudo passwd nexvision
 
 # Add to www-data group for Nginx integration
 sudo usermod -a -G www-data nexvision
@@ -275,8 +276,8 @@ sudo certbot renew --dry-run
 sudo mkdir -p /var/log/nexvision
 
 # 2. Change ownership so the service can write to it
-# (Assuming your service runs as user 'a13', if not, use 'www-data' or the appropriate user)
-sudo chown -R a13:a13 /var/log/nexvision
+# (Assuming your service runs as user 'user', if not, use 'www-data' or the appropriate user)
+sudo chown -R user:user /var/log/nexvision
 
 # 3. Create the actual log files just to be safe
 sudo touch /var/log/nexvision/access.log /var/log/nexvision/error.log
