@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channels>
+  <channel site="wavve.com" site_id="A01" lang="ko" xmltv_id="Animax.kr@SD">ANIMAX</channel>
+  <channel site="wavve.com" site_id="C2101" lang="ko" xmltv_id="YTN.kr@SD">YTN</channel>
+  <channel site="wavve.com" site_id="C2401" lang="ko" xmltv_id="MBN.kr@SD">MBN</channel>
+  <channel site="wavve.com" site_id="C2402" lang="ko" xmltv_id="MBNPlus.kr@SD">MBN 플러스</channel>
+  <channel site="wavve.com" site_id="C2501" lang="ko" xmltv_id="ChannelA.kr@SD">채널A</channel>
+  <channel site="wavve.com" site_id="C2502" lang="ko" xmltv_id="ChannelAPlus.kr@SD">채널A 플러스</channel>
+  <channel site="wavve.com" site_id="C2601" lang="ko" xmltv_id="TVChosun.kr@SD">TV CHOSUN</channel>
+  <channel site="wavve.com" site_id="C2602" lang="ko" xmltv_id="TVChosun2.kr@SD">TV CHOSUN2</channel>
+  <channel site="wavve.com" site_id="C3901" lang="ko" xmltv_id="ChW.kr@SD">채널W</channel>
+  <channel site="wavve.com" site_id="C4001" lang="ko" xmltv_id="DiscoveryChannelSoutheastAsia.sg@SouthKorea">Discovery</channel>
+  <channel site="wavve.com" site_id="C4101" lang="ko" xmltv_id="HyundaiHomeShopping.kr@SD">현대홈쇼핑</channel>
+  <channel site="wavve.com" site_id="C4102" lang="ko" xmltv_id="HyundaiHomeShoppingPlusShop.kr@SD">현대홈쇼핑+샵</channel>
+  <channel site="wavve.com" site_id="C4201" lang="ko" xmltv_id="GSShop.kr@SD">GS SHOP</channel>
+  <channel site="wavve.com" site_id="C4202" lang="ko" xmltv_id="GSMyShop.kr@SD">GS MY SHOP</channel>
+  <channel site="wavve.com" site_id="C4401" lang="ko" xmltv_id="Anibox.kr@SD">ANIBOX</channel>
+  <channel site="wavve.com" site_id="C4402" lang="ko" xmltv_id="Anione.kr@SD">ANIONE</channel>
+  <channel site="wavve.com" site_id="C4801" lang="ko" xmltv_id="ShinsegaeTVShopping.kr@SD">신세계TV쇼핑</channel>
+  <channel site="wavve.com" site_id="C4901" lang="ko" xmltv_id="ShoppingNT.kr@SD">쇼핑엔티</channel>
+  <channel site="wavve.com" site_id="C5101" lang="ko" xmltv_id="AsiaN.kr@SD">AsiaN</channel>
+  <channel site="wavve.com" site_id="C5102" lang="ko" xmltv_id="AsiaM.kr@SD">AsiaM</channel>
+  <channel site="wavve.com" site_id="C5501" lang="ko" xmltv_id="ChannelJ.kr@SD">채널J</channel>
+  <channel site="wavve.com" site_id="C5601" lang="ko" xmltv_id="LotteHomeShopping.kr@SD">롯데홈쇼핑</channel>
+  <channel site="wavve.com" site_id="C5602" lang="ko" xmltv_id="LotteOneTV.kr@SD">롯데홈쇼핑 ONETV</channel>
+  <channel site="wavve.com" site_id="C5702" lang="ko" xmltv_id="EChannel.kr@SD">노는채널 E채널</channel>
+  <channel site="wavve.com" site_id="C5901" lang="ko" xmltv_id="History.kr@SD">HISTORY</channel>
+  <channel site="wavve.com" site_id="C5902" lang="ko" xmltv_id="LifetimeAsia.us@SD">LIFETIME</channel>
+  <channel site="wavve.com" site_id="C6102" lang="ko" xmltv_id="Aniplus.kr@SD">애니플러스</channel>
+  <channel site="wavve.com" site_id="C6802" lang="ko" xmltv_id="BravoKids.kr@SD">브라보키즈</channel>
+  <channel site="wavve.com" site_id="C6901" lang="ko" xmltv_id="PolarisTV.kr@SD">폴라리스TV</channel>
+  <channel site="wavve.com" site_id="C7301" lang="ko" xmltv_id="DongaTV.kr@SD">동아TV</channel>
+  <channel site="wavve.com" site_id="C7801" lang="ko" xmltv_id="Vlending.kr@SD">블렌딩 뮤직비디오</channel>
+  <channel site="wavve.com" site_id="C8101" lang="ko" xmltv_id="JNGKorea.kr@SD">JNG</channel>
+  <channel site="wavve.com" site_id="C8301" lang="ko" xmltv_id="NSHomeShopping.kr@SD">NS홈쇼핑</channel>
+  <channel site="wavve.com" site_id="C8302" lang="ko" xmltv_id="NSShopPlus.kr@SD">NS SHOP+</channel>
+  <channel site="wavve.com" site_id="C8401" lang="ko" xmltv_id="ChannelChina.kr@SD">채널차이나</channel>
+  <channel site="wavve.com" site_id="C8701" lang="ko" xmltv_id="Telenovela.kr@SD">텔레노벨라</channel>
+  <channel site="wavve.com" site_id="E01" lang="ko" xmltv_id="EBS1TV.kr@SD">EBS 1</channel>
+  <channel site="wavve.com" site_id="E05" lang="ko" xmltv_id="EBSKids.kr@SD">EBS 키즈</channel>
+  <channel site="wavve.com" site_id="E07" lang="ko" xmltv_id="EBS2TV.kr@SD">EBS 2</channel>
+  <channel site="wavve.com" site_id="F0501" lang="ko" xmltv_id="BTNTV.kr@SD">BTN</channel>
+  <channel site="wavve.com" site_id="F0601" lang="ko" xmltv_id="CTSTV.kr@SD">CTS기독교TV</channel>
+  <channel site="wavve.com" site_id="F0701" lang="ko" xmltv_id="CPBCTV.kr@SD">가톨릭평화방송</channel>
+  <channel site="wavve.com" site_id="F1301" lang="ko" xmltv_id="DaekyoKidsTV.kr@SD">대교어린이TV</channel>
+  <channel site="wavve.com" site_id="F1401" lang="ko" xmltv_id="KShopping.kr@SD">K SHOPPING</channel>
+  <channel site="wavve.com" site_id="F2001" lang="ko" xmltv_id="MaeilBusinessTV.kr@SD">매일경제TV</channel>
+  <channel site="wavve.com" site_id="F2101" lang="ko" xmltv_id="KoreaEconomyTV.kr@SD">한국경제TV</channel>
+  <channel site="wavve.com" site_id="F2501" lang="ko" xmltv_id="TheMovie.kr@SD">THE MOVIE</channel>
+  <channel site="wavve.com" site_id="F2601" lang="ko" xmltv_id="IndieFilm.kr@SD">인디필름</channel>
+  <channel site="wavve.com" site_id="F2701" lang="ko" xmltv_id="SKStoa.kr@SD">SK스토아</channel>
+  <channel site="wavve.com" site_id="F3301" lang="ko" xmltv_id="NationalAssemblyTV.kr@SD">국회방송</channel>
+  <channel site="wavve.com" site_id="F4301" lang="ko" xmltv_id="MTN.kr@SD">머니투데이방송</channel>
+  <channel site="wavve.com" site_id="F5601" lang="ko" xmltv_id="TVasiaPlus.kr@SD">TVasia Plus</channel>
+  <channel site="wavve.com" site_id="F5602" lang="ko" xmltv_id="SmileTVPlus.kr@SD">SmileTV Plus</channel>
+  <channel site="wavve.com" site_id="K01" lang="ko" xmltv_id="KBS1TV.kr@SD">KBS 1TV</channel>
+  <channel site="wavve.com" site_id="K02" lang="ko" xmltv_id="KBS2TV.kr@SD">KBS 2TV</channel>
+  <channel site="wavve.com" site_id="K04" lang="ko" xmltv_id="KBSJoy.kr@SD">KBS JOY</channel>
+  <channel site="wavve.com" site_id="K05" lang="ko" xmltv_id="KBSLife.kr@SD">KBS Life</channel>
+  <channel site="wavve.com" site_id="K06" lang="ko" xmltv_id="KBSDrama.kr@SD">KBS DRAMA</channel>
+  <channel site="wavve.com" site_id="K09" lang="ko" xmltv_id="KBSStory.kr@SD">KBS Story</channel>
+  <channel site="wavve.com" site_id="K12" lang="en" xmltv_id="CCTV4Asia.cn@SD">CCTV4</channel>
+  <channel site="wavve.com" site_id="K25" lang="en" xmltv_id="CGTN.cn@SD">CGTN</channel>
+  <channel site="wavve.com" site_id="M01" lang="ko" xmltv_id="MBCTV.kr@SD">MBC</channel>
+  <channel site="wavve.com" site_id="M02" lang="ko" xmltv_id="MBCDrama.kr@SD">MBC Drama</channel>
+  <channel site="wavve.com" site_id="M03" lang="ko" xmltv_id="MBCEvery1.kr@SD">MBC Every1</channel>
+  <channel site="wavve.com" site_id="M06" lang="ko" xmltv_id="MBCM.kr@SD">MBC M</channel>
+  <channel site="wavve.com" site_id="M14" lang="ko" xmltv_id="MBCOn.kr@SD">MBC ON</channel>
+  <channel site="wavve.com" site_id="S01" lang="ko" xmltv_id="">SBS</channel>
+  <channel site="wavve.com" site_id="S03" lang="ko" xmltv_id="SBSPlus.kr@SD">SBS Plus</channel>
+  <channel site="wavve.com" site_id="S04" lang="ko" xmltv_id="SBSfunE.kr@SD">SBS funE</channel>
+  <channel site="wavve.com" site_id="S05" lang="ko" xmltv_id="SBSGolf.kr@SD">SBS Golf</channel>
+  <channel site="wavve.com" site_id="S06" lang="ko" xmltv_id="SBSBiz.kr@SD">SBS Biz</channel>
+  <channel site="wavve.com" site_id="S09" lang="ko" xmltv_id="SBSM.kr@SD">SBS MTV</channel>
+  <channel site="wavve.com" site_id="S10" lang="ko" xmltv_id="Nickelodeon.kr@SD">SBS Nick</channel>
+  <channel site="wavve.com" site_id="S22" lang="ko" xmltv_id="SBSFL.kr@SD">SBS Fil</channel>
+  <channel site="wavve.com" site_id="X01" lang="ko" xmltv_id="EdgeTV.kr@SD">EDGETV</channel>
+  <channel site="wavve.com" site_id="X02" lang="ko" xmltv_id="FunTV.kr@SD">FUNTV</channel>
+  <channel site="wavve.com" site_id="Y01" lang="ko" xmltv_id="YonhapNewsTV.kr@SD">연합뉴스TV</channel>
+</channels>

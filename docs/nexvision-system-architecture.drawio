@@ -1,0 +1,134 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" version="29.6.5">
+  <diagram name="NexVision System Architecture" id="system-arch">
+    <mxGraphModel dx="2583" dy="1379" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" value="NexVision IPTV Platform - System Architecture" vertex="1">
+          <mxGeometry height="40" width="800" x="400" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;" value="v8.9 (March 2026) • 11,427+ Channels • 186 API Endpoints • Multi-Storage Backends" vertex="1">
+          <mxGeometry height="20" width="1000" x="300" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=14;fontStyle=1;" value="CLIENT LAYER" vertex="1">
+          <mxGeometry height="120" width="1500" x="50" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81D4FA;strokeColor=#0277BD;" value="TV Client&#xa;(HTML5 - 199KB)&#xa;• HLS Player&#xa;• Room Registration" vertex="1">
+          <mxGeometry height="70" width="150" x="50" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81D4FA;strokeColor=#0277BD;" value="Mobile Web&#xa;Interface&#xa;• Responsive UI&#xa;• Touch Controls" vertex="1">
+          <mxGeometry height="70" width="150" x="220" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Admin Panel&#xa;Management UI&#xa;• Channel CRUD&#xa;• Package Manager" vertex="1">
+          <mxGeometry height="70" width="150" x="390" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Storage Admin&#xa;Multi-Backend UI&#xa;• S3/Azure/GCS&#xa;• Health Monitor" vertex="1">
+          <mxGeometry height="70" width="150" x="560" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="9" parent="4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;" value="External APIs&#xa;• EPG Sources&#xa;• Weather API&#xa;• RSS Feeds" vertex="1">
+          <mxGeometry height="70" width="150" x="1300" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=14;fontStyle=1;" value="WEB SERVER LAYER" vertex="1">
+          <mxGeometry height="100" width="1500" x="50" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontStyle=1;" value="Nginx Reverse Proxy (Port 80/443)&#xa;• Static File Serving • X-Accel-Redirect • SSL Termination&#xa;• HLS Stream Delivery • Caching • Rate Limiting" vertex="1">
+          <mxGeometry height="50" width="1100" x="200" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#4A148C;fontSize=14;fontStyle=1;" value="APPLICATION LAYER" vertex="1">
+          <mxGeometry height="150" width="1500" x="50" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="12" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#4A148C;fontStyle=1;" value="Flask Application Server (Port 5000)&#xa;402KB • 8,895 Lines • 186 API Endpoints&#xa;• Authentication • Room Management • Channel Streaming&#xa;• VOD Delivery • Package System • EPG Integration" vertex="1">
+          <mxGeometry height="100" width="600" x="100" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="12" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Core APIs&#xa;• /api/channels&#xa;• /api/vod&#xa;• /api/packages&#xa;• /api/rooms&#xa;• /api/epg" vertex="1">
+          <mxGeometry height="100" width="150" x="750" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="12" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Authentication&#xa;System&#xa;• Room Tokens&#xa;• Admin Users&#xa;• Package ACL" vertex="1">
+          <mxGeometry height="100" width="150" x="950" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="12" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Package System&#xa;• 11,427+ Channel&#xa;  Bulk Assignment&#xa;• Room Access&#xa;• Content Bundles" vertex="1">
+          <mxGeometry height="100" width="150" x="1150" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#E8F5E8;strokeColor=#2E7D32;fontSize=14;fontStyle=1;" value="STORAGE LAYER" vertex="1">
+          <mxGeometry height="150" width="1500" x="50" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="18" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="SQLite Database&#xa;(4.9MB+)&#xa;• 30 Tables&#xa;• 11,427+ Channels&#xa;• 20 Rooms" vertex="1">
+          <mxGeometry height="100" width="150" x="50" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="19" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#388E3C;" value="Local Storage&#xa;• /opt/nexvision/&#xa;• HLS Segments&#xa;• VOD Files" vertex="1">
+          <mxGeometry height="100" width="150" x="250" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#388E3C;" value="NAS Storage&#xa;• Network Mount&#xa;• RAID Redundancy&#xa;• Shared Access" vertex="1">
+          <mxGeometry height="100" width="150" x="450" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57F17;" value="Amazon S3&#xa;• Unlimited Scale&#xa;• CloudFront CDN&#xa;• Global Distribution" vertex="1">
+          <mxGeometry height="100" width="150" x="650" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57F17;" value="Azure Blob&#xa;• Microsoft Cloud&#xa;• Auto-scaling&#xa;• Geo-redundancy" vertex="1">
+          <mxGeometry height="100" width="150" x="850" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="23" parent="17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57F17;" value="Google GCS&#xa;• ML Integration&#xa;• Global Network&#xa;• Auto-optimization" vertex="1">
+          <mxGeometry height="100" width="150" x="1050" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="24" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;fontSize=14;fontStyle=1;" value="DATA SOURCES" vertex="1">
+          <mxGeometry height="100" width="1500" x="50" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="25" parent="24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="M3U Playlists&#xa;(11,427+ Channels)" vertex="1">
+          <mxGeometry height="50" width="200" x="100" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="26" parent="24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="EPG Sources&#xa;(XMLTV/CSV)" vertex="1">
+          <mxGeometry height="50" width="200" x="350" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="RSS Feeds&#xa;(News/Weather)" vertex="1">
+          <mxGeometry height="50" width="200" x="600" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="28" parent="24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="External APIs&#xa;(Weather, Prayer, etc.)" vertex="1">
+          <mxGeometry height="50" width="200" x="850" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#424242;fontStyle=1;" value="PERFORMANCE METRICS&#xa;&#xa;• 500+ Concurrent Streams&#xa;• &lt;200ms API Response&#xa;• 99.5% Uptime Target&#xa;• X-Accel-Redirect (10x faster)&#xa;• Package Bulk Assignment&#xa;• Multi-Storage Redundancy" vertex="1">
+          <mxGeometry height="120" width="250" x="50" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="30" edge="1" parent="1" source="5" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#1976D2;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="250" />
+              <mxPoint x="800" y="250" />
+            </Array>
+            <mxPoint x="700" y="500" as="sourcePoint" />
+            <mxPoint x="750" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" edge="1" parent="1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#1976D2;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="390" />
+              <mxPoint x="450" y="390" />
+            </Array>
+            <mxPoint x="600" y="350" as="sourcePoint" />
+            <mxPoint x="450" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" edge="1" parent="1" source="13" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#1976D2;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" target="18" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="560" />
+              <mxPoint x="180" y="560" />
+            </Array>
+            <mxPoint x="700" y="500" as="sourcePoint" />
+            <mxPoint x="750" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="33" edge="1" parent="1" source="9" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#FF9800;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="13" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1425" y="380" />
+              <mxPoint x="710" y="380" />
+            </Array>
+            <mxPoint x="700" y="500" as="sourcePoint" />
+            <mxPoint x="750" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channels>
+  <channel site="dstv.com" site_id="sen#101" lang="en" xmltv_id="">M-Net West HD</channel>
+  <channel site="dstv.com" site_id="sen#105" lang="en" xmltv_id="">M-Net Movies 1 West HD</channel>
+  <channel site="dstv.com" site_id="sen#106" lang="en" xmltv_id="">M-Net Movies 2</channel>
+  <channel site="dstv.com" site_id="sen#107" lang="en" xmltv_id="">M-Net Movies 3</channel>
+  <channel site="dstv.com" site_id="sen#108" lang="en" xmltv_id="">M-Net Movies 4</channel>
+  <channel site="dstv.com" site_id="sen#113" lang="en" xmltv_id="">MovieRoom Africa</channel>
+  <channel site="dstv.com" site_id="sen#122" lang="en" xmltv_id="">Comedy Central</channel>
+  <channel site="dstv.com" site_id="sen#124" lang="en" xmltv_id="">E! Entertainment</channel>
+  <channel site="dstv.com" site_id="sen#130" lang="en" xmltv_id="">MTV</channel>
+  <channel site="dstv.com" site_id="sen#137" lang="en" xmltv_id="">TNT Africa</channel>
+  <channel site="dstv.com" site_id="sen#150" lang="en" xmltv_id="">Akwaaba Magic</channel>
+  <channel site="dstv.com" site_id="sen#151" lang="en" xmltv_id="">Africa Magic Showcase HD</channel>
+  <channel site="dstv.com" site_id="sen#152" lang="en" xmltv_id="">Africa Magic Epic</channel>
+  <channel site="dstv.com" site_id="sen#154" lang="en" xmltv_id="">Africa Magic Family</channel>
+  <channel site="dstv.com" site_id="sen#157" lang="en" xmltv_id="">Africa Magic Yoruba</channel>
+  <channel site="dstv.com" site_id="sen#158" lang="en" xmltv_id="">Maisha Magic East HD</channel>
+  <channel site="dstv.com" site_id="sen#159" lang="en" xmltv_id="">Africa Magic Igbo</channel>
+  <channel site="dstv.com" site_id="sen#160" lang="en" xmltv_id="">Maisha Magic Bongo</channel>
+  <channel site="dstv.com" site_id="sen#163" lang="en" xmltv_id="">Maisha Magic Plus HD</channel>
+  <channel site="dstv.com" site_id="sen#169" lang="en" xmltv_id="">ROK 2</channel>
+  <channel site="dstv.com" site_id="sen#181" lang="en" xmltv_id="">National Geographic Channel</channel>
+  <channel site="dstv.com" site_id="sen#198" lang="en" xmltv_id="">Big Brother Naija pop up</channel>
+  <channel site="dstv.com" site_id="sen#199" lang="en" xmltv_id="">SS Events</channel>
+  <channel site="dstv.com" site_id="sen#218" lang="en" xmltv_id="">ESPN</channel>
+  <channel site="dstv.com" site_id="sen#221" lang="en" xmltv_id="">SS Grandstand Africa</channel>
+  <channel site="dstv.com" site_id="sen#222" lang="en" xmltv_id="">SS Football Plus Africa</channel>
+  <channel site="dstv.com" site_id="sen#223" lang="en" xmltv_id="">SS Premier League</channel>
+  <channel site="dstv.com" site_id="sen#224" lang="en" xmltv_id="">SS La Liga</channel>
+  <channel site="dstv.com" site_id="sen#225" lang="en" xmltv_id="">SS Football</channel>
+  <channel site="dstv.com" site_id="sen#226" lang="en" xmltv_id="">SS Action</channel>
+  <channel site="dstv.com" site_id="sen#227" lang="en" xmltv_id="">SS Africa</channel>
+  <channel site="dstv.com" site_id="sen#228" lang="en" xmltv_id="">SS Africa 2</channel>
+  <channel site="dstv.com" site_id="sen#229" lang="en" xmltv_id="">WWE</channel>
+  <channel site="dstv.com" site_id="sen#230" lang="en" xmltv_id="">SS Variety 1</channel>
+  <channel site="dstv.com" site_id="sen#234" lang="en" xmltv_id="">SS Tennis Africa</channel>
+  <channel site="dstv.com" site_id="sen#235" lang="en" xmltv_id="">SS Motorsport Africa</channel>
+  <channel site="dstv.com" site_id="sen#241" lang="en" xmltv_id="">SS Maximo 1 (P)</channel>
+  <channel site="dstv.com" site_id="sen#242" lang="en" xmltv_id="">SS Maximo 2 (P)</channel>
+  <channel site="dstv.com" site_id="sen#305" lang="en" xmltv_id="">Nickelodeon</channel>
+  <channel site="dstv.com" site_id="sen#307" lang="en" xmltv_id="">NickJr</channel>
+  <channel site="dstv.com" site_id="sen#308" lang="en" xmltv_id="">NickTOONS</channel>
+  <channel site="dstv.com" site_id="sen#309" lang="en" xmltv_id="">Disney Junior</channel>
+  <channel site="dstv.com" site_id="sen#322" lang="en" xmltv_id="">MTV base</channel>
+  <channel site="dstv.com" site_id="sen#325" lang="en" xmltv_id="">TRACE Naija</channel>
+  <channel site="dstv.com" site_id="sen#332" lang="en" xmltv_id="">Trace Gospel</channel>
+  <channel site="dstv.com" site_id="sen#333" lang="en" xmltv_id="">Trace Jama</channel>
+  <channel site="dstv.com" site_id="sen#348" lang="en" xmltv_id="">Eternal Word Television Network</channel>
+  <channel site="dstv.com" site_id="sen#349" lang="en" xmltv_id="">Dove TV</channel>
+  <channel site="dstv.com" site_id="sen#406" lang="en" xmltv_id="">Al Jazeera</channel>
+  <channel site="dstv.com" site_id="sen#410" lang="en" xmltv_id="">CNBC Africa</channel>
+  <channel site="dstv.com" site_id="sen#431" lang="en" xmltv_id="">NHK</channel>
+  <channel site="dstv.com" site_id="sen#452" lang="en" xmltv_id="">ZeeTV</channel>
+  <channel site="dstv.com" site_id="sen#457" lang="en" xmltv_id="">SET Max</channel>
+  <channel site="dstv.com" site_id="sen#489" lang="en" xmltv_id="">Maaddii Abol</channel>
+  <channel site="dstv.com" site_id="sen#720" lang="en" xmltv_id="">Canal+</channel>
+  <channel site="dstv.com" site_id="sen#721" lang="en" xmltv_id="">Canal+ Cinema Centre</channel>
+  <channel site="dstv.com" site_id="sen#722" lang="en" xmltv_id="">Novelas TV</channel>
+  <channel site="dstv.com" site_id="sen#723" lang="en" xmltv_id="">Canal+ Sports 2</channel>
+  <channel site="dstv.com" site_id="sen#724" lang="en" xmltv_id="">Canal+ Sports 3</channel>
+  <channel site="dstv.com" site_id="sen#726" lang="en" xmltv_id="">InfoSports+</channel>
+  <channel site="dstv.com" site_id="sen#727" lang="en" xmltv_id="">TF1</channel>
+  <channel site="dstv.com" site_id="sen#728" lang="en" xmltv_id="">France 2</channel>
+  <channel site="dstv.com" site_id="sen#745" lang="en" xmltv_id="">Piwi+</channel>
+</channels>

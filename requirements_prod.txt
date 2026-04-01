@@ -1,0 +1,26 @@
+# NexVision IPTV — Production Dependencies
+# Install: pip install -r requirements_prod.txt
+
+# ── Core Flask ────────────────────────────────────────────────────────────────
+flask>=3.0.0
+flask-cors>=4.0.0
+PyJWT>=2.8.0
+
+# ── Production WSGI server ────────────────────────────────────────────────────
+gunicorn>=21.2.0
+gevent>=23.9.1              # async worker for 500+ concurrent connections
+greenlet>=3.0.0             # gevent dependency
+
+# ── MySQL (replaces sqlite3) ──────────────────────────────────────────────────
+PyMySQL>=1.1.0
+cryptography>=41.0.0        # PyMySQL auth plugin support
+
+# ── Redis caching ─────────────────────────────────────────────────────────────
+flask-caching>=2.1.0
+redis>=5.0.0                # redis-py client
+
+# ── Environment config ────────────────────────────────────────────────────────
+python-dotenv>=1.0.0        # load .env file in wsgi.py
+
+# ── Already used by app.py ────────────────────────────────────────────────────
+requests>=2.31.0

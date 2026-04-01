@@ -1,0 +1,24 @@
+name: 🚧 Broken Guide
+description: Report an error in one of the guides
+labels: ['broken guide']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out the issue template as much as you can so we could efficiently process your request.
+
+  - type: input
+    attributes:
+      label: Site
+      description: The name of the site
+      placeholder: 'guidatv.sky.it'
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe the issue in details
+    validations:
+      required: true

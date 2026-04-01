@@ -1,0 +1,98 @@
+const axios = require('axios')
+const dayjs = require('dayjs')
+
+const API_ENDPOINT = 'https://epg.provider.plex.tv'
+
+module.exports = {
+  site: 'plex.tv',
+  days: 2,
+  request: {
+    headers: {
+      'x-plex-provider-version': '7.2',
+      'Accept': 'application/json'
+    }
+  },
+  url: function ({ channel, date }) {
+    
+    return `${API_ENDPOINT}/grid?channelGridKey=${channel.site_id}&date=${date.format('YYYY-MM-DD')}`
+  },
+  parser({ content }) {
+    const programs = []
+    const items = parseItems(content)
+    for (let item of items) {
+      programs.push({
+        title: item.grandparentTitle || item.title,
+        subTitle: (item.grandparentTitle && item.title !== item.grandparentTitle) ? item.title : null,
+        description: item.summary,
+        rating: item.contentRating || null,
+        date: item.originallyAvailableAt || item.year || null,
+        categories: parseCategories(item),
+        season: item.parentIndex || null,
+        episode: item.index || null,
+        image: item.thumb || item.grandparentThumb || null,
+        start: parseStart(item),
+        stop: parseStop(item)
+      })
+    }
+
+    return programs
+  },
+  async channels({ token }) {
+    const data = await axios
+      .get(`${API_ENDPOINT}/lineups/plex/channels?X-Plex-Token=${token}`)
+      .then(r => r.data)
+      .catch(console.error)
+
+    return data.MediaContainer.Channel.map(c => {
+      return {
+        lang: 'en',
+        site_id: c.gridKey,
+        name: c.title,
+        //  logo: c.thumb || null,
+        //  url: c.Media?.[0]?.Part?.[0]?.key ? `${API_ENDPOINT}${c.Media?.[0]?.Part?.[0]?.key}?X-Plex-Token=${token}` : null
+      }
+    })
+  }
+}
+
+function parseCategories(item) {
+  return Array.isArray(item.Genre) ? item.Genre.map(g => g.tag) : []
+}
+
+function parseStart(item) {
+  return item.beginsAt ? dayjs.unix(item.beginsAt) : null
+}
+
+function parseStop(item) {
+  return item.endsAt ? dayjs.unix(item.endsAt) : null
+}
+
+function parseItems(content) {
+  const data = JSON.parse(content)
+  if (!data || !data.MediaContainer || !Array.isArray(data.MediaContainer.Metadata)) return []
+  const metadata = data.MediaContainer.Metadata
+  const items = []
+  metadata.forEach(item => {
+    let segments = []
+    item.Media.sort(byTime).forEach(media => {
+      let prevSegment = segments[segments.length - 1]
+      if (prevSegment && prevSegment.endsAt === media.beginsAt) {
+        prevSegment.endsAt = media.endsAt
+      } else {
+        segments.push(media)
+      }
+    })
+
+    segments.forEach(segment => {
+      items.push({ ...item, segments, beginsAt: segment.beginsAt, endsAt: segment.endsAt })
+    })
+  })
+
+  return items.sort(byTime)
+
+  function byTime(a, b) {
+    if (a.beginsAt > b.beginsAt) return 1
+    if (a.beginsAt < b.beginsAt) return -1
+    return 0
+  }
+}

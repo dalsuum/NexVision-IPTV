@@ -1,0 +1,320 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" version="29.6.5">
+  <diagram name="NexVision Complete System Architecture" id="complete-arch">
+    <mxGraphModel dx="2755" dy="1471" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;" value="NexVision Complete System Architecture" vertex="1">
+          <mxGeometry height="40" width="1000" x="500" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" value="IPTV + VOD + Multi-Storage • 11,427+ Channels • 186 API Endpoints • Real-time Streaming &amp; Transcoding" vertex="1">
+          <mxGeometry height="25" width="1200" x="400" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="client-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=16;fontStyle=1;" value="CLIENT ACCESS LAYER" vertex="1">
+          <mxGeometry height="120" width="1900" x="50" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="tv-client" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81D4FA;strokeColor=#0277BD;" value="TV Client&#xa;(HTML5 - 199KB)&#xa;• Live IPTV Channels&#xa;• VOD Player&#xa;• Room Registration" vertex="1">
+          <mxGeometry height="70" width="180" x="80" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mobile-client" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81D4FA;strokeColor=#0277BD;" value="Mobile Web&#xa;Interface&#xa;• Responsive UI&#xa;• Touch Controls&#xa;• Offline Sync" vertex="1">
+          <mxGeometry height="70" width="180" x="300" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="admin-panel" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Admin Panel&#xa;Management UI&#xa;• Channel CRUD&#xa;• Package Manager&#xa;• User Management" vertex="1">
+          <mxGeometry height="70" width="180" x="520" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="storage-admin" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Storage Admin&#xa;Multi-Backend UI&#xa;• S3/Azure/GCS&#xa;• Health Monitor&#xa;• VOD Upload" vertex="1">
+          <mxGeometry height="70" width="180" x="740" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="smart-tv" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;" value="Smart TV Apps&#xa;• Samsung/LG&#xa;• Android TV&#xa;• Apple TV&#xa;• Roku" vertex="1">
+          <mxGeometry height="70" width="180" x="960" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mobile-apps" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;" value="Native Mobile&#xa;• iOS/Android Apps&#xa;• Offline Download&#xa;• Push Notifications" vertex="1">
+          <mxGeometry height="70" width="180" x="1180" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="cdn-edge" parent="client-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;" value="CDN Edge Nodes&#xa;• CloudFront&#xa;• Azure CDN&#xa;• Google CDN&#xa;• Geographic Distribution" vertex="1">
+          <mxGeometry height="70" width="200" x="1500" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="proxy-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=16;fontStyle=1;" value="LOAD BALANCER &amp; PROXY LAYER" vertex="1">
+          <mxGeometry height="100" width="1900" x="50" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="nginx-proxy" parent="proxy-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontStyle=1;" value="Nginx Load Balancer &amp; Reverse Proxy&#xa;• X-Accel-Redirect (Kernel-Level File Serving) • SSL/TLS Termination • Rate Limiting &amp; DDoS Protection&#xa;• HLS Segment Caching • Static Asset Serving • WebSocket Proxy for Real-time Features" vertex="1">
+          <mxGeometry height="50" width="1500" x="200" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="app-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#4A148C;fontSize=16;fontStyle=1;" value="UNIFIED APPLICATION LAYER" vertex="1">
+          <mxGeometry height="180" width="1900" x="50" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="flask-core" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CE93D8;strokeColor=#4A148C;fontStyle=1;" value="Flask Application Server (Port 5000)&#xa;402KB • 8,895 Lines • 186 API Endpoints&#xa;• Authentication &amp; Authorization • Room Management&#xa;• IPTV Channel Streaming • VOD Delivery • Package System&#xa;• EPG Integration • Real-time Analytics" vertex="1">
+          <mxGeometry height="130" width="400" x="80" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="iptv-engine" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="IPTV Engine&#xa;• Live Channel Streaming&#xa;• M3U Playlist Processing&#xa;• EPG Data Integration&#xa;• Channel Package Logic&#xa;• Real-time Stream Health" vertex="1">
+          <mxGeometry height="130" width="200" x="520" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vod-engine" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="VOD Engine&#xa;• Video Upload &amp; Processing&#xa;• Transcoding Pipeline&#xa;• HLS Generation&#xa;• Multi-Storage Routing&#xa;• Adaptive Bitrate" vertex="1">
+          <mxGeometry height="130" width="200" x="760" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="auth-system" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Authentication&#xa;System&#xa;• Room Tokens (UUID)&#xa;• Admin Users&#xa;• Package ACL&#xa;• Security Middleware" vertex="1">
+          <mxGeometry height="130" width="200" x="1000" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="package-system" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Package System&#xa;• 11,427+ Channel&#xa;  Bulk Assignment&#xa;• Room Access Control&#xa;• Content Bundles&#xa;• VOD Collections" vertex="1">
+          <mxGeometry height="130" width="200" x="1240" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="analytics-engine" parent="app-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B39DDB;strokeColor=#512DA8;" value="Analytics Engine&#xa;• View Tracking&#xa;• Performance Metrics&#xa;• User Behavior&#xa;• A/B Testing&#xa;• Real-time Stats" vertex="1">
+          <mxGeometry height="130" width="200" x="1480" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="processing-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#E8F5E8;strokeColor=#388E3C;fontSize=16;fontStyle=1;" value="PROCESSING &amp; TRANSCODING LAYER" vertex="1">
+          <mxGeometry height="140" width="1900" x="50" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="ffmpeg-cluster" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;" value="FFmpeg Cluster&#xa;• CPU/GPU Transcoding&#xa;• Queue Management&#xa;• Distributed Processing&#xa;• Format Conversion" vertex="1">
+          <mxGeometry height="90" width="200" x="150" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="hls-segmenter" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="HLS Segmenter&#xa;• Adaptive Streams&#xa;• Multiple Resolutions&#xa;• Playlist Generation&#xa;• Real-time Segments" vertex="1">
+          <mxGeometry height="90" width="200" x="400" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="quality-control" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Quality Control&#xa;• Video Validation&#xa;• Error Detection&#xa;• Metric Analysis&#xa;• Compliance Check" vertex="1">
+          <mxGeometry height="90" width="200" x="650" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="thumbnail-gen" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Thumbnail Generator&#xa;• Preview Images&#xa;• Scene Detection&#xa;• Sprite Sheets&#xa;• Timeline Previews" vertex="1">
+          <mxGeometry height="90" width="200" x="900" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="content-manager" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Content Manager&#xa;• Metadata Processing&#xa;• Subtitle Processing&#xa;• DRM Integration&#xa;• Asset Organization" vertex="1">
+          <mxGeometry height="90" width="200" x="1150" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="stream-health" parent="processing-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#2E7D32;" value="Stream Health Monitor&#xa;• Live Stream Validation&#xa;• Channel Availability&#xa;• Performance Monitoring&#xa;• Auto-failover Logic" vertex="1">
+          <mxGeometry height="90" width="200" x="1400" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="storage-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F57C00;fontSize=16;fontStyle=1;" value="MULTI-STORAGE BACKEND LAYER" vertex="1">
+          <mxGeometry height="160" width="1900" x="50" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="local-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57C00;" value="Local Storage&#xa;/opt/nexvision/&#xa;• Fast Access&#xa;• Direct Serving&#xa;• HLS Segments&#xa;• VOD Files" vertex="1">
+          <mxGeometry height="110" width="180" x="120" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="nas-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#F57C00;" value="NAS Storage&#xa;• Network Mount&#xa;• RAID Protection&#xa;• High Capacity&#xa;• Shared Access&#xa;• Backup Tier" vertex="1">
+          <mxGeometry height="110" width="180" x="350" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="s3-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;" value="Amazon S3&#xa;• Unlimited Scale&#xa;• CloudFront CDN&#xa;• Global Distribution&#xa;• AI/ML Integration&#xa;• Cost Optimization" vertex="1">
+          <mxGeometry height="110" width="180" x="580" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="azure-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;" value="Azure Blob&#xa;• Microsoft Cloud&#xa;• CDN Integration&#xa;• Auto-scaling&#xa;• Geo-redundancy&#xa;• ML Services" vertex="1">
+          <mxGeometry height="110" width="180" x="810" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="gcs-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCC80;strokeColor=#E65100;" value="Google GCS&#xa;• ML Integration&#xa;• Global Network&#xa;• Auto-optimization&#xa;• BigQuery Analytics&#xa;• AI Processing" vertex="1">
+          <mxGeometry height="110" width="180" x="1040" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="backup-storage" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFAB91;strokeColor=#D84315;" value="Backup Storage&#xa;• Multi-Region&#xa;• Disaster Recovery&#xa;• Compliance&#xa;• Long-term Archive&#xa;• Encrypted Backup" vertex="1">
+          <mxGeometry height="110" width="180" x="1270" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="storage-router" parent="storage-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8F65;strokeColor=#BF360C;" value="Storage Router&#xa;• Smart Backend Selection&#xa;• Load Balancing&#xa;• Failover Logic&#xa;• Cache Management&#xa;• Performance Optimization" vertex="1">
+          <mxGeometry height="110" width="200" x="1500" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="database-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;fontSize=16;fontStyle=1;" value="DATABASE &amp; METADATA LAYER" vertex="1">
+          <mxGeometry height="120" width="1900" x="50" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite-db" parent="database-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="SQLite Database (4.9MB+)&#xa;• 30 Tables • 11,427+ Channels • 20 Rooms&#xa;• VOD Metadata • User Management • Package System&#xa;• EPG Data • View Analytics • Transaction Logs" vertex="1">
+          <mxGeometry height="70" width="350" x="200" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="redis-cache" parent="database-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="Redis Cache&#xa;• Session Storage • Hot Metadata&#xa;• Queue Management • Real-time Data&#xa;• Performance Caching • API Rate Limiting" vertex="1">
+          <mxGeometry height="70" width="300" x="600" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="elasticsearch" parent="database-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;" value="ElasticSearch (Optional)&#xa;• Content Search • Log Analysis&#xa;• Performance Monitoring • User Analytics&#xa;• Advanced Queries • Data Visualization" vertex="1">
+          <mxGeometry height="70" width="300" x="950" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="data-sources-layer" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#33691E;fontSize=16;fontStyle=1;" value="EXTERNAL DATA SOURCES &amp; APIs" vertex="1">
+          <mxGeometry height="100" width="1900" x="50" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="m3u-playlists" parent="data-sources-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="M3U Playlists&#xa;(11,427+ Channels)&#xa;• IPTV Sources&#xa;• Auto-sync" vertex="1">
+          <mxGeometry height="55" width="200" x="150" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="epg-sources" parent="data-sources-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="EPG Sources&#xa;(XMLTV/CSV)&#xa;• Program Guide&#xa;• Schedule Data" vertex="1">
+          <mxGeometry height="55" width="200" x="400" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rss-feeds" parent="data-sources-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="RSS Feeds&#xa;• News Content&#xa;• Weather Data&#xa;• Live Updates" vertex="1">
+          <mxGeometry height="55" width="200" x="650" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="external-apis" parent="data-sources-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="External APIs&#xa;• Weather Services&#xa;• Prayer Times&#xa;• Social Media" vertex="1">
+          <mxGeometry height="55" width="200" x="900" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="content-providers" parent="data-sources-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;" value="Content Providers&#xa;• VOD Libraries&#xa;• License Management&#xa;• Content APIs" vertex="1">
+          <mxGeometry height="55" width="200" x="1150" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="performance-metrics" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#424242;fontStyle=1;fontSize=12;" value="PERFORMANCE METRICS &amp; CAPABILITIES&#xa;&#xa;• 500+ Concurrent Streaming Sessions&#xa;• &lt;200ms API Response Time&#xa;• 99.9% System Availability&#xa;• X-Accel-Redirect (10x Faster File Serving)&#xa;• Real-time HLS Transcoding&#xa;• Multi-CDN Global Distribution&#xa;• Auto-scaling Storage Backends&#xa;• Package Bulk Assignment (11,427+ channels)&#xa;• Multi-Storage Redundancy &amp; Failover" vertex="1">
+          <mxGeometry height="220" width="400" x="50" y="1220" as="geometry" />
+        </mxCell>
+        <mxCell id="workflow-pipeline" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E8;strokeColor=#2E7D32;fontStyle=1;fontSize=11;" value="UNIFIED CONTENT WORKFLOW&#xa;&#xa;IPTV FLOW:&#xa;1. M3U Import → Channel Processing&#xa;2. EPG Integration → Schedule Mapping&#xa;3. Package Assignment → Access Control&#xa;4. Live Stream Delivery → Client Players&#xa;&#xa;VOD FLOW:&#xa;1. Upload → Storage Backend Selection&#xa;2. Metadata Extraction → Content Analysis&#xa;3. Transcode → HLS Multi-bitrate&#xa;4. Thumbnail Generation → Preview Assets&#xa;5. Quality Validation → Content Approval&#xa;6. CDN Distribution → Global Delivery&#xa;7. Player Delivery → Adaptive Streaming" vertex="1">
+          <mxGeometry height="220" width="350" x="500" y="1220" as="geometry" />
+        </mxCell>
+        <mxCell id="security-compliance" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontStyle=1;fontSize=11;" value="SECURITY &amp; COMPLIANCE&#xa;&#xa;• Room-based Token Authentication&#xa;• SHA256 Password Hashing&#xa;• SSL/TLS Encryption (Nginx)&#xa;• Rate Limiting &amp; DDoS Protection&#xa;• Package-based Access Control&#xa;• Admin Role-based Permissions&#xa;• Secure Multi-Storage Access&#xa;• X-Accel-Redirect (No Direct File Access)&#xa;• Encrypted Backup Storage&#xa;• Audit Logging &amp; Monitoring&#xa;• GDPR/Privacy Compliance Ready" vertex="1">
+          <mxGeometry height="220" width="350" x="900" y="1220" as="geometry" />
+        </mxCell>
+        <mxCell id="scalability-features" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontStyle=1;fontSize=11;" value="SCALABILITY &amp; RELIABILITY&#xa;&#xa;• Horizontal Scaling (Gunicorn Workers)&#xa;• Load Balancing (Nginx)&#xa;• Multi-Storage Backend Support&#xa;• CDN Integration (Global Scale)&#xa;• Redis Caching (High Performance)&#xa;• Queue-based Processing (FFmpeg)&#xa;• Auto-failover Storage Logic&#xa;• Real-time Health Monitoring&#xa;• Distributed Transcoding Cluster&#xa;• Geographic Content Distribution&#xa;• Elastic Storage Backends" vertex="1">
+          <mxGeometry height="220" width="350" x="1300" y="1220" as="geometry" />
+        </mxCell>
+        <mxCell id="conn1" edge="1" parent="1" source="tv-client" style="endArrow=classic;html=1;strokeWidth=3;strokeColor=#1976D2;" target="nginx-proxy" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="230" />
+              <mxPoint x="520" y="230" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn2" edge="1" parent="1" source="mobile-client" style="endArrow=classic;html=1;strokeWidth=3;strokeColor=#1976D2;" target="nginx-proxy" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="230" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn3" edge="1" parent="1" source="admin-panel" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2E7D32;" target="nginx-proxy" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="230" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn4" edge="1" parent="1" source="smart-tv" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#E65100;" target="cdn-edge" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1210" y="230" />
+              <mxPoint x="1480" y="230" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn5" edge="1" parent="1" source="nginx-proxy" style="endArrow=classic;html=1;strokeWidth=4;strokeColor=#4A148C;entryX=0.634;entryY=0.023;entryDx=0;entryDy=0;entryPerimeter=0;" target="flask-core" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1000" y="360" />
+              <mxPoint x="384" y="360" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn6" edge="1" parent="1" source="flask-core" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#512DA8;" target="iptv-engine" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn7" edge="1" parent="1" source="flask-core" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#512DA8;" target="vod-engine" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn8" edge="1" parent="1" source="vod-engine" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#388E3C;" target="ffmpeg-cluster" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="600" />
+              <mxPoint x="400" y="600" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn9" edge="1" parent="1" source="ffmpeg-cluster" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2E7D32;" target="hls-segmenter" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn10" edge="1" parent="1" source="storage-router" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#F57C00;" target="local-storage" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn11" edge="1" parent="1" source="storage-router" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#F57C00;" target="s3-storage" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn12" edge="1" parent="1" source="storage-router" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#E65100;" target="azure-storage" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn13" edge="1" parent="1" source="flask-core" style="endArrow=classic;html=1;strokeWidth=3;strokeColor=#C62828;" target="sqlite-db" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="640" />
+              <mxPoint x="130" y="1010" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn14" edge="1" parent="1" source="flask-core" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#C62828;" target="redis-cache" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="640" />
+              <mxPoint x="150" y="960" />
+              <mxPoint x="650" y="960" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn15" edge="1" parent="1" source="m3u-playlists" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#33691E;" target="iptv-engine" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="1090" />
+              <mxPoint x="230" y="970" />
+              <mxPoint x="280" y="930" />
+              <mxPoint x="370" y="900" />
+              <mxPoint x="440" y="620" />
+              <mxPoint x="510" y="610" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn16" edge="1" parent="1" source="epg-sources" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#33691E;" target="iptv-engine" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="1080" />
+              <mxPoint x="620" y="770" />
+              <mxPoint x="670" y="680" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn17" edge="1" parent="1" source="cdn-edge" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#E65100;" target="s3-storage" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1810" y="170" />
+              <mxPoint x="1810" y="750" />
+              <mxPoint x="780" y="750" />
+            </Array>
+            <mxPoint x="900" y="800" as="sourcePoint" />
+            <mxPoint x="950" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="label1" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" value="Client Requests" vertex="1">
+          <mxGeometry height="15" width="80" x="200" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="label2" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" value="API Calls" vertex="1">
+          <mxGeometry height="15" width="60" x="300" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="label3" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" value="Processing Pipeline" vertex="1">
+          <mxGeometry height="15" width="100" x="400" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="label4" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" value="Storage Operations" vertex="1">
+          <mxGeometry height="15" width="100" x="741" y="732" as="geometry" />
+        </mxCell>
+        <mxCell id="label5" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" value="Data Sources" vertex="1">
+          <mxGeometry height="15" width="80" x="520" y="1080" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

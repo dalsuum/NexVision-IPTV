@@ -1,0 +1,9 @@
+# backups
+*.tar.gz
+
+# android builds
+*.apk
+/build/
+
+# gradle wrapper zip
+gradle-*.zip

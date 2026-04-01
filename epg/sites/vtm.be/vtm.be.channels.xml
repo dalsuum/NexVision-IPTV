@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channels>
+  <channel site="vtm.be" site_id="qmusic" lang="nl" xmltv_id="QmusicVlaanderen.be@SD">Qmusic</channel>
+  <channel site="vtm.be" site_id="vtm" lang="nl" xmltv_id="VTM.be@SD">VTM</channel>
+  <channel site="vtm.be" site_id="vtm2" lang="nl" xmltv_id="VTM2.be@SD">VTM 2</channel>
+  <channel site="vtm.be" site_id="vtm3" lang="nl" xmltv_id="VTM3.be@SD">VTM 3</channel>
+  <channel site="vtm.be" site_id="vtm4" lang="nl" xmltv_id="VTM4.be@SD">VTM 4</channel>
+  <channel site="vtm.be" site_id="vtmgold" lang="nl" xmltv_id="VTMGold.be@SD">VTM Gold</channel>
+  <channel site="vtm.be" site_id="vtmnonstop" lang="nl" xmltv_id="">VTM NON-STOP Dokters</channel>
+</channels>

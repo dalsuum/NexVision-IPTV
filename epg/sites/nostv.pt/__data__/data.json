@@ -1,0 +1,67 @@
+[
+    {
+        "CoreId": "2026012313905035",
+        "AssetId": "EPGE2026012313905035",
+        "ContentId": "epg@2026012313905035",
+        "ProgramId": "3805166",
+        "AggregatorId": "2649043",
+        "DateFullEventId": "2026012313905035",
+        "GridItemsLink": "/v2/browse/epg@2026012313905035/grid/items",
+        "PlayListTrayItemLink": "/v1/contents/epg@2026012313905035/PlayListTray/items",
+        "DetailNodeItemNavLink": "/nodeitems/epg@2026012313905035/detail?context=schedule",
+        "UtcDateTimeStart": "2026-01-23T22:39:00Z",
+        "UtcDateTimeEnd": "2026-01-24T00:23:00Z",
+        "Type": 4,
+        "IsAdult": false,
+        "AiringChannel": {
+            "IsOnline": true,
+            "IsTimeWarpable": true,
+            "IsRestartable": true,
+            "ServiceId": "139",
+            "ChannelId": "5",
+            "AssetId": "EPGC139",
+            "Name": "RTP 1 HD",
+            "RatingDisplay": "M3",
+            "DvbLocator": "dvb://36.4E.1E79",
+            "Rating": 20,
+            "Position": 1,
+            "QualityVersion": 2,
+            "Images": [
+                {
+                    "ImageId": "RTPHD.png",
+                    "Type": 16,
+                    "Url": "http://vip.repositories.local.internal/Repositories.EPG/OttChannelIcons/RTPHD.png"
+                }
+            ]
+        },
+        "Metadata": {
+            "Title": "Em Casa d'Amália",
+            "SubTitle": "",
+            "RatingDisplay": "M6",
+            "GenreDisplay": "Talk-Show",
+            "SeriesId": "124075",
+            "Description": "Que mais poderíamos pedir para o regresso deste programa, do que receber um dos poetas de Amália? Manuel Alegre, autor do icónico \"Trova do Vento que Passa\", estará connosco. A este raro momento, juntam-se também ilustres convidados: Paulo de Carvalho e o seu filho Agir, Rita Guerra e André Amaro...",
+            "ReleaseYear": "2025",
+            "Rating": 60,
+            "Season": 9,
+            "Episode": 15,
+            "Duration": 104,
+            "ProgramId": 3805166,
+            "AggregatorId": 2649043,
+            "IsNPVR": true,
+            "IsStartOver": true
+        },
+        "Images": [
+            {
+                "ImageId": "901d96a8f1534749b076212c296d821e",
+                "Type": 1,
+                "Url": "http://vip.pam.local.internal/PAM.Images/Store/901d96a8f1534749b076212c296d821e"
+            },
+            {
+                "ImageId": "4de2fbd7177c4e7c8cc9faf703b119b5",
+                "Type": 38,
+                "Url": "http://vip.pam.local.internal/PAM.Images/Store/4de2fbd7177c4e7c8cc9faf703b119b5"
+            }
+        ]
+    }
+]

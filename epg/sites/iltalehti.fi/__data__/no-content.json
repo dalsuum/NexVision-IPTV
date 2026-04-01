@@ -1,0 +1,275 @@
+{
+  "message": "OK",
+  "response": [
+    {
+      "channelId": "391",
+      "channelName": "YLE TV1",
+      "logoUrl": "https://img.ilcdn.fi/D-Az_q-nf1Ln3pa2xYQzH-QbdCE=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1757606745768",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "392",
+      "channelName": "YLE TV2",
+      "logoUrl": "https://img.ilcdn.fi/0Bu1Pih6jOOYDwEJTDHdN9vOug8=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732701303",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "559",
+      "channelName": "MTV3",
+      "logoUrl": "https://img.ilcdn.fi/NzOiSU5X-sANJaFfvIJDNSs4uqc=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1757591587378",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "616",
+      "channelName": "Nelonen",
+      "logoUrl": "https://img.ilcdn.fi/bu2FcZ1uiXzUYnCOrbW-Z1zhVRE=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F9889107881421354653",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "570",
+      "channelName": "Yle Teema Fem",
+      "logoUrl": "https://img.ilcdn.fi/JnqWej11q6a5H9QWPsG1LNRLWfw=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732546666",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "560",
+      "channelName": "MTV Sub",
+      "logoUrl": "https://img.ilcdn.fi/CYq6soGhxjNiOD5BkX5ROrgXpxE=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1726086727",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "556",
+      "channelName": "TV 5",
+      "logoUrl": "https://img.ilcdn.fi/iOJkEMKNmDbt9U0vCFzSiPW7a7k=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F10621190623214367699",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "619",
+      "channelName": "Liv",
+      "logoUrl": "https://img.ilcdn.fi/kUWAh_c7THvhDMWy__2EE6Bsw9s=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732877701",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "621",
+      "channelName": "JIM",
+      "logoUrl": "https://img.ilcdn.fi/pFEW0raIu9VMrJx0SXJCLoe-1aQ=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1757591754884",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "393",
+      "channelName": "Kutonen",
+      "logoUrl": "https://img.ilcdn.fi/WeWJamC_GoDWzzCGHrU-ksXyuxE=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F5072756166026384851",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "554",
+      "channelName": "TLC",
+      "logoUrl": "https://img.ilcdn.fi/vG7k0TlOODpX7IoNRQzM10wGfZg=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F12444934799445749027",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "557",
+      "channelName": "Star Channel",
+      "logoUrl": "https://img.ilcdn.fi/V0Q1-5HMrWkcQH7HgeJBJPKt8uA=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F12586606875566380155",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "561",
+      "channelName": "MTV Ava",
+      "logoUrl": "https://img.ilcdn.fi/2DyU8corjce_NF52dYxZWovE7AE=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732873692",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "620",
+      "channelName": "Hero",
+      "logoUrl": "https://img.ilcdn.fi/N50z0BZHIRMT8vUYphpZhxq5DVo=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732877286",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "555",
+      "channelName": "Frii",
+      "logoUrl": "https://img.ilcdn.fi/X8BshY4Whsdi0O9t3bu28bK_n-I=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F6468873565567341649",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "553",
+      "channelName": "National Geographic",
+      "logoUrl": "https://img.ilcdn.fi/srISmPjw6JPch5Rbiov-zblb858=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1148435428698689295",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "7996",
+      "channelName": "Eveo",
+      "logoUrl": "https://img.ilcdn.fi/7f7VgBeD_V8bMgv36u15-hhE0h4=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1732876160",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    },
+    {
+      "channelId": "13786",
+      "channelName": "Viaplay TV Finland",
+      "logoUrl": "https://img.ilcdn.fi/cE__LIboXbbhbq2zWSJMkqTUzSg=/0x40/smart/filters:quality(86)/il-telkku-image.prod.il.fi%2F1762429531348",
+      "programs": {
+        "21_01_last_day": [],
+        "01_05": [],
+        "05_09": [],
+        "09_12": [],
+        "12_17": [],
+        "17_21": [],
+        "21_01": [],
+        "01_05_next_day": []
+      }
+    }
+  ]
+}
