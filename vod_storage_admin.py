@@ -883,7 +883,11 @@ STORAGE_ADMIN_HTML = """
             button.innerText = '🧪 Testing...';
             
             try {
-                const response = await fetch('/api/admin/storage/test', { method: 'POST' });
+                const response = await fetch('/api/admin/storage/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
                 const data = await response.json();
                 
                 if (data.success) {

@@ -78,3 +78,6 @@ ENV/
 env/
 .venv/
 node_modules/
+
+# VOD runtime data
+vod_data/
