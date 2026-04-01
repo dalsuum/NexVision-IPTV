@@ -1,0 +1,25 @@
+services:
+  nexvision:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexvision
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./videos:/app/videos
+      - ./hls:/app/hls
+      - ./thumbnails:/app/thumbnails
+      - ./vod_data:/app/vod_data
+      - ./nexvision.db:/app/nexvision.db
+      - ./vod.db:/app/vod.db
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/vod/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

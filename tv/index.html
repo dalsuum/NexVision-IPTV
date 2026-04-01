@@ -2670,7 +2670,14 @@ async function startVoD(url, title) {
   video.addEventListener('canplay', () => clearTimeout(loadTimeout), { once: true });
 
   if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
-    _vodHls = new Hls({ enableWorker: false, maxBufferLength: 60 });
+    let recoveringMediaError = false;
+    _vodHls = new Hls({
+      enableWorker: true,
+      capLevelToPlayerSize: true,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
+      backBufferLength: 30
+    });
     _vodHls.loadSource(playableUrl);
     _vodHls.attachMedia(video);
     _vodHls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -2679,7 +2686,22 @@ async function startVoD(url, title) {
       document.getElementById('vod-play-btn').innerHTML = '&#9646;&#9646;';
     });
     _vodHls.on(Hls.Events.ERROR, (e, data) => {
-      if (data.fatal) { clearTimeout(loadTimeout); onVideoError(); }
+      if (!data.fatal) return;
+
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        _vodHls.startLoad();
+        return;
+      }
+
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !recoveringMediaError) {
+        recoveringMediaError = true;
+        _vodHls.recoverMediaError();
+        setTimeout(() => { recoveringMediaError = false; }, 3000);
+        return;
+      }
+
+      clearTimeout(loadTimeout);
+      onVideoError();
     });
   } else if (isHLS && video.canPlayType('application/vnd.apple.mpegurl')) {
     // Native HLS (iOS Safari)

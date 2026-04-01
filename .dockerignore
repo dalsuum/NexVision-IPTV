@@ -1,0 +1,16 @@
+.git
+.gitignore
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.env
+.env.*
+node_modules
+epg/node_modules
+backups
+local_backups
+.cache
+git-secrets

@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-04-01T08:04:25+00:00",
+  "m3u_url": "",
+  "total_streams": 0,
+  "tested_streams": 0,
+  "healthy": 0,
+  "unhealthy": 0,
+  "success_rate": 0.0,
+  "status": "skipped",
+  "message": "M3U_URL is not set",
+  "sample_failures": []
+}
