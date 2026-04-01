@@ -5370,16 +5370,16 @@ def get_epg():
             SELECT e.*, c.name as channel_name
             FROM epg_entries e JOIN channels c ON c.id=e.channel_id
             WHERE e.channel_id=?
-              AND e.end_time >= datetime('now')
-              AND e.start_time <= datetime('now', ?)
+              AND REPLACE(e.end_time, 'T', ' ') >= datetime('now')
+              AND REPLACE(e.start_time, 'T', ' ') <= datetime('now', ?)
             ORDER BY e.start_time
         """, (channel_id, f'+{hours} hours')).fetchall()
     else:
         rows = conn.execute("""
             SELECT e.*, c.name as channel_name
             FROM epg_entries e JOIN channels c ON c.id=e.channel_id
-            WHERE e.end_time >= datetime('now')
-              AND e.start_time <= datetime('now', ?)
+            WHERE REPLACE(e.end_time, 'T', ' ') >= datetime('now')
+              AND REPLACE(e.start_time, 'T', ' ') <= datetime('now', ?)
             ORDER BY e.channel_id, e.start_time
         """, (f'+{hours} hours',)).fetchall()
     conn.close()
