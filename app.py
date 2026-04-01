@@ -5450,7 +5450,7 @@ def sync_epg_now():
     url = request.json.get('url', '').strip()
 
     if not url:
-        return jsonify({'ok': False, 'error': 'URL required'}), 400
+        return jsonify({'error': 'URL required'}), 400
 
     try:
         # Fetch guide.xml
@@ -5461,7 +5461,8 @@ def sync_epg_now():
         # Parse XML
         root = ET.fromstring(raw)
         conn = get_db()
-        added = 0
+        imported = 0
+        unmatched = 0
 
         # Build channel name map from XML
         channel_names = {}
@@ -5472,6 +5473,7 @@ def sync_epg_now():
                 channel_names[ch_id] = display_name
 
         # Extract programmes
+        total_parsed = 0
         for prog in root.findall('.//programme'):
             channel_id = prog.get('channel', '').strip()
             title = prog.findtext('title', '').strip()
@@ -5481,6 +5483,8 @@ def sync_epg_now():
 
             if not (channel_id and title and start and stop):
                 continue
+
+            total_parsed += 1
 
             # Parse EPG datetime (format: "20260401120000 +0200")
             try:
@@ -5492,6 +5496,7 @@ def sync_epg_now():
             # Get channel display name from XML mapping
             display_name = channel_names.get(channel_id, '')
             if not display_name:
+                unmatched += 1
                 continue
 
             # Find channel in database by display name
@@ -5505,16 +5510,88 @@ def sync_epg_now():
                         (channel_id, title, description, start_time, end_time, category)
                         VALUES (?, ?, ?, ?, ?, ?)
                     """, (ch[0], title, desc, start_dt.isoformat(), stop_dt.isoformat(), ''))
-                    added += 1
+                    imported += 1
                 except:
                     pass
+            else:
+                unmatched += 1
 
         conn.commit()
         conn.close()
-        return jsonify({'ok': True, 'added': added})
+        return jsonify({'imported': imported, 'total_parsed': total_parsed, 'unmatched': unmatched})
 
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/epg/generate-guide', methods=['POST'])
+@admin_required
+def generate_epg_guide():
+    """Generate guide.xml from database EPG entries."""
+    import xml.etree.ElementTree as ET
+
+    days = int(request.json.get('days', 2))
+    path = request.json.get('path', '/opt/nexvision/guide.xml').strip()
+
+    try:
+        conn = get_db()
+        rows = conn.execute("""
+            SELECT e.channel_id, c.name, e.title, e.description, e.start_time, e.end_time
+            FROM epg_entries e
+            JOIN channels c ON c.id = e.channel_id
+            WHERE e.end_time > datetime('now', '-1 day')
+            ORDER BY e.channel_id, e.start_time
+        """).fetchall()
+        conn.close()
+
+        # Create XML structure
+        tv = ET.Element('tv', {'generator-info-name': 'NexVision'})
+
+        # Add channels
+        channels = {}
+        for row in rows:
+            ch_id = row['channel_id']
+            if ch_id not in channels:
+                channels[ch_id] = row['name']
+                ch = ET.SubElement(tv, 'channel', {'id': f'nexvision-{ch_id}'})
+                ET.SubElement(ch, 'display-name').text = row['name']
+
+        # Add programmes
+        for row in rows:
+            prog = ET.SubElement(tv, 'programme', {
+                'channel': f'nexvision-{row["channel_id"]}',
+                'start': row['start_time'].replace(' ', '').replace('-', '').replace(':', ''),
+                'stop': row['end_time'].replace(' ', '').replace('-', '').replace(':', '')
+            })
+            ET.SubElement(prog, 'title').text = row['title']
+            if row['description']:
+                ET.SubElement(prog, 'desc').text = row['description']
+
+        # Write to file
+        tree = ET.ElementTree(tv)
+        tree.write(path, encoding='UTF-8', xml_declaration=True)
+
+        size = os.path.getsize(path)
+        return jsonify({'path': path, 'size_bytes': size})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/epg/monitor', methods=['GET'])
+def get_epg_monitor():
+    """Get EPG sync monitor status."""
+    conn = get_db()
+    settings = {}
+    for row in conn.execute("SELECT key, value FROM settings WHERE key LIKE 'epg_%'").fetchall():
+        settings[row['key'].replace('epg_', '')] = row['value']
+    conn.close()
+
+    return jsonify({
+        'auto_url': settings.get('auto_url', 'http://172.17.13.50:3000/guide.xml'),
+        'auto_enabled': int(settings.get('auto_enabled', 0)),
+        'auto_interval_minutes': int(settings.get('auto_interval_minutes', 360)),
+        'last_sync_at': settings.get('last_sync_at', 'Never'),
+        'last_message': settings.get('last_message', ''),
+    })
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
