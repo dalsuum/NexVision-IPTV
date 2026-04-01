@@ -442,7 +442,7 @@ CREATE UNIQUE INDEX idx_rooms_token ON rooms(room_token);
          │                       │                       │
          │              ┌─────────────────┐              │
          └─────────────▶│ NexVision Server│◀──────────────┘
-                        │ 172.17.13.50    │
+                        │ YOUR_SERVER_IP_HERE    │
                         └─────────────────┘
                                 │
                        ┌─────────────────┐
@@ -455,7 +455,7 @@ CREATE UNIQUE INDEX idx_rooms_token ON rooms(room_token);
 
 #### Single Server (Local Storage)
 ```
-Server: 172.17.13.50
+Server: YOUR_SERVER_IP_HERE
 ├── OS: Ubuntu 22.04 LTS
 ├── Storage: /opt/nexvision/
 │   ├── nexvision.db (SQLite - 4.9MB)
@@ -467,7 +467,7 @@ Server: 172.17.13.50
 
 #### Multi-Server (Cloud Storage)
 ```
-Web Server: 172.17.13.50
+Web Server: YOUR_SERVER_IP_HERE
 ├── Nginx + Flask App
 ├── SQLite Database
 └── Storage Backend: Cloud

@@ -235,17 +235,17 @@ sudo ufw status verbose
 If admin panel should only be accessible from staff network:
 ```bash
 # Allow admin panel only from staff IP range
-sudo ufw allow from 192.168.1.0/24 to any port 80 comment 'Admin - Staff LAN only'
+sudo ufw allow from YOUR_NETWORK_CIDR to any port 80 comment 'Admin - Staff LAN only'
 
 # Or allow admin from specific management IP
-sudo ufw allow from 192.168.1.100 to any port 80 comment 'Admin - IT workstation'
+sudo ufw allow from YOUR_NAS_SERVER_IP0 to any port 80 comment 'Admin - IT workstation'
 ```
 
 Alternatively, add IP restriction in Nginx for the `/admin/` location:
 ```nginx
 location /admin/ {
-    allow 192.168.1.0/24;   # Staff network
-    allow 127.0.0.1;
+    allow YOUR_NETWORK_CIDR;   # Staff network
+    allow YOUR_SERVER_IP_HERE;
     deny all;
     ...
 }
@@ -356,7 +356,7 @@ FLUSH PRIVILEGES;
 DELETE FROM mysql.user WHERE User='';
 
 -- Remove remote root access
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', 'YOUR_SERVER_IP_HERE', '::1');
 
 FLUSH PRIVILEGES;
 EXIT;
@@ -368,8 +368,8 @@ sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
 ```
 ```ini
 # Bind MySQL to localhost only
-bind-address = 127.0.0.1
-mysqlx-bind-address = 127.0.0.1
+bind-address = YOUR_SERVER_IP_HERE
+mysqlx-bind-address = YOUR_SERVER_IP_HERE
 ```
 ```bash
 sudo systemctl restart mysql
@@ -404,7 +404,7 @@ sudo nano /etc/redis/redis.conf
 ```
 ```ini
 # Bind to localhost only
-bind 127.0.0.1 -::1
+bind YOUR_SERVER_IP_HERE -::1
 
 # Disable protected mode (already bound to localhost)
 protected-mode yes
@@ -666,11 +666,11 @@ sudo ufw status verbose
 
 # 8. Verify MySQL not listening externally
 sudo ss -tlnp | grep 3306
-# Expected: only 127.0.0.1:3306
+# Expected: only YOUR_SERVER_IP_HERE:3306
 
 # 9. Verify Redis not listening externally
 sudo ss -tlnp | grep 6379
-# Expected: only 127.0.0.1:6379
+# Expected: only YOUR_SERVER_IP_HERE:6379
 
 # 10. SSH login test with key (should succeed)
 ssh -i ~/.ssh/nexvision_admin -p 2222 admin@SERVER_IP echo "SSH OK"

@@ -267,16 +267,16 @@ Backup Files Created:          1 file (app.py.backup.*)
 ### Quick Start Commands
 ```bash
 # Check system status
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
 # Open admin dashboard
-open http://localhost:5000/admin/storage
+open http://YOUR_SERVER_IP_HERE:5000/admin/storage
 
 # Test backend connectivity
-curl -X POST http://localhost:5000/api/admin/storage/test
+curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/test
 
 # View all available backends
-curl http://localhost:5000/api/admin/storage/backends
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/backends
 ```
 
 ### 30-Minute Deployment
@@ -323,7 +323,7 @@ cp app.py.backup.20260323_100449 app.py
 sudo systemctl restart nexvision
 
 # Verify
-curl http://localhost:5000/api/vod/videos
+curl http://YOUR_SERVER_IP_HERE:5000/api/vod/videos
 
 # Time: <1 minute
 ```
@@ -356,7 +356,7 @@ curl http://localhost:5000/api/vod/videos
 ✅ **Switch Between Backends** (1 click)
 ✅ **Monitor Storage Health** (real-time)
 ✅ **Scale to 100,000+ Users** (with S3/Azure/GCS)
-✅ **Use Admin Dashboard** (http://localhost:5000/admin/storage)
+✅ **Use Admin Dashboard** (http://YOUR_SERVER_IP_HERE:5000/admin/storage)
 ✅ **Call API Endpoints** (7 documented endpoints)
 ✅ **Upload Videos** (any size, any format)
 ✅ **Automatic Transcoding** (all backends)
@@ -421,8 +421,8 @@ Documentation:    11,000+ lines ✅
 
 ### To Use
 ```
-Dashboard:  http://localhost:5000/admin/storage
-API Base:   http://localhost:5000/api/admin/storage/
+Dashboard:  http://YOUR_SERVER_IP_HERE:5000/admin/storage
+API Base:   http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/
 Health:     GET /api/admin/storage/health
 Test:       POST /api/admin/storage/test
 Settings:   .env file

@@ -315,7 +315,7 @@ Code Reference:
 ### Path 1: Local Storage (Dev/Demo)
 ```
 1. Read: EXECUTIVE-SUMMARY.md
-2. Run: curl http://localhost:5000/api/admin/storage/info
+2. Run: curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 3. Done! (already working)
 Time: 5 minutes
 ```
@@ -327,7 +327,7 @@ Time: 5 minutes
 3. Mount: sudo mount -t nfs ...
 4. Configure: echo "STORAGE_BACKEND=nas" >> .env
 5. Deploy: sudo systemctl restart nexvision
-6. Test: curl http://localhost:5000/api/admin/storage/health
+6. Test: curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/health
 Time: 1-2 hours (plus NAS setup time)
 ```
 
@@ -338,8 +338,8 @@ Time: 1-2 hours (plus NAS setup time)
 3. Setup: Create S3 bucket + CloudFront + IAM in AWS
 4. Configure: Add AWS credentials to .env
 5. Deploy: sudo systemctl restart nexvision
-6. Test: curl -X POST http://localhost:5000/api/admin/storage/test
-7. Monitor: Open http://localhost:5000/admin/storage
+6. Test: curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/test
+7. Monitor: Open http://YOUR_SERVER_IP_HERE:5000/admin/storage
 Time: 1-2 days (AWS setup complexity)
 ```
 
@@ -548,7 +548,7 @@ You'll know you're ready when you can:
 1. **Choose Role** (above)
 2. **Follow Reading Path** (recommended for your role)
 3. **Follow Action Plan** (specific instructions)
-4. **Access Dashboard** (http://localhost:5000/admin/storage)
+4. **Access Dashboard** (http://YOUR_SERVER_IP_HERE:5000/admin/storage)
 5. **Success!** 🎉
 
 ### Questions?

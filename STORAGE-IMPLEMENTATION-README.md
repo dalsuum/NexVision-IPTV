@@ -114,13 +114,13 @@
 export STORAGE_BACKEND=local
 
 # Verify
-curl http://172.17.13.50:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 ```
 
 ### Option 2: NAS (For Hotel Chain <500 Users)
 ```bash
 # 1. Mount NAS
-sudo mount -t nfs 192.168.1.10:/export/vod /mnt/nas/vod
+sudo mount -t nfs YOUR_NAS_SERVER_IP:/export/vod /mnt/nas/vod
 
 # 2. Configure
 echo "STORAGE_BACKEND=nas" >> .env
@@ -130,7 +130,7 @@ echo "NAS_MOUNT=/mnt/nas/vod" >> .env
 sudo systemctl restart nexvision
 
 # 4. Test admin dashboard
-# Open: http://172.17.13.50:5000/admin/storage
+# Open: http://"YOUR_SERVER_IP_HERE":5000/admin/storage
 ```
 
 ### Option 3: AWS S3 (For Global Scale >1000 Users)
@@ -150,7 +150,7 @@ pip install boto3
 
 # 4. Restart & test
 sudo systemctl restart nexvision
-curl -X POST http://172.17.13.50:5000/api/admin/storage/test
+curl -X POST http://"YOUR_SERVER_IP_HERE":5000/api/admin/storage/test
 ```
 
 ### Option 4: Azure Blob Storage
@@ -178,7 +178,7 @@ sudo systemctl restart nexvision
 
 ## 🎨 Admin Dashboard
 
-**Access at:** http://172.17.13.50:5000/admin/storage
+**Access at:** http://"YOUR_SERVER_IP_HERE":5000/admin/storage
 
 ### Dashboard Features
 
@@ -224,21 +224,21 @@ All endpoints require admin authentication. Base path: `/api/admin/storage/`
 
 ```bash
 # Get current info
-curl http://localhost:5000/api/admin/storage/info | jq .
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info | jq .
 
 # List backends
-curl http://localhost:5000/api/admin/storage/backends | jq '.backends[] | {id, name, is_current, configured}'
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/backends | jq '.backends[] | {id, name, is_current, configured}'
 
 # Test connectivity
-curl -X POST http://localhost:5000/api/admin/storage/test
+curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/test
 
 # Switch backend (example)
-curl -X POST http://localhost:5000/api/admin/storage/switch \
+curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/switch \
   -H "Content-Type: application/json" \
   -d '{"backend": "s3", "reason": "Scaling up"}'
 
 # Monitor health
-watch 'curl -s http://localhost:5000/api/admin/storage/health | jq .status'
+watch 'curl -s http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/health | jq .status'
 ```
 
 ---
@@ -379,7 +379,7 @@ GCS_BUCKET=nexvision-vod
 ### Daily
 ```bash
 # Check health
-curl -s http://localhost:5000/api/admin/storage/health | jq .status
+curl -s http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/health | jq .status
 
 # Monitor logs
 tail -100 /var/log/nexvision/app.log | grep storage

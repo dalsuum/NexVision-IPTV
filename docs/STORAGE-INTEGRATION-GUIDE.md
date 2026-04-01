@@ -273,7 +273,7 @@ def transcode_video(video_id: int, source_path: str):
 # Celery background task (for distributed transcoding)
 from celery import Celery
 
-celery = Celery('vod_transcoder', broker=os.getenv('REDIS_URL', 'redis://localhost:6379'))
+celery = Celery('vod_transcoder', broker=os.getenv('REDIS_URL', 'redis://YOUR_REDIS_SERVER:6379'))
 
 @celery.task(bind=True, max_retries=3)
 def transcode_video_task(self, video_id: int, source_path: str):
@@ -413,7 +413,7 @@ VOD_DATA_DIR=./vod_data
 
 **Test:**
 ```bash
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 ```
 
 ### Example 2: NAS (Hotel/On-Prem)
@@ -425,7 +425,7 @@ VOD_DATA_DIR=/mnt/nas/vod
 
 **Setup NAS mount first:**
 ```bash
-sudo mount -t nfs 192.168.1.10:/export/vod /mnt/nas/vod
+sudo mount -t nfs YOUR_NAS_SERVER_IP:/export/vod /mnt/nas/vod
 ```
 
 ### Example 3: AWS S3 + CloudFront
@@ -480,14 +480,14 @@ python3 storage_backends.py
 
 ```bash
 # 1. Check health
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
 # 2. Upload test video
 curl -X POST -F "video=@test.mp4" \
-  http://localhost:5000/api/vod/upload
+  http://YOUR_SERVER_IP_HERE:5000/api/vod/upload
 
 # 3. Check HLS URL
-curl http://localhost:5000/api/vod/video/1/master.m3u8
+curl http://YOUR_SERVER_IP_HERE:5000/api/vod/video/1/master.m3u8
 
 # 4. Play in video client
 # Update TV interface to use returned HLS URL
@@ -509,7 +509,7 @@ ls -la /opt/nexvision/videos/
 
 ```bash
 # 1. Mount NAS
-sudo mount -t nfs 192.168.1.10:/export/vod /mnt/nas/vod
+sudo mount -t nfs YOUR_NAS_SERVER_IP:/export/vod /mnt/nas/vod
 
 # 2. Copy current data to NAS
 rsync -avz /opt/nexvision/vod_data/ /mnt/nas/vod/
@@ -522,7 +522,7 @@ VOD_DATA_DIR=/mnt/nas/vod
 sudo systemctl restart nexvision
 
 # 5. Verify health
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
 # 6. Keep local disk as backup for 1 week
 # Then: rm -rf /opt/nexvision/vod_data
@@ -601,7 +601,7 @@ print(storage.get_storage_stats())
 
 ```bash
 # Watch storage stats
-watch 'curl -s http://localhost:5000/api/admin/storage/info | jq .'
+watch 'curl -s http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info | jq .'
 
 # Monitor disk I/O (NAS)
 iostat -x 1 | head -20

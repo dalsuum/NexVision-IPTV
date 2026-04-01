@@ -142,7 +142,7 @@ sudo mkdir -p /mnt/nas/vod
 sudo chown nexvision:nexvision /mnt/nas/vod
 
 # Mount NAS (persistent in /etc/fstab)
-echo "192.168.1.10:/export/vod /mnt/nas/vod nfs defaults,vers=4.1,soft,timeo=600 0 0" | sudo tee -a /etc/fstab
+echo "YOUR_NAS_SERVER_IP:/export/vod /mnt/nas/vod nfs defaults,vers=4.1,soft,timeo=600 0 0" | sudo tee -a /etc/fstab
 sudo mount -a
 
 # Test mount
@@ -521,7 +521,7 @@ import subprocess
 import json
 from pathlib import Path
 
-app = Celery('vod_transcoder', broker='redis://localhost:6379')
+app = Celery('vod_transcoder', broker='redis://YOUR_REDIS_SERVER:6379')
 
 @app.task(bind=True, max_retries=3)
 def transcode_video(self, video_id: int, input_path: str, qualities: list):
@@ -694,7 +694,7 @@ Recommended: Local storage + NAS backup
 **Implementation:**
 ```bash
 # Mount NAS
-echo "192.168.1.10:/vod /mnt/nas/vod nfs defaults" >> /etc/fstab
+echo "YOUR_NAS_SERVER_IP:/vod /mnt/nas/vod nfs defaults" >> /etc/fstab
 
 # app.py env
 VOD_DATA_DIR=/mnt/nas/vod
@@ -811,7 +811,7 @@ STORAGE_BACKEND=nas
 VOD_DATA_DIR=/mnt/nas/vod
 
 # Mount
-sudo mount -t nfs 192.168.1.10:/export/vod /mnt/nas/vod
+sudo mount -t nfs YOUR_NAS_SERVER_IP:/export/vod /mnt/nas/vod
 ```
 
 ### Quick Start: AWS S3

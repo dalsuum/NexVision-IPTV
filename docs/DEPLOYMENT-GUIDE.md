@@ -220,7 +220,7 @@ server {
 
     # Main application proxy
     location / {
-        proxy_pass http://127.0.0.1:5000;
+        proxy_pass http://YOUR_SERVER_IP_HERE:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -283,7 +283,7 @@ User=nexvision
 Group=nexvision
 WorkingDirectory=/opt/nexvision
 Environment=PATH=/opt/nexvision/venv/bin
-ExecStart=/opt/nexvision/venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 4 --timeout 120 app:app
+ExecStart=/opt/nexvision/venv/bin/gunicorn --bind YOUR_SERVER_IP_HERE:5000 --workers 4 --timeout 120 app:app
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 RestartSec=5
@@ -458,13 +458,13 @@ systemctl status nexvision nginx
 
 # 2. HTTP response test
 curl -I http://localhost
-curl -s http://localhost/api/health
+curl -s http://YOUR_SERVER_IP_HERE/api/health
 
 # 3. Database connectivity
 sqlite3 /opt/nexvision/nexvision.db "SELECT COUNT(*) FROM channels;"
 
 # 4. Storage backend test
-curl -s http://localhost/storage/health
+curl -s http://YOUR_SERVER_IP_HERE/storage/health
 ```
 
 ### 8.2 Functional Testing
@@ -537,7 +537,7 @@ sudo tar -czf /opt/nexvision/backups/config_$(date +%Y%m%d).tar.gz \
 
 #### "Channels not loading"
 - Verify package assignment: Admin → Rooms
-- Check API response: `curl http://localhost/api/channels?limit=5`
+- Check API response: `curl http://YOUR_SERVER_IP_HERE/api/channels?limit=5`
 - Review room registration token
 
 #### "VOD not playing"

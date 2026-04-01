@@ -87,16 +87,16 @@ AWS_SECRET_KEY=...
 sudo systemctl restart nexvision
 
 # Verify via admin dashboard
-open http://172.17.13.50:5000/admin/storage
+open http://YOUR_SERVER_IP_HERE:5000/admin/storage
 ```
 
 ### Step 4: Test
 ```bash
 # Check health
-curl http://localhost:5000/api/admin/storage/health
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/health
 
 # Switch backends (if needed)
-curl -X POST http://localhost:5000/api/admin/storage/switch \
+curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/switch \
   -H "Content-Type: application/json" \
   -d '{"backend": "s3"}'
 ```
@@ -121,7 +121,7 @@ curl -X POST http://localhost:5000/api/admin/storage/switch \
 
 ## 🎨 Admin Dashboard Features
 
-**Location:** http://172.17.13.50:5000/admin/storage
+**Location:** http://YOUR_SERVER_IP_HERE:5000/admin/storage
 
 **Real-Time Panels:**
 - Current storage backend & status
@@ -242,7 +242,7 @@ cp /opt/nexvision/app.py.backup.20260323_100449 /opt/nexvision/app.py
 sudo systemctl restart nexvision
 
 # Verify
-curl http://localhost:5000/api/vod/videos
+curl http://YOUR_SERVER_IP_HERE:5000/api/vod/videos
 ```
 
 Takes 30 seconds. No data loss.
@@ -385,13 +385,13 @@ All switches use same code. Just change `.env` and restart!
 
 ```bash
 # 1. Check status
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
 # 2. View admin dashboard
-open http://172.17.13.50:5000/admin/storage
+open http://YOUR_SERVER_IP_HERE:5000/admin/storage
 
 # 3. Test backend
-curl -X POST http://localhost:5000/api/admin/storage/test
+curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/test
 
 # 4. View documentation
 cat docs/DEPLOYMENT-GUIDE.md

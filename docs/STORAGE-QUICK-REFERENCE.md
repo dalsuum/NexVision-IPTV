@@ -250,7 +250,7 @@ python3 app.py
 ### For NAS
 ```bash
 # 1. Mount NAS
-sudo mount -t nfs 192.168.1.10:/vod /mnt/nas/vod
+sudo mount -t nfs YOUR_NAS_SERVER_IP:/vod /mnt/nas/vod
 
 # 2. Update .env
 echo "STORAGE_BACKEND=nas" >> .env
@@ -281,7 +281,7 @@ CLOUDFRONT_URL=https://d123.cloudfront.net
 EOF
 
 # 4. Test
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
 # 5. Restart
 python3 app.py
@@ -303,7 +303,7 @@ AZURE_CDN_URL=https://mycdn.azureedge.net
 EOF
 
 # 4. Test & restart
-curl http://localhost:5000/api/admin/storage/info
+curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 python3 app.py
 ```
 

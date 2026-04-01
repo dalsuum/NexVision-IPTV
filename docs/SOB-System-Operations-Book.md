@@ -56,7 +56,7 @@ NexVision IPTV is a hotel-grade Internet Protocol Television platform delivering
 | Service | Port | Protocol | Status Check | Purpose |
 |---------|------|----------|--------------|---------|
 | **Nginx** | 80/443 | HTTP/HTTPS | `curl -I http://localhost` | Reverse proxy & static files |
-| **Flask/Gunicorn** | 5000 | HTTP | `curl http://localhost:5000/api/health` | Main application |
+| **Flask/Gunicorn** | 5000 | HTTP | `curl http://YOUR_SERVER_IP_HERE:5000/api/health` | Main application |
 | **MySQL/MariaDB** | 3306 | TCP | `mysqladmin ping` | Database (if used) |
 
 ### 2.2 Application Services
@@ -75,16 +75,16 @@ NexVision IPTV is a hotel-grade Internet Protocol Television platform delivering
 
 ```bash
 # Basic health check
-curl -s http://localhost/api/health
+curl -s http://YOUR_SERVER_IP_HERE/api/health
 
 # Channel count check
-curl -s http://localhost/api/channels?limit=1&envelope=1 | jq '.total'
+curl -s http://YOUR_SERVER_IP_HERE/api/channels?limit=1&envelope=1 | jq '.total'
 
 # Storage health check
-curl -s http://localhost/storage/health
+curl -s http://YOUR_SERVER_IP_HERE/storage/health
 
 # Admin authentication check
-curl -s http://localhost/admin
+curl -s http://YOUR_SERVER_IP_HERE/admin
 ```
 
 ### 3.2 Key Performance Indicators
@@ -147,10 +147,10 @@ sqlite3 /opt/nexvision/nexvision.db "VACUUM;"
 logrotate -d /etc/logrotate.d/nginx
 
 # 3. Storage backend health
-curl -s http://localhost/storage/health | jq '.'
+curl -s http://YOUR_SERVER_IP_HERE/storage/health | jq '.'
 
 # 4. EPG sync status
-curl -s http://localhost/api/epg?hours=24 | jq length
+curl -s http://YOUR_SERVER_IP_HERE/api/epg?hours=24 | jq length
 ```
 
 ### 4.3 Package Management Operations
@@ -163,7 +163,7 @@ curl -s http://localhost/api/epg?hours=24 | jq length
 
 2. **Via API** (for automation):
    ```bash
-   curl -X PUT http://localhost/api/packages/2 \
+   curl -X PUT http://YOUR_SERVER_IP_HERE/api/packages/2 \
      -H "Content-Type: application/json" \
      -d '{"name": "All Channels", "select_all_channels": true}'
    ```
@@ -179,7 +179,7 @@ curl -s http://localhost/api/epg?hours=24 | jq length
 **Causes & Solutions**:
 1. **Package not assigned**: Check Admin → Rooms → ensure room has package assigned
 2. **Token issues**: Clear TV browser cache, re-register room
-3. **API issues**: Check `curl http://localhost/api/channels?limit=5`
+3. **API issues**: Check `curl http://YOUR_SERVER_IP_HERE/api/channels?limit=5`
 
 #### Issue: "VOD not playing"
 **Symptoms**: Video fails to load, 404 errors in browser
@@ -306,10 +306,10 @@ PRAGMA temp_store = memory;
 
 ```bash
 # Check admin authentication
-curl -s http://localhost/admin | grep -q "login" && echo "Auth working"
+curl -s http://YOUR_SERVER_IP_HERE/admin | grep -q "login" && echo "Auth working"
 
 # Verify room token isolation
-curl -s -H "X-Room-Token: invalid" http://localhost/api/channels
+curl -s -H "X-Room-Token: invalid" http://YOUR_SERVER_IP_HERE/api/channels
 
 # Check file permissions
 ls -la /opt/nexvision/nexvision.db    # Should be nexvision:nexvision 600

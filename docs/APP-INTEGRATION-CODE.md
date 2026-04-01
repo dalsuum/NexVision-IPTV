@@ -355,7 +355,7 @@ def queue_transcode_job(video_id: str, source_path: str):
         # Celery task (distributed)
         try:
             from celery import Celery
-            celery_app = Celery('vod_transcoder', broker=os.getenv('REDIS_URL', 'redis://localhost:6379'))
+            celery_app = Celery('vod_transcoder', broker=os.getenv('REDIS_URL', 'redis://YOUR_REDIS_SERVER:6379'))
             
             @celery_app.task(bind=True, max_retries=3)
             def transcode_task(self, vid_id, src_path):
@@ -512,23 +512,23 @@ def admin_storage_dashboard():
    ───────
 
    # Test storage backend
-   curl -X POST http://localhost:5000/api/admin/storage/test
+   curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/test
 
    # Get storage info
-   curl http://localhost:5000/api/admin/storage/info
+   curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info
 
    # List backends
-   curl http://localhost:5000/api/admin/storage/backends
+   curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/backends
 
    # Switch backend
-   curl -X POST http://localhost:5000/api/admin/storage/switch \\
+   curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/switch \\
         -H "Content-Type: application/json" \\
         -d '{"backend": "s3", "reason": "Scale upgrade"}'
 
 5. ADMIN DASHBOARD
    ───────────────
 
-   Access at: http://localhost:5000/admin/storage
+   Access at: http://YOUR_SERVER_IP_HERE:5000/admin/storage
 
    Features:
    - View current storage backend
@@ -570,7 +570,7 @@ def admin_storage_dashboard():
       3. Restart app
       4. Check: curl /api/admin/storage/info
       5. Test upload: curl -X POST /api/admin/storage/test
-      6. Monitor: watch curl -s http://localhost:5000/api/admin/storage/info | jq .
+      6. Monitor: watch curl -s http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/info | jq .
 
 9. MONITORING
    ──────────

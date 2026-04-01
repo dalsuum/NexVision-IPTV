@@ -257,7 +257,7 @@ location /vod/hls/ {
 
 location @vod_proxy {
     # Proxy to Flask for authentication
-    proxy_pass http://127.0.0.1:5000;
+    proxy_pass http://YOUR_SERVER_IP_HERE:5000;
     proxy_set_header X-Original-URI $request_uri;
 }
 
@@ -331,7 +331,7 @@ def serve_hls_content(file_path):
 │   Server    │   (AWS)         │   (Microsoft)   │      CDN            │
 ├─────────────┼─────────────────┼─────────────────┼─────────────────────┤
 │ NexVision   │ • Global Edge   │ • Verizon POP   │ • Google Edge       │
-│ 172.17.13.50│ • S3 Backend    │ • Azure Blob    │ • GCS Backend       │ │ • Local Cache   │ • Auto-scaling  │ • Fast Purge    │ • ML Optimization   │
+│ YOUR_SERVER_IP_HERE│ • S3 Backend    │ • Azure Blob    │ • GCS Backend       │ │ • Local Cache   │ • Auto-scaling  │ • Fast Purge    │ • ML Optimization   │
 │ • Auth Check│ • SSL/HTTPS     │ • Custom Rules  │ • Analytics         │
 └─────────────┴─────────────────┴─────────────────┴─────────────────────┘
 ```
@@ -792,12 +792,12 @@ STORAGE_SECURITY_CONFIG = {
 **Symptoms**: Player shows loading spinner indefinitely
 **Diagnosis**:
 ```bash
-# Check HLS playlist accessibility  curl -I http://localhost/vod/hls/movie-123/master.m3u8
+# Check HLS playlist accessibility  curl -I http://YOUR_SERVER_IP_HERE/vod/hls/movie-123/master.m3u8
 
 # Check X-Accel-Redirect configuration
 tail -f /var/log/nginx/error.log
 
-# Test storage backend connectivity  curl -s http://localhost/storage/health | jq .
+# Test storage backend connectivity  curl -s http://YOUR_SERVER_IP_HERE/storage/health | jq .
 ```
 
 #### Issue: "Slow streaming/buffering"
