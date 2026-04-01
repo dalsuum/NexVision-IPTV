@@ -111,7 +111,9 @@ See full architecture diagram: [`docs/nexvision-architecture.drawio`](docs/nexvi
 
 ### Prerequisites
 - Python 3.10+
-- FFmpeg (bundled in `ffmpeg/bin/` for Windows)
+- FFmpeg
+  - **Linux:** `sudo apt install ffmpeg -y`
+  - **Windows:** bundled in `ffmpeg/bin/` (included in repo)
 
 ### 1. Install Dependencies
 ```bash
