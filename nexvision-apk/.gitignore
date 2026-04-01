@@ -1,0 +1,26 @@
+# Build outputs
+*.iml
+.gradle/
+.idea/
+.DS_Store
+/local.properties
+/captures/
+/.externalNativeBuild/
+/.cxx/
+
+# Compiled files
+*.class
+*.apk
+*.aab
+*.dex
+
+# Build directories
+/build/
+app/build/
+
+# Keystore files (never commit)
+*.jks
+*.keystore
+
+# Gradle cache
+gradle-wrapper.jar
