@@ -47,20 +47,34 @@ yarn.lock
 .pytest_cache/
 .coverage
 
-# Environment variables
+# Environment variables (NEVER commit .env files with secrets!)
+.env
 .env.local
 .env.*.local
+.env.swp
 
 # Database files (contain live data)
 *.db
 *.db-journal
+vod.db
 local_backups/
+backups/
 
 # EPG generated files
 epg/public/
+epg/.env
 guide.xml
+epg/temp/
 
 # Temporary files
 *.tmp
 *.bak
 *.swp
+*.log
+
+# Virtual Environment & Dependencies (DO NOT COMMIT)
+venv/
+ENV/
+env/
+.venv/
+node_modules/
