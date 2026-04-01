@@ -325,25 +325,60 @@ The NexVision Android app is a native Kotlin IPTV client with a **libVLC 3.6** v
 
 ### Building the APK
 
-**Option 1 — Android Studio (recommended)**
+**Option 1 — Android Studio (recommended, on your PC/Mac)**
 1. Install [Android Studio](https://developer.android.com/studio)
 2. Open the `nexvision-apk/` folder
 3. Wait for Gradle sync → **Build → Build APK(s)**
 4. Output: `app/build/outputs/apk/debug/app-debug.apk`
 
-**Option 2 — Command line**
+**Option 2 — Command line on the Linux server**
 
-Requirements: JDK 17+, Android SDK (command-line tools), Gradle 8.4
+The Android SDK is already installed on the server at `/home/a13/android-sdk`.
 
 ```bash
 cd nexvision-apk
 
-# Build debug APK
-./gradlew assembleDebug
+# Build debug APK (SDK path is set in local.properties)
+ANDROID_HOME=/home/a13/android-sdk ./gradlew assembleDebug
 
-# Output
+# Output (~91MB)
 app/build/outputs/apk/debug/app-debug.apk
 ```
+
+To avoid typing `ANDROID_HOME` every time, add to `~/.bashrc`:
+
+```bash
+export ANDROID_HOME=/home/a13/android-sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+```
+
+**Setting up Android SDK from scratch (if needed)**
+
+```bash
+# 1. Download command-line tools
+mkdir -p ~/android-sdk/cmdline-tools
+cd /tmp
+curl -O https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+unzip commandlinetools-linux-11076708_latest.zip -d /tmp/cmdtools-extract
+mv /tmp/cmdtools-extract/cmdline-tools ~/android-sdk/cmdline-tools/latest
+
+# 2. Set environment
+export ANDROID_HOME=~/android-sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+
+# 3. Accept licenses and install SDK components
+yes | sdkmanager --licenses
+sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+# 4. Tell Gradle where the SDK is
+echo "sdk.dir=$HOME/android-sdk" > /opt/nexvision/nexvision-apk/local.properties
+
+# 5. Build
+cd /opt/nexvision/nexvision-apk
+./gradlew assembleDebug
+```
+
+> **Note:** `local.properties` is gitignored — each machine needs its own copy with the correct `sdk.dir` path.
 
 ### APK Features
 - **Login screen** — enter server URL, username, and password at runtime (no rebuild needed)
