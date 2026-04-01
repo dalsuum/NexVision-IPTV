@@ -269,7 +269,20 @@ sudo certbot renew --dry-run
 
 ## 5. SERVICE CONFIGURATION
 
-### 5.1 Systemd Service Setup
+### 5.1 Log Directory
+
+# 1. Create the log directory
+sudo mkdir -p /var/log/nexvision
+
+# 2. Change ownership so the service can write to it
+# (Assuming your service runs as user 'a13', if not, use 'www-data' or the appropriate user)
+sudo chown -R a13:a13 /var/log/nexvision
+
+# 3. Create the actual log files just to be safe
+sudo touch /var/log/nexvision/access.log /var/log/nexvision/error.log
+sudo chmod 664 /var/log/nexvision/*.log
+
+### 5.2 Systemd Service Setup
 ```bash
 # Create systemd service file
 sudo tee /etc/systemd/system/nexvision.service << 'EOF'
@@ -281,6 +294,7 @@ After=network.target mysql.service
 Type=notify
 User=nexvision
 Group=nexvision
+RuntimeDirectory=nexvision
 WorkingDirectory=/opt/nexvision
 Environment=PATH=/opt/nexvision/venv/bin
 ExecStart=/opt/nexvision/venv/bin/gunicorn --bind YOUR_SERVER_IP_HERE:5000 --workers 4 --timeout 120 app:app
