@@ -1,42 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_dark">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <!-- Full-screen WebView (TV client) -->
+    <WebView
+        android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/bg_surface"
-            app:titleTextColor="@color/text_primary"
-            app:subtitleTextColor="@color/text_secondary"
-            app:title="@string/app_name" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <!-- Register Form -->
+    <!-- Setup form shown on first launch -->
     <LinearLayout
-        android:id="@+id/registerForm"
+        android:id="@+id/setupForm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:padding="32dp"
+        android:visibility="visible">
 
         <TextView
             android:layout_width="match_parent"
@@ -94,38 +78,12 @@
 
     </LinearLayout>
 
-    <!-- Channel List -->
-    <LinearLayout
-        android:id="@+id/channelListView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    <!-- Loading spinner (overlaid on top of everything) -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
-        <SearchView
-            android:id="@+id/searchView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/bg_surface"
-            android:queryHint="@string/hint_search_channels"
-            android:iconifiedByDefault="false" />
-
-        <TextView
-            android:id="@+id/tvChannelCount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-    </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>
