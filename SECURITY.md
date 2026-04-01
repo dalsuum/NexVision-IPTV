@@ -227,7 +227,7 @@ pip install --upgrade -r requirements.txt
 For security issues:
 1. **Do NOT open public issues** for security vulnerabilities
 2. **Contact maintainers privately** or use GitHub's security advisory feature
-3. **Report to security@example.com** (if available)
+3. **Report to dalsuum08@gmail.com** (if available)
 
 ---
 
