@@ -23,16 +23,20 @@ class MainActivity : AppCompatActivity() {
     private val executor = Executors.newSingleThreadExecutor()
 
     private var allChannels: List<Channel> = emptyList()
+    private var isCommercialMode = false
 
     private val prefs get() = getSharedPreferences("nexvision", Context.MODE_PRIVATE)
-    private var serverUrl: String get() = prefs.getString("server_url", "") ?: ""
+    private var serverUrl: String
+        get() = prefs.getString("server_url", "") ?: ""
         set(v) { prefs.edit().putString("server_url", v).apply() }
-    private var savedUsername: String get() = prefs.getString("username", "") ?: ""
-        set(v) { prefs.edit().putString("username", v).apply() }
-    private var savedPassword: String get() = prefs.getString("password", "") ?: ""
-        set(v) { prefs.edit().putString("password", v).apply() }
-    private var authToken: String get() = prefs.getString("token", "") ?: ""
-        set(v) { prefs.edit().putString("token", v).apply() }
+    private var roomToken: String
+        get() = prefs.getString("room_token", "") ?: ""
+        set(v) { prefs.edit().putString("room_token", v).apply() }
+    private var roomNumber: String
+        get() = prefs.getString("room_number", "") ?: ""
+        set(v) { prefs.edit().putString("room_number", v).apply() }
+
+    private val unitLabel get() = if (isCommercialMode) "Screen" else "Room"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,16 +45,13 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         setupRecyclerView()
-        setupLoginForm()
+        setupRegisterForm()
         setupSearch()
 
-        if (serverUrl.isNotEmpty() && authToken.isNotEmpty()) {
-            showChannelList()
-            loadChannels()
-        } else if (serverUrl.isNotEmpty()) {
-            showLoginForm()
+        if (serverUrl.isNotEmpty() && roomToken.isNotEmpty()) {
+            loadSettingsThenChannels()
         } else {
-            showLoginForm()
+            showRegisterForm()
         }
     }
 
@@ -63,27 +64,27 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        binding.recyclerView.addItemDecoration(
+            DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
+        )
         binding.recyclerView.adapter = adapter
     }
 
-    private fun setupLoginForm() {
+    private fun setupRegisterForm() {
         binding.etServerUrl.setText(serverUrl)
-        binding.etUsername.setText(savedUsername)
+        binding.etRoomNumber.setText(roomNumber)
+
         binding.btnConnect.setOnClickListener {
             val url = binding.etServerUrl.text.toString().trim()
-            val username = binding.etUsername.text.toString().trim()
-            val password = binding.etPassword.text.toString()
+            val room = binding.etRoomNumber.text.toString().trim()
 
-            if (url.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show()
+            if (url.isEmpty() || room.isEmpty()) {
+                Toast.makeText(this, "Server URL and room number are required", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             serverUrl = url
-            savedUsername = username
-            savedPassword = password
-            doLogin(url, username, password)
+            doRegister(url, room)
         }
     }
 
@@ -91,33 +92,44 @@ class MainActivity : AppCompatActivity() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                val filtered = if (newText.isNullOrBlank()) {
-                    allChannels
-                } else {
-                    allChannels.filter { it.name.contains(newText, ignoreCase = true) }
-                }
+                val filtered = if (newText.isNullOrBlank()) allChannels
+                else allChannels.filter { it.name.contains(newText, ignoreCase = true) }
                 adapter.updateData(filtered)
                 return true
             }
         })
     }
 
-    private fun doLogin(url: String, username: String, password: String) {
+    private fun doRegister(url: String, room: String) {
         showLoading(true)
         executor.execute {
             try {
-                val response = ApiClient.login(url, username, password)
-                authToken = response.token
+                val info = ApiClient.registerRoom(url, room)
+                roomToken = info.token
+                roomNumber = info.room_number
                 runOnUiThread {
                     showLoading(false)
                     showChannelList()
-                    loadChannels()
+                    loadSettingsThenChannels()
                 }
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    Toast.makeText(this, "Login failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, e.message ?: "Registration failed", Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+    }
+
+    private fun loadSettingsThenChannels() {
+        executor.execute {
+            val settings = ApiClient.getSettings(serverUrl)
+            isCommercialMode = settings.deployment_mode == "commercial"
+            runOnUiThread {
+                val label = if (roomNumber.isNotEmpty()) "$unitLabel $roomNumber" else unitLabel
+                supportActionBar?.subtitle = label
+                showChannelList()
+                loadChannels()
             }
         }
     }
@@ -126,7 +138,7 @@ class MainActivity : AppCompatActivity() {
         showLoading(true)
         executor.execute {
             try {
-                val channels = ApiClient.getChannels(serverUrl, authToken)
+                val channels = ApiClient.getChannels(serverUrl, roomToken)
                 allChannels = channels
                 runOnUiThread {
                     showLoading(false)
@@ -136,26 +148,21 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 runOnUiThread {
                     showLoading(false)
-                    // Token may have expired — go back to login
-                    if (e.message?.contains("401") == true || e.message?.contains("403") == true) {
-                        authToken = ""
-                        showLoginForm()
-                        Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this, "Failed to load channels: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
+                    Toast.makeText(
+                        this, "Failed to load channels: ${e.message}", Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
     }
 
-    private fun showLoginForm() {
-        binding.loginForm.visibility = View.VISIBLE
+    private fun showRegisterForm() {
+        binding.registerForm.visibility = View.VISIBLE
         binding.channelListView.visibility = View.GONE
     }
 
     private fun showChannelList() {
-        binding.loginForm.visibility = View.GONE
+        binding.registerForm.visibility = View.GONE
         binding.channelListView.visibility = View.VISIBLE
     }
 
@@ -170,19 +177,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_refresh -> {
+                if (roomToken.isNotEmpty()) loadChannels()
+                true
+            }
             R.id.action_settings -> {
                 showServerConfigDialog()
                 true
             }
-            R.id.action_refresh -> {
-                if (authToken.isNotEmpty()) loadChannels()
-                true
-            }
             R.id.action_logout -> {
-                authToken = ""
+                roomToken = ""
+                roomNumber = ""
                 allChannels = emptyList()
                 adapter.updateData(emptyList())
-                showLoginForm()
+                showRegisterForm()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -192,21 +200,18 @@ class MainActivity : AppCompatActivity() {
     private fun showServerConfigDialog() {
         val dialogBinding = DialogServerConfigBinding.inflate(layoutInflater)
         dialogBinding.etDialogServerUrl.setText(serverUrl)
-        dialogBinding.etDialogUsername.setText(savedUsername)
+        dialogBinding.etDialogRoomNumber.setText(roomNumber)
 
         AlertDialog.Builder(this)
-            .setTitle("Server Configuration")
+            .setTitle("Change $unitLabel")
             .setView(dialogBinding.root)
             .setPositiveButton("Connect") { _, _ ->
                 val url = dialogBinding.etDialogServerUrl.text.toString().trim()
-                val username = dialogBinding.etDialogUsername.text.toString().trim()
-                val password = dialogBinding.etDialogPassword.text.toString()
-                if (url.isNotEmpty() && username.isNotEmpty() && password.isNotEmpty()) {
+                val room = dialogBinding.etDialogRoomNumber.text.toString().trim()
+                if (url.isNotEmpty() && room.isNotEmpty()) {
                     serverUrl = url
-                    savedUsername = username
-                    savedPassword = password
-                    authToken = ""
-                    doLogin(url, username, password)
+                    roomToken = ""
+                    doRegister(url, room)
                 }
             }
             .setNegativeButton("Cancel", null)
