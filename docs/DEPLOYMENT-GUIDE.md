@@ -270,8 +270,8 @@ sudo certbot renew --dry-run
 
 ## 5. SERVICE CONFIGURATION
 
-### 5.1 Log Directory
-
+# 5.1 Log Directory
+```
 # 1. Create the log directory
 sudo mkdir -p /var/log/nexvision
 
@@ -282,6 +282,7 @@ sudo chown -R user:user /var/log/nexvision
 # 3. Create the actual log files just to be safe
 sudo touch /var/log/nexvision/access.log /var/log/nexvision/error.log
 sudo chmod 664 /var/log/nexvision/*.log
+```
 
 ### 5.2 Systemd Service Setup
 ```bash
