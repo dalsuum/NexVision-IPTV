@@ -2794,8 +2794,8 @@ pages.epg = async function() {
       <div class="fg"><label>Interval (min)</label><input id="epg-auto-interval" type="number" min="15" value="${parseInt(m.auto_interval_minutes||360)||360}"></div>
       <div class="fg"><label>Auto Sync</label><select id="epg-auto-enabled" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%"><option value="1" ${(m.auto_enabled?'selected':'')}>On</option><option value="0" ${(!m.auto_enabled?'selected':'')}>Off</option></select></div>
       <button class="btn btn-p" onclick="saveEpgMonitorSettings()">💾 Save</button>
-      <button class="btn btn-g" onclick="syncEpgNow()">⟳ Sync Now</button>
       <button class="btn btn-g" onclick="generateEpgGuideXml()">📄 Generate guide.xml</button>
+      <button class="btn btn-g" onclick="syncEpgNow()">⟳ Sync Now</button>
       <button class="btn btn-g" onclick="pages.epg()">↻ Refresh</button>
     </div>
     <div id="epg-monitor-msg" style="margin-top:8px;font-size:12px;color:var(--text2)">${m.last_message?esc(m.last_message):''}</div>
