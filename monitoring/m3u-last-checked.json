@@ -1,14 +1,19 @@
 {
-  "checked_at": "2026-04-19T05:11:15+00:00",
+  "checked_at": "2026-04-20T05:21:40+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 12009,
+  "total_streams": 12041,
   "tested_streams": 25,
-  "healthy": 22,
-  "unhealthy": 3,
-  "success_rate": 88.0,
+  "healthy": 21,
+  "unhealthy": 4,
+  "success_rate": 84.0,
   "status": "ok",
   "message": "Health check completed",
   "sample_failures": [
+    {
+      "url": "https://123tv-mx1.flex-cdn.net/index.m3u8",
+      "status_code": null,
+      "error": "HTTPSConnectionPool(host='123tv-mx1.flex-cdn.net', port=443): Max retries exceeded with url: /index.m3u8 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1010)')))"
+    },
     {
       "url": "https://cdn-globecast.akamaized.net/live/eds/2m_monde/hls_video_ts_tuhawxpiemz257adfc/2m_monde.m3u8",
       "status_code": 403,
