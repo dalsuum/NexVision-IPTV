@@ -1,6 +1,6 @@
 # NexVision IPTV Platform - Documentation
 
-**System Version**: v8.9 (March 2026)
+**System Version**: v8.10 (April 2026)
 **Platform**: Ubuntu 22.04 LTS
 **Database**: SQLite (4.9MB+)
 **Backend**: Flask (8,895+ lines)

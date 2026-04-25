@@ -31,7 +31,7 @@
   - ✅ Storage initialization
   - ✅ Admin routes registered
   - ✅ Backward compatible
-  - ✅ Auto-backup created (app.py.backup.20260323_100449)
+  - ✅ Auto-backup created (app.py.backup.YYYYMMDD_HHMMSS)
 
 - [x] **setup_multi_storage.py** (250 lines)
   - ✅ Automated integration script
@@ -144,7 +144,7 @@ Documentation:          Complete (11,000+ lines)
 storage_backends.py ............................ 600 lines ✅
 vod_storage_admin.py ........................... 500 lines ✅
 app.py ........................................ MODIFIED ✅
-app.py.backup.20260323_100449 ................. CREATED (rollback) ✅
+app.py.backup.YYYYMMDD_HHMMSS ................. CREATED (rollback) ✅
 .env ........................................... UPDATED ✅
 DOCUMENTATION-INDEX.md ......................... 500+ lines ✅
 EXECUTIVE-SUMMARY.md ........................... 400+ lines ✅
@@ -317,7 +317,7 @@ curl http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/backends
 If needed, revert to original state:
 ```bash
 # Restore backup
-cp app.py.backup.20260323_100449 app.py
+cp app.py.backup.YYYYMMDD_HHMMSS app.py
 
 # Restart
 sudo systemctl restart nexvision

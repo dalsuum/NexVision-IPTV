@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.9
+# NexVision IPTV Platform v8.10
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -454,6 +454,7 @@ cd /opt/nexvision/nexvision-apk
 | **Proxy** | Nginx | Static files, HLS, rate limiting |
 | **Cache** | Redis + Flask-Caching | Hot endpoint caching |
 | **Database** | SQLite (dev) / MySQL (prod) | All application data |
+| **Storage** | Multi-backend (Local, S3, etc.) | Flexible video/image storage |
 | **Video** | FFmpeg | MP4 → HLS transcoding |
 | **Streaming** | HLS (HTTP Live Streaming) | Adaptive bitrate video delivery |
 | **TV Client** | Vanilla JS + CSS | Single-page TV interface |
@@ -461,6 +462,19 @@ cd /opt/nexvision/nexvision-apk
 | **Mobile Player** | libVLC Android 3.6 | APK native HLS player |
 | **Android** | Kotlin + RecyclerView | Android APK native client |
 | **Build** | Gradle 8.4 + Android SDK 34 | APK compilation |
+
+## Core Application Files
+
+| File | Lines | Purpose |
+|---|---|---|
+| `app.py` | ~8000 | Main Flask application with all routes and business logic |
+| `db_mysql.py` | ~500 | MySQL compatibility layer providing sqlite3-like API |
+| `cache_setup.py` | ~200 | Redis caching configuration and utilities |
+| `storage_backends.py` | ~600 | Multi-storage backend implementation (Local, S3, FTP, etc.) |
+| `vod_storage_admin.py` | ~500 | VOD storage administration and management interface |
+| `setup_multi_storage.py` | ~250 | Setup and configuration for multi-storage backends |
+| `wsgi.py` | ~50 | Gunicorn production entry point |
+| `gunicorn.conf.py` | ~100 | Gunicorn worker and server configuration |
 
 ---
 
@@ -471,8 +485,15 @@ cd /opt/nexvision/nexvision-apk
 | **System Operations Book** | [`docs/SOB-System-Operations-Book.md`](docs/SOB-System-Operations-Book.md) | Operations reference, monitoring, incident response |
 | **Deployment Guide** | [`docs/DEPLOYMENT-GUIDE.md`](docs/DEPLOYMENT-GUIDE.md) | Step-by-step production deployment |
 | **Server Hardening** | [`docs/Server-Hardening-Procedure.md`](docs/Server-Hardening-Procedure.md) | Security hardening guide |
+| **Architecture Overview** | [`docs/NEXVISION-ARCHITECTURE.md`](docs/NEXVISION-ARCHITECTURE.md) | System architecture deep dive |
+| **Storage Implementation** | [`docs/STORAGE-IMPLEMENTATION-README.md`](docs/STORAGE-IMPLEMENTATION-README.md) | Multi-storage backend details |
+| **Storage Integration** | [`docs/STORAGE-INTEGRATION-GUIDE.md`](docs/STORAGE-INTEGRATION-GUIDE.md) | Storage backend setup and configuration |
+| **Storage Quick Reference** | [`docs/STORAGE-QUICK-REFERENCE.md`](docs/STORAGE-QUICK-REFERENCE.md) | Storage backend comparison |
+| **VOD Server Architecture** | [`docs/VOD-SERVER-ARCHITECTURE.md`](docs/VOD-SERVER-ARCHITECTURE.md) | VOD streaming architecture |
+| **EPG Service** | [`docs/EPG-SERVICE.md`](docs/EPG-SERVICE.md) | Electronic Program Guide integration |
+| **App Integration Code** | [`docs/APP-INTEGRATION-CODE.md`](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
 | **Architecture Diagram** | [`docs/nexvision-architecture.drawio`](docs/nexvision-architecture.drawio) | Full system architecture (draw.io) |
-| **VOD Streaming Diagram** | [`docs/vod-streaming-diagram.drawio`](docs/vod-streaming-diagram.drawio) | HLS streaming flow (draw.io) |
+| **VOD Streaming Diagram** | [`docs/vod-server-architecture.drawio`](docs/vod-server-architecture.drawio) | HLS streaming flow (draw.io) |
 
 ---
 
@@ -484,6 +505,9 @@ nexvision-iptv/
 ├── app.py                    # Main Flask application (~8000 lines)
 ├── db_mysql.py               # MySQL compatibility wrapper (sqlite3 API)
 ├── cache_setup.py            # Redis/Flask-Caching configuration
+├── storage_backends.py       # Multi-storage backend implementation
+├── vod_storage_admin.py      # VOD storage administration interface
+├── setup_multi_storage.py    # Multi-storage setup and configuration
 ├── wsgi.py                   # Gunicorn production entry point
 ├── gunicorn.conf.py          # Gunicorn worker configuration
 ├── requirements_prod.txt     # Production Python dependencies
@@ -500,28 +524,27 @@ nexvision-iptv/
 ├── nginx/
 │   └── nexvision.conf        # Nginx virtual host configuration
 │
-├── ffmpeg/
-│   └── bin/                  # FFmpeg binaries (Windows dev)
-│       ├── ffmpeg.exe
-│       ├── ffprobe.exe
-│       └── *.dll
+├── scripts/
+│   ├── check_m3u_health.py   # M3U playlist health monitoring
+│   └── ...                   # Other utility scripts
 │
 ├── videos/                   # Source MP4 video files
-├── hls/                      # Transcoded HLS segments
+├── hls/                      # Transcoded HLS segments (generated)
 │   └── {video_id}/
 │       ├── master.m3u8
 │       ├── 480p/
 │       ├── 720p/
 │       └── 1080p/
-├── thumbnails/               # Auto-generated VOD cover images
+├── thumbnails/               # Auto-generated VOD cover images (generated)
 ├── uploads/                  # Admin-uploaded images (slides, logos)
 │
 ├── docs/
 │   ├── SOB-System-Operations-Book.md
-│   ├── Deployment-Procedure.md
+│   ├── DEPLOYMENT-GUIDE.md
 │   ├── Server-Hardening-Procedure.md
 │   ├── nexvision-architecture.drawio
-│   └── vod-streaming-diagram.drawio
+│   ├── vod-server-architecture.drawio
+│   └── ...                   # Additional documentation files
 │
 └── nexvision-apk/            # Android APK project (Kotlin, minSdk 21)
     ├── settings.gradle

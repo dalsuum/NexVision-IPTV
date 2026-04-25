@@ -32,7 +32,7 @@ All code written, integrated, tested, and validated. **Zero bugs. Ready to deplo
 - Seamlessly integrated storage abstraction
 - All VOD routes now multi-backend aware
 - Admin dashboard accessible at `/admin/storage`
-- Automatic backup created (app.py.backup.20260323_100449)
+- Automatic backup created (app.py.backup.YYYYMMDD_HHMMSS)
 
 ---
 
@@ -113,7 +113,7 @@ curl -X POST http://YOUR_SERVER_IP_HERE:5000/api/admin/storage/switch \
 | **Documentation** | 11,000+ lines |
 | **Test Cases Passed** | 12/12 ✅ |
 | **Production Ready** | YES ✅ |
-| **Backup Created** | app.py.backup.20260323_100449 |
+| **Backup Created** | app.py.backup.YYYYMMDD_HHMMSS |
 | **Rollback Capability** | Instantaneous |
 | **Deployment Time** | <5 minutes |
 
@@ -190,7 +190,7 @@ LocalStorage, NASStorage, S3Storage, AzureStorage, GCSStorage
 - `/opt/nexvision/.env` (configuration template added)
 
 **Backup Created:**
-- `/opt/nexvision/app.py.backup.20260323_100449` (rollback point)
+- `/opt/nexvision/app.py.backup.YYYYMMDD_HHMMSS` (rollback point)
 
 ---
 
@@ -236,7 +236,7 @@ LocalStorage, NASStorage, S3Storage, AzureStorage, GCSStorage
 
 ```bash
 # Restore from backup (one command)
-cp /opt/nexvision/app.py.backup.20260323_100449 /opt/nexvision/app.py
+cp /opt/nexvision/app.py.backup.YYYYMMDD_HHMMSS /opt/nexvision/app.py
 
 # Restart app
 sudo systemctl restart nexvision
