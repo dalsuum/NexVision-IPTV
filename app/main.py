@@ -25,8 +25,8 @@ import sqlite3                          # kept for VOD SQLite fallback only
 # ── Production: MySQL + Redis ─────────────────────────────────────────────────
 _USE_MYSQL = os.getenv('USE_MYSQL', '0') == '1'
 if _USE_MYSQL:
-    from db_mysql import get_mysql_db, get_vod_mysql_db, add_column_if_missing
-    from cache_setup import cache, init_cache, TTL_SETTINGS, TTL_CHANNELS, \
+    from ..db.db_mysql import get_mysql_db, get_vod_mysql_db, add_column_if_missing
+    from ..db.cache_setup import cache, init_cache, TTL_SETTINGS, TTL_CHANNELS, \
         TTL_VOD, TTL_NAV, TTL_SLIDES, TTL_RSS, \
         invalidate_settings, invalidate_channels, invalidate_vod, \
         invalidate_nav, invalidate_slides, invalidate_rss
@@ -43,12 +43,12 @@ from flask import (
     Response, stream_with_context, abort, make_response
 )
 from flask_cors import CORS
-from vod_storage_admin import StorageConfig, STORAGE_ADMIN_HTML, create_storage_admin_routes
+from ..db.vod_storage_admin import StorageConfig, STORAGE_ADMIN_HTML, create_storage_admin_routes
 
 # Resolve paths relative to this file, so it works regardless of working directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ADMIN_DIR = os.path.join(BASE_DIR, 'admin')
-TV_DIR    = os.path.join(BASE_DIR, 'tv')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ADMIN_DIR = os.path.join(BASE_DIR, 'web', 'admin')
+TV_DIR = os.path.join(BASE_DIR, 'web', 'tv')
 DB_PATH   = os.path.join(BASE_DIR, 'nexvision.db')
 
 app = Flask(__name__, static_folder=ADMIN_DIR, static_url_path='/admin')

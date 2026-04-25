@@ -123,7 +123,7 @@ pip install flask werkzeug feedparser requests
 
 ### 2. Run the Server
 ```bash
-python app.py
+python run.py
 ```
 
 ### 3. Access the Interfaces
@@ -465,16 +465,17 @@ cd /opt/nexvision/nexvision-apk
 
 ## Core Application Files
 
-| File | Lines | Purpose |
-|---|---|---|
-| `app.py` | ~8000 | Main Flask application with all routes and business logic |
-| `db_mysql.py` | ~500 | MySQL compatibility layer providing sqlite3-like API |
-| `cache_setup.py` | ~200 | Redis caching configuration and utilities |
-| `storage_backends.py` | ~600 | Multi-storage backend implementation (Local, S3, FTP, etc.) |
-| `vod_storage_admin.py` | ~500 | VOD storage administration and management interface |
-| `setup_multi_storage.py` | ~250 | Setup and configuration for multi-storage backends |
-| `wsgi.py` | ~50 | Gunicorn production entry point |
-| `gunicorn.conf.py` | ~100 | Gunicorn worker and server configuration |
+| File | Layer | Lines | Purpose |
+|---|---|---|---|
+| `web/tv/index.html` | Web | ~500 | Guest TV client interface |
+| `web/admin/index.html` | Web | ~2000 | Admin panel single-page app |
+| `app/main.py` | App | ~8000 | Main Flask application with all routes and business logic |
+| `app/wsgi.py` | App | ~50 | Gunicorn production entry point |
+| `app/gunicorn.conf.py` | App | ~100 | Gunicorn worker and server configuration |
+| `db/db_mysql.py` | DB | ~500 | MySQL compatibility layer providing sqlite3-like API |
+| `db/cache_setup.py` | DB | ~200 | Redis caching configuration and utilities |
+| `db/storage_backends.py` | DB | ~600 | Multi-storage backend implementation (Local, S3, FTP, etc.) |
+| `db/vod_storage_admin.py` | DB | ~500 | VOD storage administration and management interface |
 
 ---
 
@@ -502,52 +503,41 @@ cd /opt/nexvision/nexvision-apk
 ```
 nexvision-iptv/
 │
-├── app.py                    # Main Flask application (~8000 lines)
-├── db_mysql.py               # MySQL compatibility wrapper (sqlite3 API)
-├── cache_setup.py            # Redis/Flask-Caching configuration
-├── storage_backends.py       # Multi-storage backend implementation
-├── vod_storage_admin.py      # VOD storage administration interface
-├── setup_multi_storage.py    # Multi-storage setup and configuration
-├── wsgi.py                   # Gunicorn production entry point
-├── gunicorn.conf.py          # Gunicorn worker configuration
+├── run.py                    # Development entry point
 ├── requirements_prod.txt     # Production Python dependencies
 ├── .env.example              # Environment variables template
 ├── nexvision.db              # Main SQLite database (dev only)
 ├── vod.db                    # VOD SQLite database (dev only)
 │
-├── tv/
-│   └── index.html            # Guest TV client (single-page app)
+├── web/                      # Frontend layer (static files)
+│   ├── tv/
+│   │   └── index.html        # Guest TV client
+│   └── admin/
+│       └── index.html        # Admin panel
 │
-├── admin/
-│   └── index.html            # Staff admin panel (single-page app)
+├── app/                      # Application layer (Flask API)
+│   ├── __init__.py
+│   ├── main.py               # Main Flask application
+│   ├── wsgi.py               # Gunicorn entry point
+│   └── gunicorn.conf.py      # Gunicorn configuration
 │
-├── nginx/
-│   └── nexvision.conf        # Nginx virtual host configuration
-│
-├── scripts/
-│   ├── check_m3u_health.py   # M3U playlist health monitoring
-│   └── ...                   # Other utility scripts
+├── db/                       # Database layer
+│   ├── __init__.py
+│   ├── db_mysql.py           # MySQL compatibility wrapper
+│   ├── cache_setup.py        # Redis caching configuration
+│   ├── storage_backends.py   # Multi-storage backend implementation
+│   └── vod_storage_admin.py  # VOD storage administration
 │
 ├── videos/                   # Source MP4 video files
 ├── hls/                      # Transcoded HLS segments (generated)
-│   └── {video_id}/
-│       ├── master.m3u8
-│       ├── 480p/
-│       ├── 720p/
-│       └── 1080p/
-├── thumbnails/               # Auto-generated VOD cover images (generated)
-├── uploads/                  # Admin-uploaded images (slides, logos)
-│
-├── docs/
-│   ├── SOB-System-Operations-Book.md
-│   ├── DEPLOYMENT-GUIDE.md
-│   ├── Server-Hardening-Procedure.md
-│   ├── nexvision-architecture.drawio
-│   ├── vod-server-architecture.drawio
-│   └── ...                   # Additional documentation files
-│
-└── nexvision-apk/            # Android APK project (Kotlin, minSdk 21)
-    ├── settings.gradle
+├── thumbnails/               # VOD thumbnails (generated)
+├── uploads/                  # Admin-uploaded images
+├── nginx/
+│   └── nexvision.conf        # Nginx configuration
+├── scripts/                  # Utility scripts
+├── docs/                     # Documentation
+└── nexvision-apk/            # Android APK source
+```
     ├── build.gradle
     └── app/src/main/
         ├── AndroidManifest.xml
