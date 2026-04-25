@@ -1,33 +1,18 @@
 {
-  "checked_at": "2026-04-01T08:19:56+00:00",
+  "checked_at": "2026-04-25T04:44:12+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 11931,
+  "total_streams": 12275,
   "tested_streams": 25,
-  "healthy": 20,
-  "unhealthy": 5,
-  "success_rate": 80.0,
+  "healthy": 23,
+  "unhealthy": 2,
+  "success_rate": 92.0,
   "status": "ok",
   "message": "Health check completed",
   "sample_failures": [
     {
-      "url": "https://mumt03.tangotv.in/1SNEWS/index.m3u8",
-      "status_code": 403,
-      "error": null
-    },
-    {
       "url": "https://cdn-globecast.akamaized.net/live/eds/2m_monde/hls_video_ts_tuhawxpiemz257adfc/2m_monde.m3u8",
       "status_code": 403,
       "error": null
-    },
-    {
-      "url": "http://69.64.57.208/2stv/playlist.m3u8",
-      "status_code": 403,
-      "error": null
-    },
-    {
-      "url": "http://31.148.48.15/2x2/index.m3u8",
-      "status_code": null,
-      "error": "HTTPConnectionPool(host='31.148.48.15', port=80): Max retries exceeded with url: /2x2/index.m3u8 (Caused by ConnectTimeoutError(<HTTPConnection(host='31.148.48.15', port=80) at 0x7f3afaea72c0>, 'Connection to 31.148.48.15 timed out. (connect timeout=8)'))"
     },
     {
       "url": "https://3abn.bozztv.com/3abn/3abn_uganda_live/index.m3u8",
