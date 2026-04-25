@@ -16,6 +16,7 @@
 
 ### 🚀 Deployment & Installation
 - **[DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** - Complete deployment guide with multi-storage support
+- **[ORACLE-CLOUD-IMPLEMENTATION.md](ORACLE-CLOUD-IMPLEMENTATION.md)** - Oracle Cloud Infrastructure deployment plan
 - **[Server-Hardening-Procedure.md](Server-Hardening-Procedure.md)** - Security hardening checklist
 
 ### 🏗️ Multi-Storage System
