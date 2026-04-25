@@ -15,7 +15,7 @@ except ImportError:
 
 # ── Import and initialise the Flask app ──────────────────────────────────────
 from .main import app, init_db, migrate_db, get_db, vod_init_db
-from ..db.cache_setup import init_cache
+from db.cache_setup import init_cache
 
 # Initialise databases on first worker startup
 init_db()

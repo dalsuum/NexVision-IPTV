@@ -158,7 +158,7 @@ def create_storage_admin_routes(app, require_admin=None):
         create_storage_admin_routes(app, require_admin=require_admin_decorator)
     """
     
-    from storage_backends import get_storage_backend
+    from .storage_backends import get_storage_backend
     
     def admin_required(f):
         """Wrapper for admin-only routes (if provided)"""
