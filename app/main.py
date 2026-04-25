@@ -5319,20 +5319,6 @@ body[data-theme='light']{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#eef2fb;--bg4:#dfe5f2;
 </style>
 </head>
 <body>
-<header style="display:flex;align-items:center;gap:20px">
-    <div class="logo" id="vod-public-logo">NexVision <span>VOD</span></div>
-    <div class="hdr-badge" id="vod-public-badge">STREAM SERVER</div>
-  <nav class="topnav">
-    <a href="/vod" class="active">VOD</a>
-    <a href="/vod/admin">Admin</a>
-    <a href="/vod/admin/storage">Storage</a>
-    <div class="hdr-right">
-      <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><span id="theme-icon">🌙</span> Dark</button>
-      <div style="font-size:12px;color:var(--muted)" id="hdr-status">Loading...</div>
-    </div>
-  </nav>
-</header>
-
 <div class="container">
   <div class="stats-grid" id="stats-grid">
     <div class="stat-card"><div class="stat-val" id="st-total">-</div><div class="stat-lbl">Total Videos</div></div>

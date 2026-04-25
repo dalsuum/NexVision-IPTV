@@ -73,6 +73,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tb-ref:hover{color:var(--text)}
 .tb-theme{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;transition:.15s;font-family:'DM Mono',monospace;letter-spacing:.6px}
 .tb-theme:hover{color:var(--text);border-color:var(--gold)}
+.tb-vod{background:var(--bg3);border:1px solid var(--border2);color:var(--purple);border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;transition:.15s;font-family:'DM Mono',monospace;letter-spacing:.6px}
+.tb-vod:hover{background:rgba(148,119,255,0.12);border-color:var(--purple);color:var(--text)}
 .ri{display:inline-block}.tb-ref.spin .ri{animation:spn .6s linear infinite}
 @keyframes spn{to{transform:rotate(360deg)}}
 .content{padding:24px 28px;flex:1}
@@ -283,6 +285,7 @@ tr.sel td{background:rgba(212,168,67,.05)}
       <div class="ni" id="ni-channels"  onclick="go('channels')"><span class="ic">📺</span>TV Channels<span class="bc" id="cnt-channels">—</span></div>
       <div class="ni" id="ni-groups"    onclick="go('groups')"><span class="ic">⊞</span>Media Groups</div>
       <div class="sb-sec">Content</div>
+      <div class="ni" id="ni-vod-manager" onclick="go('vod-manager')"><span class="ic">🎬</span>VOD Manager</div>
       <div class="ni" id="ni-vod"       onclick="go('vod')"><span class="ic">🎬</span>Video on Demand<span class="bc" id="cnt-vod">—</span></div>
       <div class="ni" id="ni-radio"     onclick="go('radio')"><span class="ic">📻</span>Web Radio<span class="bc" id="cnt-radio">—</span></div>
       <div class="ni" id="ni-pages"     onclick="go('pages')"><span class="ic">📄</span>Content Pages</div>
@@ -321,7 +324,6 @@ tr.sel td{background:rgba(212,168,67,.05)}
       <div class="tb-right">
         <div class="ldot"></div>
         <div class="tb-rooms" id="tb-rooms">Loading...</div>
-<button class="tb-vod" onclick="window.open('/vod/', '_blank')" title="Open VOD Dashboard"><span class="ri">🎬</span> VOD</button>
 <button class="tb-theme" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><span id="theme-icon">🌙</span> Dark</button>
 <button class="tb-ref" onclick="refreshCurrent()"><span class="ri">↻</span> Refresh</button>
       </div>
@@ -494,7 +496,7 @@ async function updateCounts(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vod:'Video on Demand',"vod-manager":'VOD Manager',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
 async function go(page){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   const ni=document.getElementById('ni-'+page);if(ni)ni.classList.add('on');
@@ -833,6 +835,13 @@ async vod(){
     <tbody id="vod-tbody">${movies.map(m=>vodRow(m)).join('')}</tbody>
   </table></div>`;
   initBulk('vod',null,async()=>{const ids=getSelected('vod');if(!ids.length)return;if(!confirm('Delete '+ids.length+' movies?'))return;const r=await req('/vod/bulk-delete',{method:'POST',body:JSON.stringify({ids})});if(r?.ok){toast('🗑 '+r.deleted+' movies deleted');await pages.vod();}});
+},
+
+async ['vod-manager'](){
+  document.getElementById('content').innerHTML=`
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:calc(100vh - 210px)">
+    <iframe src="/vod/" title="VOD Manager" style="width:100%;height:calc(100vh - 210px);border:none;display:block;"></iframe>
+  </div>`;
 },
 
 // ── PACKAGES ─────────────────────────────────────────────────────────────────
