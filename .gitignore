@@ -50,6 +50,32 @@ yarn.lock
 # Environment variables (NEVER commit .env files with secrets!)
 .env
 .env.local
+.env.production
+
+# Backup files
+*.backup
+app.py.pre_bugfix
+backups/
+
+# Temp and cache
+temp/
+.cache/
+__pycache__/
+*.pyc
+
+# Unnecessary tools
+git-secrets/
+
+# Empty data directories
+hls/
+thumbnails/
+videos/
+local_backups/
+
+# Editor specific
+.selected_editor
+.env
+.env.local
 .env.*.local
 .env.swp
 
