@@ -25,8 +25,28 @@ VOD_DB_CONFIG = {
 }
 
 
+_INTERVAL_UNIT_MAP = {
+    'microseconds': 'MICROSECOND', 'microsecond': 'MICROSECOND',
+    'seconds': 'SECOND', 'second': 'SECOND',
+    'minutes': 'MINUTE', 'minute': 'MINUTE',
+    'hours': 'HOUR', 'hour': 'HOUR',
+    'days': 'DAY', 'day': 'DAY',
+    'weeks': 'WEEK', 'week': 'WEEK',
+    'months': 'MONTH', 'month': 'MONTH',
+    'quarters': 'QUARTER', 'quarter': 'QUARTER',
+    'years': 'YEAR', 'year': 'YEAR',
+}
+
+def _sqlite_interval_to_mysql(m):
+    parts = m.group(1).strip().split()
+    if len(parts) == 2:
+        amount, unit = parts
+        mysql_unit = _INTERVAL_UNIT_MAP.get(unit.lower(), unit.upper())
+        return f"DATE_ADD(NOW(), INTERVAL {amount} {mysql_unit})"
+    return f"DATE_ADD(NOW(), INTERVAL {m.group(1)})"
+
+
 def _adapt_sql(sql):
-    print("DEBUG: _adapt_sql called")
     stripped = sql.strip()
     if stripped.upper().startswith('PRAGMA'):
         return 'SELECT 1'
@@ -34,7 +54,7 @@ def _adapt_sql(sql):
     sql = sql.replace('?', '%s')
 
     sql = re.sub(r"datetime\('now'\)", 'NOW()', sql, flags=re.IGNORECASE)
-    sql = re.sub(r"datetime\('now',\s*'([^']+)'\)", r'DATE_ADD(NOW(), INTERVAL \1)', sql, flags=re.IGNORECASE)
+    sql = re.sub(r"datetime\('now',\s*'([^']+)'\)", _sqlite_interval_to_mysql, sql, flags=re.IGNORECASE)
     sql = re.sub(r"date\('now'\)", 'CURDATE()', sql, flags=re.IGNORECASE)
     sql = re.sub(
         r"\s*strftime\('([^']+)',\s*([^)]+)\)",
@@ -156,9 +176,6 @@ class MySQLConnection:
     def __init__(self, conn):
         self._conn = conn
         self._last_result = None
-
-    def cursor(self):
-        return self._conn.cursor()
 
     def execute(self, sql, params=()):
         sql = _adapt_sql(sql)
