@@ -58,6 +58,7 @@ def parse_guide(xml_data):
 
 def import_to_db(programmes):
     """Import EPG data into NexVision database"""
+    conn = None
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
@@ -73,7 +74,7 @@ def import_to_db(programmes):
             # Find channel by tvg_id (EPG channel ID)
             cursor.execute('SELECT id FROM channels WHERE tvg_id = ?', (prog['channel_id'],))
             result = cursor.fetchone()
-            
+
             if result:
                 channel_id = result['id']
                 try:
@@ -89,7 +90,7 @@ def import_to_db(programmes):
                 unmatched += 1
 
         conn.commit()
-        
+
         # Update settings
         cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
                       ('epg_last_sync_status', 'ok'))
@@ -99,15 +100,16 @@ def import_to_db(programmes):
                       ('epg_last_unmatched', str(unmatched)))
         cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
                       ('epg_last_sync_at', datetime.now().isoformat()))
-        
+
         conn.commit()
-        conn.close()
-        
         print(f"  Imported: {imported:,}, Unmatched: {unmatched:,}")
         return imported, unmatched
     except Exception as e:
         print(f"  ERROR importing: {e}", file=sys.stderr)
         return 0, 0
+    finally:
+        if conn:
+            conn.close()
 
 def main():
     """Main EPG import workflow"""

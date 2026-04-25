@@ -47,7 +47,6 @@ def invalidate_settings():
     cache.delete('nv:settings_stamp')
 
 def invalidate_channels():
-    cache.delete_memoized_all('get_channels')   # clears all arg variants
     cache.delete('nv:channels')
 
 def invalidate_vod():
