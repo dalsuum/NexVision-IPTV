@@ -76,6 +76,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ri{display:inline-block}.tb-ref.spin .ri{animation:spn .6s linear infinite}
 @keyframes spn{to{transform:rotate(360deg)}}
 .content{padding:24px 28px;flex:1}
+.embed-shell{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.embed-frame{width:100%;height:calc(100vh - 180px);border:0;background:#000}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden}
 .sc::before{content:'';position:absolute;top:-30px;right:-20px;width:90px;height:90px;border-radius:50%;opacity:.06}
@@ -283,6 +285,7 @@ tr.sel td{background:rgba(212,168,67,.05)}
       <div class="ni" id="ni-channels"  onclick="go('channels')"><span class="ic">📺</span>TV Channels<span class="bc" id="cnt-channels">—</span></div>
       <div class="ni" id="ni-groups"    onclick="go('groups')"><span class="ic">⊞</span>Media Groups</div>
       <div class="sb-sec">Content</div>
+      <div class="ni" id="ni-vod-manager" onclick="go('vodManager')"><span class="ic">🎛️</span>VOD Manager</div>
       <div class="ni" id="ni-vod"       onclick="go('vod')"><span class="ic">🎬</span>Video on Demand<span class="bc" id="cnt-vod">—</span></div>
       <div class="ni" id="ni-radio"     onclick="go('radio')"><span class="ic">📻</span>Web Radio<span class="bc" id="cnt-radio">—</span></div>
       <div class="ni" id="ni-pages"     onclick="go('pages')"><span class="ic">📄</span>Content Pages</div>
@@ -321,7 +324,6 @@ tr.sel td{background:rgba(212,168,67,.05)}
       <div class="tb-right">
         <div class="ldot"></div>
         <div class="tb-rooms" id="tb-rooms">Loading...</div>
-<button class="tb-vod" onclick="window.open('/vod/', '_blank')" title="Open VOD Dashboard"><span class="ri">🎬</span> VOD</button>
 <button class="tb-theme" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><span id="theme-icon">🌙</span> Dark</button>
 <button class="tb-ref" onclick="refreshCurrent()"><span class="ri">↻</span> Refresh</button>
       </div>
@@ -494,8 +496,9 @@ async function updateCounts(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
 async function go(page){
+  document.body.classList.remove('vod-embed-mode');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   const ni=document.getElementById('ni-'+page);if(ni)ni.classList.add('on');
   curPage=page;document.getElementById('tb-title').textContent=TITLES[page]||page;
@@ -815,6 +818,14 @@ async groups(){
     <td><div class="tda"><button class="btn btn-g btn-sm" onclick="eGroup(${g.id})">Edit</button>${g.name!=='All Channels'?'<button class="btn btn-d btn-sm" onclick="dGroup('+g.id+',\''+esc(g.name)+'\')">Del</button>':''}</div></td></tr>`).join('')}
     </tbody></table></div>`;
   initBulk('grp',null,async()=>{const ids=getSelected('grp');if(!ids.length)return;if(!confirm('Delete '+ids.length+' groups?'))return;const r=await req('/media-groups/bulk-delete',{method:'POST',body:JSON.stringify({ids})});if(r?.ok){toast('🗑 '+r.deleted+' groups deleted');await pages.groups();}});
+},
+
+// ── VOD ───────────────────────────────────────────────────────────────────────
+async vodManager(){
+  document.getElementById('content').innerHTML=`
+  <div class="embed-shell">
+    <iframe class="embed-frame" src="/vod/?embedded=1&inframe=1&_ts=${Date.now()}" title="VOD Manager" loading="lazy" referrerpolicy="same-origin"></iframe>
+  </div>`;
 },
 
 // ── VOD ───────────────────────────────────────────────────────────────────────

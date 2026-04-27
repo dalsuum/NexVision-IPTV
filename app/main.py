@@ -54,6 +54,7 @@ DB_PATH   = os.path.join(BASE_DIR, 'nexvision.db')
 app = Flask(__name__, static_folder=ADMIN_DIR, static_url_path='/admin')
 CORS(app)
 app.config['SECRET_KEY'] = 'nexvision-iptv-secure-secret-key-2024-x7k9'
+APP_VERSION = os.getenv('NEXVISION_VERSION', '8.10')
 
 
 # Online threshold: a room is considered online if seen within this many minutes
@@ -5191,7 +5192,7 @@ def vod_health():
     return jsonify({
         'status':  'ok',
         'service': 'NexVision VOD Stream Server',
-        'version': '1.0.0',
+        'version': APP_VERSION,
         'host':    host,
         'api':     host + '/vod/api/',
         'ffmpeg':  _vod_check_ffmpeg(),
@@ -5236,7 +5237,21 @@ def _vod_uptime() -> str:
 @app.route('/vod/')
 @app.route('/vod')
 def vod_dashboard():
-    resp = make_response(_render_vod_ui())
+    embedded = (
+        request.args.get('embedded') == '1'
+        or request.args.get('inframe') == '1'
+        or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
+    )
+    html = _render_vod_ui()
+    if embedded:
+        # Strip the VOD page header entirely when rendered inside admin iframe.
+        html = re.sub(
+            r'<header style="display:flex;align-items:center;gap:20px">.*?</header>\s*',
+            '',
+            html,
+            flags=re.DOTALL
+        )
+    resp = make_response(html)
     resp.headers['Content-Type']  = 'text/html; charset=utf-8'
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     resp.headers['Pragma']        = 'no-cache'
@@ -5252,6 +5267,13 @@ def _render_vod_ui() -> str:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NexVision VOD</title>
+<script>
+(function () {
+  if (new URLSearchParams(window.location.search).get('embedded') === '1') {
+    document.documentElement.classList.add('embedded-mode');
+  }
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#06060a;--bg2:#0d0d14;--bg3:#131320;--bg4:#1a1a2e;--gold:#c9a84c;--gold2:#e8c56a;--gold3:rgba(201,168,76,.15);--white:#f0f0f8;--muted:rgba(240,240,248,.35);--dimmed:rgba(240,240,248,.6);--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);--red:#e84855;--green:#52d98e;--blue:#4a9eff}
@@ -5315,13 +5337,13 @@ textarea{resize:vertical;min-height:80px}
 .hdr-right{display:flex;gap:10px;margin-left:auto;align-items:center}
 .theme-toggle{padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--dimmed);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .theme-toggle:hover{color:var(--white);border-color:var(--gold)}
+html.embedded-mode header{display:none}
+html.embedded-mode .container{max-width:none;padding:20px}
 body[data-theme='light']{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#eef2fb;--bg4:#dfe5f2;--gold:#9a7220;--gold2:#b78929;--gold3:rgba(154,114,32,.12);--white:#1a2233;--muted:rgba(26,34,51,.45);--dimmed:rgba(26,34,51,.7);--border:rgba(12,22,38,.08);--border2:rgba(12,22,38,.16);--red:#c23a48;--green:#2f8e5f;--blue:#2a74c9}
 </style>
 </head>
 <body>
 <header style="display:flex;align-items:center;gap:20px">
-    <div class="logo" id="vod-public-logo">NexVision <span>VOD</span></div>
-    <div class="hdr-badge" id="vod-public-badge">STREAM SERVER</div>
   <nav class="topnav">
     <a href="/vod" class="active">VOD</a>
     <a href="/vod/admin">Admin</a>
@@ -5481,9 +5503,16 @@ body[data-theme='light']{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#eef2fb;--bg4:#dfe5f2;
 const API = window.location.origin + '/vod/api';
 const APIKEY_LS = 'vod_api_key';
 const THEME_KEY = 'nv_theme_mode';
+const EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
 let _searchTimer = null;
 let _vod_public_settings = {};
 let _vod_public_config_stamp = null;
+
+if (EMBEDDED_MODE) {
+    document.body.classList.add('embedded-mode');
+    const hdr = document.querySelector('header');
+    if (hdr) hdr.remove();
+}
 
 function applyTheme(mode) {
     const m = (mode === 'light') ? 'light' : 'dark';
@@ -6324,6 +6353,18 @@ def vod_admin_hub():
     </body>
     </html>
     """
+    embedded = (
+        request.args.get('embedded') == '1'
+        or request.args.get('inframe') == '1'
+        or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
+    )
+    if embedded:
+        html = re.sub(
+            r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
+            '',
+            html,
+            flags=re.DOTALL
+        )
     resp = make_response(html)
     resp.headers['Content-Type'] = 'text/html; charset=utf-8'
     resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -6596,6 +6637,18 @@ def vod_admin_storage():
     html = html.replace('__STORAGE_ADMIN_HTML__', STORAGE_ADMIN_HTML)
     html = html.replace('__QUICK_SETUP_BACKENDS__', json.dumps(quick_setup_backends))
     html = html.replace('__QUICK_SETUP_CURRENT__', json.dumps(current_backend))
+    embedded = (
+        request.args.get('embedded') == '1'
+        or request.args.get('inframe') == '1'
+        or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
+    )
+    if embedded:
+        html = re.sub(
+            r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
+            '',
+            html,
+            flags=re.DOTALL
+        )
     resp = make_response(html)
     resp.headers['Content-Type'] = 'text/html; charset=utf-8'
     resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
