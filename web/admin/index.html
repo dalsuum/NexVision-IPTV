@@ -2850,7 +2850,7 @@ pages.epg = async function() {
       <div class="ibox"><div style="font-size:11px;color:var(--text2)">Last Sync</div><div style="margin-top:6px;font-weight:700">${m.last_sync_at?esc(m.last_sync_at):'Never'}</div><div style="font-size:11px;color:var(--text3)">${m.last_duration_ms?('Duration: '+m.last_duration_ms+' ms'):''}</div></div>
     </div>
     <div class="fgrid" style="grid-template-columns:2fr 130px 100px auto auto auto;align-items:end">
-      <div class="fg fcol"><label>EPG Source URL (XMLTV/CSV)</label><input id="epg-auto-url" value="${esc(m.auto_url||'')}" placeholder="https://your-provider.example/guide.xml or local://iptv-org-epg"></div>
+      <div class="fg fcol"><label>EPG Source URL (XMLTV — from your IPTV provider)</label><input id="epg-auto-url" value="${esc(m.auto_url||'')}" placeholder="http://your-iptv-provider.com/epg.xml"></div>
       <div class="fg"><label>Interval (min)</label><input id="epg-auto-interval" type="number" min="15" value="${parseInt(m.auto_interval_minutes||360)||360}"></div>
       <div class="fg"><label>Auto Sync</label><select id="epg-auto-enabled" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%"><option value="1" ${(m.auto_enabled?'selected':'')}>On</option><option value="0" ${(!m.auto_enabled?'selected':'')}>Off</option></select></div>
       <button class="btn btn-p" onclick="saveEpgMonitorSettings()">💾 Save</button>
@@ -3080,22 +3080,12 @@ async function syncEpgNow(){
   const url = document.getElementById('epg-auto-url').value.trim();
   const msg = document.getElementById('epg-monitor-msg');
   if(!url){
-    msg.innerHTML='<span style="color:var(--red)">Please set EPG Source URL first.</span>';
+    msg.innerHTML='<span style="color:var(--red)">Please enter an external XMLTV EPG URL from your IPTV provider.</span>';
     return;
   }
-
-  // Preflight local/generated guide feeds to avoid noisy 400 when there are no programmes yet.
-  if(url.includes('/guide.xml') || url.startsWith('local://')){
-    let probeUrl = url;
-    if(url.startsWith('local://')) probeUrl = window.location.origin + '/guide.xml';
-    try{
-      const resp = await fetch(probeUrl, {cache:'no-store'});
-      const txt = await resp.text();
-      if(resp.ok && !txt.includes('<programme')){
-        msg.innerHTML='<span style="color:var(--red)">Guide is reachable but has no programme entries yet. Import external EPG first, then generate guide.xml again.</span>';
-        return;
-      }
-    }catch(_e){}
+  if(url === 'http://localhost:3000/guide.xml' || url === 'http://127.0.0.1:3000/guide.xml'){
+    msg.innerHTML='<span style="color:var(--red)">⚠️ That URL is the local output file — enter your IPTV provider\'s XMLTV EPG URL instead (e.g. http://your-provider.com/epg.xml)</span>';
+    return;
   }
 
   msg.innerHTML='Syncing EPG...';
@@ -3113,7 +3103,7 @@ async function generateEpgGuideXml(){
     msg.innerHTML='<span style="color:var(--red)">Generate failed: '+esc(r?.error||'unknown error')+'</span>';
     return;
   }
-  msg.innerHTML='<span style="color:var(--green)">✅ Generated '+esc(r.path)+' ('+fmtNum(r.size_bytes||0)+' bytes). Use URL: http://172.17.13.50:3000/guide.xml</span>';
+  msg.innerHTML='<span style="color:var(--green)">✅ Generated '+esc(r.path)+' ('+fmtNum(r.size_bytes||0)+' bytes). Use URL: http://localhost:3000/guide.xml</span>';
 }
 
 

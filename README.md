@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.11
+# NexVision IPTV Platform v8.12
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -45,6 +45,7 @@ Hotel WiFi/LAN
 | Feature | Description |
 |---|---|
 | 📺 **Live TV** | IPTV channels from M3U sources, grouped by category |
+| 📅 **EPG / Programme Guide** | Current & upcoming programme info while watching live TV |
 | 🎬 **Video on Demand** | Multi-quality HLS streaming (480p / 720p / 1080p) |
 | 📻 **Radio** | Internet radio stations with vinyl animation |
 | 💬 **Messages** | Room-specific messages + birthday popup notifications |
@@ -58,6 +59,7 @@ Hotel WiFi/LAN
 | Feature | Description |
 |---|---|
 | 📡 Channel Management | Import from M3U URL/file, edit, reorder, bulk select |
+| 📅 EPG Management | Sync XMLTV guide from any URL, auto-match channels by tvg_id |
 | 🎬 VOD Management | Upload MP4 → auto-transcoded to HLS by FFmpeg |
 | 💬 Messaging | Broadcast to all rooms or specific rooms |
 | 🎂 Birthdays | Auto birthday messages injected into guest inbox |
@@ -340,10 +342,11 @@ X-Room-Token: <room_token>
 | **WSGI** | Gunicorn + gevent | Async production server |
 | **Proxy** | Nginx | Static files, HLS, rate limiting |
 | **Cache** | Redis + Flask-Caching | Hot endpoint caching |
-| **Database** | SQLite (dev) / MySQL (prod) | All application data |
+| **Database** | SQLite WAL (dev) / MySQL (prod) | All application data |
 | **Storage** | Multi-backend (Local, S3, etc.) | Flexible video/image storage |
 | **Video** | FFmpeg | MP4 → HLS transcoding |
 | **Streaming** | HLS (HTTP Live Streaming) | Adaptive bitrate video delivery |
+| **EPG** | Node.js + PM2 (iptv-org/epg) | Programme guide grabber & XML server |
 | **TV Client** | Vanilla JS + CSS | Single-page TV interface |
 | **Video Player** | hls.js 1.5 | Browser HLS playback |
 
@@ -402,7 +405,11 @@ nexvision-iptv/
 │   └── data/                 # Storage backend state
 │
 ├── uploads/                  # Admin-uploaded images (logos, slides)
-├── epg/                      # EPG service (Node.js)
+├── epg/                      # EPG service (Node.js + PM2)
+│   ├── pm2.config.js         # PM2 process config (serve + grab)
+│   ├── channels.xml          # Channel list for iptv-org grabber
+│   └── public/
+│       └── guide.xml         # Generated XMLTV output (served on :3000)
 ├── android/                  # Android TV client source
 ├── nginx/
 │   └── nexvision.conf        # Nginx configuration
@@ -411,6 +418,59 @@ nexvision-iptv/
 └── monitoring/
     └── m3u-last-checked.json # Latest health check result
 ```
+
+---
+
+## EPG / Programme Guide
+
+The EPG service is a Node.js process (PM2) that serves `guide.xml` on port 3000. The Flask app syncs EPG data from any XMLTV source into the database.
+
+### Architecture
+
+```
+External XMLTV URL  ──→  Flask /api/epg/sync-now  ──→  nexvision.db (epg_entries)
+                                                              │
+                         Flask /api/epg/generate-guide  ──→  epg/public/guide.xml
+                                                              │
+                         PM2 epg-serve  ──────────────→  :3000/guide.xml  (TV clients)
+```
+
+### Setup (first time)
+
+```bash
+# 1. Start the EPG service
+cd /opt/nexvision/epg
+npx pm2 start pm2.config.js
+npx pm2 save
+
+# 2. Enable PM2 on system boot
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u $USER --hp $HOME
+# Run the output command
+
+# 3. In Admin → EPG / Schedule:
+#    - Enter your IPTV provider's XMLTV URL in "EPG Source URL"
+#    - Click "Sync Now"  → imports EPG entries into the database
+#    - Click "Generate guide.xml"  → exports to epg/public/guide.xml
+```
+
+### EPG Source URL
+
+Use your IPTV provider's XMLTV feed (typically provided alongside the M3U URL):
+```
+http://your-provider.com/xmltv.php?username=xxx&password=xxx
+```
+
+The sync matches channels by **tvg_id** first (most accurate), then by display name. Channels in the database must have `tvg_id` values matching the channel IDs in the XMLTV file.
+
+### PM2 Process Summary
+
+| Process | Purpose | Schedule |
+|---|---|---|
+| `epg-serve` | Static file server on :3000 | Always on |
+| `epg-grab` | Grabs EPG via iptv-org grabber | Every 6 hours (requires `channels.xml` with `site` attributes) |
+| `epg-grab-startup` | One-shot grab on startup | Once |
+
+> **Note:** `epg-grab` only works if `epg/channels.xml` has `site` and `site_id` attributes configured per channel. For most setups, using the "Sync Now" button with an external XMLTV URL is simpler.
 
 ---
 
@@ -425,6 +485,10 @@ nexvision-iptv/
 | RSS ticker not updating | `redis-cli FLUSHALL` to clear stale cache |
 | Admin panel 403 | Check admin PIN in Settings |
 | VOD transcoding stuck | Kill stuck FFmpeg: `ps aux \| grep ffmpeg && kill -9 PID` |
+| EPG "Sync failed: database is locked" | Fixed in v8.12 — SQLite WAL mode + batch inserts. Run `sudo systemctl reload nexvision` |
+| EPG Sync Now does nothing | The EPG Source URL must be an external XMLTV URL from your provider, not `localhost:3000/guide.xml` |
+| EPG service not running | `cd /opt/nexvision/epg && npx pm2 start pm2.config.js && npx pm2 save` |
+| EPG 0 matches after sync | Channel `tvg_id` values in the DB must match channel IDs in the XMLTV file |
 
 ---
 
@@ -473,5 +537,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.11 — Built with Flask · Nginx · FFmpeg · hls.js*
+*NexVision IPTV v8.12 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-04-30*

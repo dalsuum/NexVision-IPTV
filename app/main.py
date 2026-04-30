@@ -86,8 +86,10 @@ def _safe_int(val, default=0):
 def get_db():
     if _USE_MYSQL:
         return get_mysql_db()
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     return conn
 
 def migrate_db(conn):
@@ -3238,52 +3240,56 @@ def sync_epg_now():
         return jsonify({'error': 'URL required'}), 400
 
     try:
-        # Fetch guide.xml
+        # Fetch and parse XML before touching the DB
         req = urllib.request.Request(url, headers={'User-Agent': 'NexVision/6.0'})
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             raw = resp.read()
 
-        # Parse XML
         root = ET.fromstring(raw)
-        conn = get_db()
-        
-        # Clear old EPG data (older than 1 day)
-        conn.execute("DELETE FROM epg_entries WHERE end_time < datetime('now', '-1 day')")
-        
-        imported = 0
-        unmatched = 0
 
-        # Build channel name map from XML
-        channel_names = {}
+        # Build channel display-name map from the XML <channel> elements
+        xml_channel_names = {}
         for ch_elem in root.findall('.//channel'):
             ch_id = ch_elem.get('id', '').strip()
             display_name = ch_elem.findtext('display-name', '').strip()
             if ch_id and display_name:
-                channel_names[ch_id] = display_name
+                xml_channel_names[ch_id] = display_name
 
-        # Extract programmes
+        # Load ALL DB channels into memory once (avoids one query per programme)
+        conn = get_db()
+        tvg_map  = {}  # tvg_id  → db channel id
+        name_map = {}  # name    → db channel id
+        id_map   = {}  # int id  → db channel id
+        for row in conn.execute("SELECT id, tvg_id, name FROM channels").fetchall():
+            if row['tvg_id']:
+                tvg_map[row['tvg_id'].strip()] = row['id']
+            if row['name']:
+                name_map[row['name'].strip().lower()] = row['id']
+            id_map[row['id']] = row['id']
+
+        # Parse all programmes into memory, match channels in Python
+        entries = []
         total_parsed = 0
+        unmatched = 0
+
         for prog in root.findall('.//programme'):
             channel_id = prog.get('channel', '').strip()
-            title = prog.findtext('title', '').strip()
-            start = prog.get('start', '').strip()
-            stop = prog.get('stop', '').strip()
-            desc = prog.findtext('desc', '').strip()
+            title      = prog.findtext('title', '').strip()
+            start      = prog.get('start', '').strip()
+            stop       = prog.get('stop', '').strip()
+            desc       = prog.findtext('desc', '').strip()
 
             if not (channel_id and title and start and stop):
                 continue
 
             total_parsed += 1
 
-            # Parse EPG datetime (supports multiple formats)
             try:
-                # Try standard XMLTV format first: "20260401120000 +0200"
                 ts = start.split()[0] if ' ' in start else start
                 if 'T' in ts:
-                    # ISO format with or without decimals: "20260401T060452.288550" or "20260401T060452"
-                    ts = ts.replace('T', '')[:14]  # Extract first 14 chars
+                    ts = ts.replace('T', '')[:14]
                 start_dt = datetime.strptime(ts, '%Y%m%d%H%M%S')
-                
+
                 ts_stop = stop.split()[0] if ' ' in stop else stop
                 if 'T' in ts_stop:
                     ts_stop = ts_stop.replace('T', '')[:14]
@@ -3291,37 +3297,34 @@ def sync_epg_now():
             except:
                 continue
 
-            # For external EPG, match by default channel ID pattern
-            # Try to find channel by tvg_id first, then by name
-            ch = None
-            
-            # Extract channel number from nexvision-NNNN format
-            if 'nexvision-' in channel_id:
-                ch_num = channel_id.replace('nexvision-', '')
-                ch = conn.execute("SELECT id FROM channels WHERE id=? LIMIT 1", (int(ch_num),)).fetchone()
-            
-            # If not found, try finding by display name
-            if not ch:
-                display_name = channel_names.get(channel_id, '')
-                if display_name:
-                    ch = conn.execute("SELECT id FROM channels WHERE name=? LIMIT 1",
-                                    (display_name,)).fetchone()
-            
-            if ch:
+            # Match: tvg_id → nexvision-N prefix → display name
+            ch_id = tvg_map.get(channel_id)
+            if not ch_id and 'nexvision-' in channel_id:
                 try:
-                    conn.execute("""
-                        INSERT INTO epg_entries
-                        (channel_id, title, description, start_time, end_time, category)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """, (ch[0], title, desc, start_dt.isoformat(), stop_dt.isoformat(), ''))
-                    imported += 1
-                except:
+                    ch_id = id_map.get(int(channel_id.replace('nexvision-', '')))
+                except ValueError:
                     pass
+            if not ch_id:
+                dn = xml_channel_names.get(channel_id, '').strip().lower()
+                if dn:
+                    ch_id = name_map.get(dn)
+
+            if ch_id:
+                entries.append((ch_id, title, desc, start_dt.isoformat(), stop_dt.isoformat(), ''))
             else:
                 unmatched += 1
 
+        # Write everything in one fast transaction
+        conn.execute("DELETE FROM epg_entries WHERE end_time < datetime('now', '-1 day')")
+        conn.executemany("""
+            INSERT OR REPLACE INTO epg_entries
+            (channel_id, title, description, start_time, end_time, category)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, entries)
         conn.commit()
         conn.close()
+
+        imported = len(entries)
         return jsonify({'imported': imported, 'total_parsed': total_parsed, 'unmatched': unmatched})
 
     except Exception as e:
@@ -3397,7 +3400,7 @@ def get_epg_monitor():
     conn.close()
 
     return jsonify({
-        'auto_url': settings.get('auto_url', 'http://172.17.13.50:3000/guide.xml'),
+        'auto_url': settings.get('auto_url', 'http://localhost:3000/guide.xml'),
         'auto_enabled': int(settings.get('auto_enabled', 0)),
         'auto_interval_minutes': int(settings.get('auto_interval_minutes', 360)),
         'last_sync_at': settings.get('last_sync_at', 'Never'),
