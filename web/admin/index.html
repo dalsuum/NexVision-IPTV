@@ -78,6 +78,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .content{padding:24px 28px;flex:1}
 .embed-shell{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .embed-frame{width:100%;height:calc(100vh - 180px);border:0;background:#000}
+.vod-topbar{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap}
+.vod-topbar .sec-title{margin:0;white-space:nowrap}
+.topnav{display:flex;gap:4px}
+.topnav a{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:background .15s,color .15s;cursor:pointer;border:1px solid transparent}
+.topnav a:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.topnav a.active{background:var(--blue-dim);color:var(--blue);border-color:rgba(74,158,255,.3)}
+.vod-topbar-status{font-size:11px;color:var(--text3);margin-left:auto;white-space:nowrap}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden}
 .sc::before{content:'';position:absolute;top:-30px;right:-20px;width:90px;height:90px;border-radius:50%;opacity:.06}
@@ -825,7 +832,16 @@ async groups(){
 async vodManager(){
   document.getElementById('content').innerHTML=`
   <div class="embed-shell">
-    <iframe class="embed-frame" src="/vod/?embedded=1&inframe=1&_ts=${Date.now()}" title="VOD Manager" loading="lazy" referrerpolicy="same-origin"></iframe>
+    <div class="vod-topbar">
+      <span class="sec-title">VOD Manager</span>
+      <nav class="topnav">
+        <a class="active" onclick="vodNav(this,'/vod/?embedded=1&inframe=1')">VOD</a>
+        <a onclick="vodNav(this,'/vod/admin?embedded=1&inframe=1')">Admin</a>
+        <a onclick="vodNav(this,'/vod/admin/storage?embedded=1&inframe=1')">Storage</a>
+      </nav>
+      <span class="vod-topbar-status" id="hdr-status">FFmpeg OK | Disk: 9.7 GB free | Up: 8h 34m 15s</span>
+    </div>
+    <iframe id="vod-frame" class="embed-frame" src="/vod/?embedded=1&inframe=1&_ts=${Date.now()}" title="VOD Manager" loading="lazy" referrerpolicy="same-origin"></iframe>
   </div>`;
 },
 
@@ -1027,6 +1043,13 @@ async reports(){
   window._rptTab='channels';loadRpt(30);
 }
 };// end pages
+
+function vodNav(el,src){
+  document.querySelectorAll('.topnav a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  const f=document.getElementById('vod-frame');
+  if(f) f.src=src+'&_ts='+Date.now();
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROW RENDERERS
