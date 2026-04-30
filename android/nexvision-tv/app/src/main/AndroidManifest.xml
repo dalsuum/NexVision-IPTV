@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Network -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Boot receiver — relaunch after device restart -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+      Android TV requirements:
+        • leanback feature marks this as a TV app in the Play Store
+        • touchscreen:required=false is mandatory — TV has no touchscreen
+    -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:banner="@drawable/tv_banner"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.NexVisionTV"
+        android:usesCleartextTraffic="true">
+        <!--
+          usesCleartextTraffic="true" is required for http:// URLs on API 28+.
+          Switch to https and remove this once TLS is configured on the server.
+        -->
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape">
+
+            <!-- Regular launcher (sideloading / ADB) -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Android TV home screen launcher -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <!--
+              Home / default launcher — makes the system offer this app when the
+              user presses the Home button and no other launcher is set.
+              Both categories are required: HOME selects it as a home candidate,
+              DEFAULT allows it to be chosen without explicit user selection.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </activity>
+
+        <!--
+          BootReceiver — starts MainActivity after the device boots.
+          exported="true" is required on API 33+ for implicit broadcasts.
+          directBootAware="false" (default): fires after the user has unlocked,
+          which is correct — WebView needs network and decrypted storage.
+        -->
+        <!--
+          SetupActivity — shown on first boot (no config) or when IT staff
+          reconfigure the box. Not exported: only launched by MainActivity.
+        -->
+        <activity
+            android:name=".SetupActivity"
+            android:exported="false"
+            android:configChanges="keyboard|keyboardHidden|navigation|screenLayout|screenSize"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

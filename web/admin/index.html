@@ -291,6 +291,7 @@ tr.sel td{background:rgba(212,168,67,.05)}
       <div class="ni" id="ni-pages"     onclick="go('pages')"><span class="ic">📄</span>Content Pages</div>
       <div class="sb-sec">System</div>
       <div class="ni" id="ni-rooms"     onclick="go('rooms')"><span class="ic">🏨</span>Rooms &amp; Devices<span class="bc" id="cnt-rooms">—</span></div>
+      <div class="ni" id="ni-devices"   onclick="go('devices')"><span class="ic">📱</span>Android TV Boxes<span class="bc" id="cnt-devices">—</span></div>
       <div class="ni" id="ni-skins"     onclick="go('skins')"><span class="ic">🎨</span>Skins &amp; Themes</div>
       <div class="ni" id="ni-users"     onclick="go('users')"><span class="ic">👥</span>Users</div>
       <div class="sb-sec">Notifications</div>
@@ -496,7 +497,7 @@ async function updateCounts(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
 async function go(page){
   document.body.classList.remove('vod-embed-mode');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -955,6 +956,30 @@ async rooms(){
     <td><div class="tda"><button class="btn btn-g btn-xs" onclick="eRoom(${r.id})">Edit</button><button class="btn btn-b btn-xs" onclick="rgenToken(${r.id},'${esc(r.room_number)}')">New Token</button><button class="btn btn-d btn-xs" onclick="dRoom(${r.id},'${esc(r.room_number)}')">Del</button></div></td></tr>`;}).join('')}
   </tbody></table></div>`;
   initBulk('rm',null,async()=>{const ids=getSelected('rm');if(!ids.length)return;if(!confirm('Delete '+ids.length+' '+termUnits.toLowerCase()+'?'))return;const r=await req('/rooms/bulk-delete',{method:'POST',body:JSON.stringify({ids})});if(r?.ok){toast('🗑 '+r.deleted+' '+termUnits.toLowerCase()+' deleted');await pages.rooms();}});
+},
+
+// ── ANDROID TV DEVICES ────────────────────────────────────────────────────────
+async devices(){
+  const devs=await req('/devices');if(!devs)return;
+  document.getElementById('cnt-devices').textContent=devs.length;
+  const on=devs.filter(d=>d.online).length;
+  const ago=ts=>{if(!ts)return'Never';const s=Math.floor((Date.now()-new Date(ts+'Z'))/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';};
+  document.getElementById('content').innerHTML=`
+  <div class="sec-hdr"><div class="sec-title">Android TV Devices</div>
+  <div class="sec-acts"><span class="bdg bg">● ${on} Active</span><span class="bdg br">○ ${devs.length-on} Inactive</span></div></div>
+  <div class="ibox info">📱 Devices register automatically when the Android TV app calls the heartbeat endpoint every 5&nbsp;minutes. A device is shown as <b>Active</b> if it checked in within the last 10&nbsp;minutes.</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>MAC Address</th><th>Room</th><th>Device Name</th><th>App Version</th><th>Status</th><th>Last Seen</th><th>Registered</th></tr></thead>
+    <tbody>${devs.length?devs.map(d=>`<tr>
+      <td><b style="font-family:monospace;letter-spacing:.5px">${esc(d.mac_address)}</b></td>
+      <td>${esc(d.room_number||'—')}</td>
+      <td style="color:var(--text2)">${esc(d.device_name||'—')}</td>
+      <td><span class="bdg bb" style="font-size:10px">${esc(d.app_version||'unknown')}</span></td>
+      <td><span class="bdg ${d.online?'bg':'br'}">${d.online?'Active':'Inactive'}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${ago(d.last_seen)}</td>
+      <td style="font-size:11px;color:var(--text3)">${d.created_at?new Date(d.created_at+'Z').toLocaleDateString():'—'}</td>
+    </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:32px">No devices registered yet. Devices appear here after their first heartbeat.</td></tr>'}
+    </tbody></table></div>`;
 },
 
 // ── SKINS ─────────────────────────────────────────────────────────────────────

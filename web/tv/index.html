@@ -15,6 +15,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<!--
+  Google Cast Web Sender SDK (CAF).
+  async — non-blocking; the SDK fires window.__onGCastApiAvailable when ready.
+  Only active on Chrome/Chromium and requires HTTPS (or localhost).
+-->
+<script async src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 <script>
 (async () => {
   const path = window.location.pathname;
@@ -1212,6 +1218,322 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
 
 .info-empty { text-align:center;color:var(--muted);padding:48px 24px;font-size:14px; }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TV MODE — body.tv-mode (applied by JS when ?platform=tv)
+   10-foot UI: D-pad navigation, no mouse, Chromecast / Android TV.
+   Sections:
+     1. Global baseline (cursor, font-size)
+     2. Universal focus ring
+     3. Font-size floor (key readable elements ≥ 20px)
+     4. Channel tile dimensions (≥ 260×150 px)
+     5. Player controls always visible
+     6. VLC scrubber always visible
+     7. Hover neutralisation (prevents mouse-style effects on TV)
+     8. Focus equivalents (what hover did, now on :focus)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Global baseline ───────────────────────────────────────────────────── */
+body.tv-mode,
+body.tv-mode * { cursor: none !important; }
+
+body.tv-mode { font-size: 20px; }
+
+/* ── 2. Universal focus ring ──────────────────────────────────────────────── */
+/* Force the ring on every focus event — TV navigation is always keyboard,
+   so we don't want :focus-visible to suppress it. */
+body.tv-mode :focus,
+body.tv-mode :focus-visible,
+body.tv-mode :focus:not(:focus-visible) {
+  outline: 4px solid #fff !important;
+  outline-offset: 4px !important;
+}
+
+/* ── 3. Font-size floor ───────────────────────────────────────────────────── */
+body.tv-mode .nav-btn,
+body.tv-mode .ch-name,
+body.tv-mode .ch-row-name,
+body.tv-mode .mv-title,
+body.tv-mode .sec-title,
+body.tv-mode .hero-title,
+body.tv-mode .svc-title,
+body.tv-mode .it-title,
+body.tv-mode .btn-hero,
+body.tv-mode .ctrl-btn,
+body.tv-mode .filter-chip,
+body.tv-mode .country-tab,
+body.tv-mode .reg-btn { font-size: 20px; }
+
+/* Secondary labels — legible on a TV but don't need full 20px */
+body.tv-mode .ch-num,
+body.tv-mode .ch-row-num,
+body.tv-mode .ch-epg-now,
+body.tv-mode .ch-epg-next,
+body.tv-mode .ch-row-epg,
+body.tv-mode .mv-sub,
+body.tv-mode .sec-count,
+body.tv-mode .ch-group-btn { font-size: 16px; }
+
+/* ── 4. Channel tile dimensions ───────────────────────────────────────────── */
+body.tv-mode .ch-card      { width: 260px; min-height: 150px; }
+body.tv-mode .ch-img       { height: 110px; font-size: 42px; }
+
+/* ── TV mode: full-screen 3×4 paginated grid ─────────────────────────────
+   The sidebar expands to 100 % width; the player-area collapses to zero.
+   The video element stays in the DOM so requestFullscreen() still works —
+   Chrome's top-layer promotion does not require the element to be visible. */
+body.tv-mode .ch-sidebar     { width: auto; flex: 1; border-right: none; }
+body.tv-mode .tv-player-area { overflow: hidden; flex: 0 0 0; min-width: 0; }
+
+/* Grid replaces the vertical scroll list */
+body.tv-mode .ch-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px 32px;
+  overflow: hidden;   /* no scroll — page flip handles navigation */
+  flex: 1;            /* fills remaining sidebar column height */
+}
+
+/* Cards fill their grid cell completely */
+body.tv-mode .ch-list .ch-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-shrink: unset;
+  display: flex;
+  flex-direction: column;
+}
+body.tv-mode .ch-list .ch-img  { flex: 1; height: auto; min-height: 80px; }
+body.tv-mode .ch-list .ch-info { flex-shrink: 0; }
+
+/* Playing-state highlight for grid cards */
+.ch-card.playing { border-color: var(--gold); background: var(--gold4); }
+
+/* ── 5. Player controls always visible ────────────────────────────────────── */
+/* Mouse mode fades controls on idle — TV has no hover to bring them back. */
+body.tv-mode .player-wrap .player-controls { opacity: 1 !important; transition: none; }
+
+/* ── 6. VLC scrubber always visible ──────────────────────────────────────── */
+body.tv-mode .vlc-track .vlc-track-bg   { height: 5px; }
+body.tv-mode .vlc-track .vlc-track-thumb { opacity: 1; }
+/* Suppress the expand animation that hover normally triggers */
+body.tv-mode .vlc-track:hover .vlc-track-bg   { height: 5px; }
+body.tv-mode .vlc-track:hover .vlc-track-thumb { opacity: 1; }
+
+/* ── 7. Hover neutralisation ──────────────────────────────────────────────── */
+/* On real Cast/Android TV there is no pointer so :hover never fires anyway,
+   but Android WebView in TV mode can have a D-pad-driven pointer; resetting
+   hover here ensures no stray mouse-style highlight leaks through. */
+body.tv-mode .nav-btn:hover          { color:var(--muted);background:transparent }
+body.tv-mode .theme-toggle:hover     { color:var(--dimmed);border-color:var(--border2) }
+body.tv-mode .btn-hero-primary:hover { background:var(--gold) }
+body.tv-mode .btn-hero-ghost:hover   { background:transparent;opacity:1 }
+body.tv-mode .sec-link:hover         { color:var(--gold) }
+body.tv-mode .h-nav-btn:hover        { background:rgba(6,8,14,.85);border-color:var(--border2);color:var(--gold) }
+body.tv-mode .ch-card:hover          { border-color:var(--border);transform:none;box-shadow:none }
+body.tv-mode .ch-card:hover .ch-play { opacity:0 }
+body.tv-mode .mv-card:hover          { transform:none }
+body.tv-mode .ch-group-btn:hover     { border-color:var(--border);color:var(--dimmed) }
+body.tv-mode .ch-row:hover           { background:transparent }
+body.tv-mode .ctrl-btn:hover         { background:transparent }
+body.tv-mode .ctrl-btn.play:hover    { background:var(--gold3) }
+body.tv-mode .filter-chip:hover      { border-color:var(--border);color:var(--dimmed) }
+body.tv-mode .movie-tile:hover       { transform:none }
+body.tv-mode .movie-tile:hover .mt-overlay { opacity:0 }
+body.tv-mode .vlc-btn:hover          { color:var(--muted);background:transparent }
+body.tv-mode .vlc-skip:hover         { color:var(--muted);background:transparent }
+body.tv-mode .vlc-play:hover         { background:var(--gold);transform:none }
+body.tv-mode .r-btn:hover            { border-color:var(--border);color:var(--dimmed) }
+body.tv-mode .r-btn.play:hover       { background:var(--gold) }
+body.tv-mode .country-tab:hover      { color:var(--dimmed) }
+body.tv-mode .station-card:hover     { border-color:var(--border);background:var(--bg2) }
+body.tv-mode .ig-btn:hover           { color:var(--muted) }
+body.tv-mode .info-tile:hover        { border-color:var(--border);transform:none }
+body.tv-mode .reg-btn:hover          { background:var(--gold) }
+body.tv-mode .reg-numpad button:hover,
+body.tv-mode .reg-numpad button:active { background:var(--bg3);border-color:var(--border) }
+body.tv-mode .svc-tile:hover         { border-color:var(--border);background:var(--bg2);transform:none }
+body.tv-mode .svc-call-btn:hover     { background:var(--gold) }
+body.tv-mode .epg-btn:hover          { background:transparent;color:var(--dimmed) }
+body.tv-mode .hdr-msg-btn:hover      { background:transparent;color:var(--dimmed) }
+body.tv-mode .msg-mark-all:hover     { color:var(--dimmed);border-color:var(--border) }
+body.tv-mode .msg-card-inbox:hover   { border-color:var(--border);background:var(--bg2) }
+body.tv-mode .msg-dismiss:hover      { background:transparent }
+body.tv-mode .mb-close:hover         { color:var(--dimmed) }
+body.tv-mode .bday-close:hover       { background:transparent }
+body.tv-mode .epg-close:hover        { color:var(--dimmed) }
+body.tv-mode .info-overlay-back:hover  { background:var(--bg3);color:var(--dimmed) }
+body.tv-mode .info-overlay-close:hover { background:var(--bg3);border-color:var(--border);color:var(--dimmed) }
+body.tv-mode .info-list-row:hover    { border-color:var(--border);transform:none }
+body.tv-mode .prayer-widget:hover    { border-color:rgba(201,168,76,0.1) }
+body.tv-mode .bn-item:hover          { color:var(--muted) }
+body.tv-mode .et-inner:hover,
+body.tv-mode .nt-inner:hover         { animation-play-state:running }
+/* Nav style variants */
+body.tv-mode #top-nav.style-pill .nav-btn:hover,
+body.tv-mode #top-nav.style-flat .nav-btn:hover,
+body.tv-mode #top-nav.style-boxed .nav-btn:hover,
+body.tv-mode #top-nav.style-icon .nav-btn:hover  { background:transparent;color:var(--muted) }
+/* Light-theme hover overrides (specificity 0,4,1 — must match exactly to win) */
+html[data-theme='light'] .screen .ig-btn:hover,
+html[data-theme='light'] .screen .filter-chip:hover,
+html[data-theme='light'] .screen .country-tab:hover,
+html[data-theme='light'] .screen .ch-group-btn:hover,
+html[data-theme='light'] .screen .msg-mark-all:hover,
+html[data-theme='light'] .screen .epg-btn:hover,
+html[data-theme='light'] .screen .ctrl-btn:hover { color:var(--dimmed) }
+
+/* ── 8. Focus equivalents ─────────────────────────────────────────────────── */
+/* Each rule mirrors its :hover counterpart exactly. */
+body.tv-mode .nav-btn:focus          { color:var(--white);background:var(--bg3) }
+body.tv-mode .theme-toggle:focus     { color:var(--white);border-color:var(--gold) }
+body.tv-mode .btn-hero-primary:focus { background:var(--gold2) }
+body.tv-mode .btn-hero-ghost:focus   { background:var(--overlay-light);opacity:0.8 }
+body.tv-mode .sec-link:focus         { color:var(--gold2) }
+body.tv-mode .h-nav-btn:focus        { background:rgba(12,16,26,.95);border-color:var(--gold);color:var(--gold2) }
+body.tv-mode .ch-card:focus          { border-color:var(--gold);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.4) }
+body.tv-mode .ch-card:focus .ch-play { opacity:1 }
+body.tv-mode .mv-card:focus          { transform:scale(1.04) }
+body.tv-mode .ch-group-btn:focus     { border-color:var(--border2);color:var(--white) }
+body.tv-mode .ch-row:focus           { background:var(--bg3) }
+body.tv-mode .ctrl-btn:focus         { background:var(--border2) }
+body.tv-mode .ctrl-btn.play:focus    { background:var(--gold2) }
+body.tv-mode .filter-chip:focus      { border-color:var(--border2);color:var(--white) }
+body.tv-mode .movie-tile:focus       { transform:translateY(-6px) }
+body.tv-mode .movie-tile:focus .mt-overlay { opacity:1 }
+body.tv-mode .vlc-btn:focus          { color:#fff;background:rgba(255,255,255,.1) }
+body.tv-mode .vlc-skip:focus         { color:#fff;background:rgba(255,255,255,.1) }
+body.tv-mode .vlc-play:focus         { background:var(--gold2);transform:scale(1.07) }
+body.tv-mode .r-btn:focus            { border-color:var(--gold);color:var(--gold) }
+body.tv-mode .r-btn.play:focus       { background:var(--gold2) }
+body.tv-mode .country-tab:focus      { color:var(--white) }
+body.tv-mode .station-card:focus     { border-color:var(--border2);background:var(--bg3) }
+body.tv-mode .ig-btn:focus           { color:var(--white) }
+body.tv-mode .info-tile:focus        { border-color:var(--border2);transform:translateY(-3px) }
+body.tv-mode .reg-btn:focus          { background:var(--gold2) }
+body.tv-mode .reg-numpad button:focus { background:var(--bg4);border-color:var(--gold) }
+body.tv-mode .svc-tile:focus         { border-color:var(--gold);background:var(--bg3);transform:translateY(-2px) }
+body.tv-mode .svc-call-btn:focus     { background:var(--gold2) }
+body.tv-mode .epg-btn:focus          { background:rgba(255,255,255,0.14);color:#fff }
+body.tv-mode .hdr-msg-btn:focus      { background:rgba(255,255,255,0.09);color:var(--white) }
+body.tv-mode .msg-mark-all:focus     { color:var(--white);border-color:rgba(255,255,255,0.15) }
+body.tv-mode .msg-card-inbox:focus   { border-color:var(--border2);background:var(--bg3) }
+body.tv-mode .msg-dismiss:focus      { background:rgba(255,255,255,0.14) }
+body.tv-mode .mb-close:focus         { color:#fff }
+body.tv-mode .bday-close:focus       { background:rgba(212,168,67,0.22) }
+body.tv-mode .epg-close:focus        { color:#fff }
+body.tv-mode .info-overlay-back:focus  { background:var(--bg4);color:var(--gold) }
+body.tv-mode .info-overlay-close:focus { background:var(--bg4);border-color:var(--border2);color:var(--gold) }
+body.tv-mode .info-list-row:focus    { border-color:var(--gold);transform:translateX(4px) }
+body.tv-mode .prayer-widget:focus    { border-color:rgba(201,168,76,0.3) }
+/* Nav style variants */
+body.tv-mode #top-nav.style-pill .nav-btn:focus  { background:rgba(255,255,255,0.06);color:var(--white) }
+body.tv-mode #top-nav.style-flat .nav-btn:focus   { color:var(--white) }
+body.tv-mode #top-nav.style-boxed .nav-btn:focus  { background:var(--bg4);color:var(--white) }
+body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,0.06);color:var(--white) }
+
+/* ── Fullscreen OSD ───────────────────────────────────────────────────────── */
+/* Sits above .player-controls (DOM order) via pointer-events:none so clicks  */
+/* still reach the video and control buttons underneath.                       */
+#fs-osd {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  /* padding-bottom clears the .player-controls strip (~74 px) */
+  padding: 56px 40px 84px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.84) 42%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.35s ease;
+}
+#fs-osd.fs-osd--visible { opacity: 1; }
+.fs-osd-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.fs-osd-logo {
+  width: 64px; height: 64px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+}
+.fs-osd-logo img { width: 100%; height: 100%; object-fit: contain; }
+.fs-osd-info { flex: 1; min-width: 0; }
+.fs-osd-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px; font-weight: 300; letter-spacing: 2px;
+  color: #fff; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fs-osd-epg {
+  font-size: 15px; color: rgba(255,255,255,0.65);
+  margin-top: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fs-osd-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 42px; font-weight: 300; letter-spacing: 3px;
+  color: #fff; flex-shrink: 0;
+}
+.fs-osd-bar-wrap {
+  margin-top: 14px; height: 3px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px; overflow: hidden;
+}
+.fs-osd-bar {
+  height: 100%; width: 0%;
+  background: var(--gold, #c9a84c);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* ── Cast button ─────────────────────────────────────────────────────────── */
+.cast-btn {
+  background: none;
+  border: none;
+  color: var(--dimmed);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.cast-btn:hover,
+.cast-btn:focus { color: var(--white); background: var(--overlay-light); outline: none; }
+.cast-btn--connected { color: var(--gold) !important; }
+/* Larger, lighter in the OSD overlay */
+#fs-osd .cast-btn { color: rgba(255,255,255,0.55); padding: 8px; }
+#fs-osd .cast-btn:hover,
+#fs-osd .cast-btn:focus { color: #fff; background: rgba(255,255,255,0.12); }
+#fs-osd .cast-btn--connected { color: var(--gold) !important; }
+
+/* ── Keyboard accessibility: focus equivalents for hover-only reveals ─────
+   Applied globally so desktop keyboard users benefit even without tv-mode.
+   tv-mode equivalents in the tv-mode block above are more specific and take
+   precedence for TV clients; these handle ordinary keyboard navigation.    */
+
+/* 1. Player controls — reveal when any child button has keyboard focus */
+.player-wrap:focus-within .player-controls { opacity: 1; }
+
+/* 2. Channel card play-icon reveal */
+.ch-card:focus .ch-play { opacity: 1; }
+
+/* 3. VOD movie-tile overlay reveal */
+.movie-tile:focus .mt-overlay { opacity: 1; }
+
+/* 4. VOD seek bar — expand track and show scrubber thumb on focus */
+.vlc-track:focus-within .vlc-track-bg    { height: 5px; }
+.vlc-track:focus-within .vlc-track-thumb { opacity: 1; }
+
+/* 5. Tickers — pause marquee when the scrolling container is focused */
+.et-inner:focus,
+.nt-inner:focus { animation-play-state: paused; outline: none; }
+
 </style>
 </head>
 <body>
@@ -1232,7 +1554,7 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
 
 <!-- v6: EMERGENCY TICKER -->
 <div id="emergency-ticker">
-  <div class="et-inner" id="et-inner">
+  <div class="et-inner" id="et-inner" tabindex="0" aria-label="Emergency ticker — press Space to pause">
     <span class="et-label">🚨 EMERGENCY</span>
   </div>
 </div>
@@ -1297,7 +1619,7 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
 
 <!-- v6: NEWS TICKER (bottom) -->
 <div id="news-ticker">
-  <div class="nt-inner" id="nt-inner">
+  <div class="nt-inner" id="nt-inner" tabindex="0" aria-label="News ticker — press Space to pause">
     <span class="nt-label">📰 NEWS</span>
   </div>
 </div>
@@ -1370,7 +1692,15 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
     <div class="screen" id="screen-tv">
       <div class="ch-sidebar">
         <div class="ch-sidebar-hdr">
-          <h2>Live TV <span id="tv-ch-total" style="font-size:12px;color:var(--muted)"></span></h2>
+          <div style="display:flex;align-items:center;margin-bottom:12px">
+            <h2 style="margin-bottom:0;flex:1">Live TV <span id="tv-ch-total" style="font-size:12px;color:var(--muted)"></span></h2>
+            <button class="cast-btn" id="cast-btn-sidebar" style="display:none"
+                onclick="CastMgr.requestSession()" title="Cast to TV" aria-label="Cast to TV">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                <path d="M1 18v3h3c0-1.66-1.34-3-3-3m0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7m18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11M21 3H3C1.9 3 1 3.9 1 5v3c6.08 0 11 4.93 11 11h9c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+              </svg>
+            </button>
+          </div>
           <input class="ch-search" placeholder="Search channels..." oninput="tvSearchChannels(this.value)" id="tv-ch-search">
         </div>
         <div class="ch-groups" id="ch-groups"></div>
@@ -1400,6 +1730,26 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
             <button class="ctrl-btn" onclick="toggleMute()">🔊</button>
             <button class="ctrl-btn" onclick="toggleFullscreen()">⛶</button>
             <button class="epg-btn" onclick="openEpgOverlay()" style="margin-left:8px">📅 EPG</button>
+          </div>
+          <!-- Fullscreen OSD: channel info + EPG bar, auto-hides after 4 s -->
+          <div id="fs-osd">
+            <div class="fs-osd-row">
+              <div class="fs-osd-logo" id="fs-osd-logo">📺</div>
+              <div class="fs-osd-info">
+                <div class="fs-osd-name" id="fs-osd-name">—</div>
+                <div class="fs-osd-epg"  id="fs-osd-epg"></div>
+              </div>
+              <div class="fs-osd-time" id="fs-osd-time">—</div>
+              <button class="cast-btn" id="cast-btn-osd" style="display:none"
+                  onclick="CastMgr.requestSession()" title="Cast to TV" aria-label="Cast to TV">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26" aria-hidden="true">
+                  <path d="M1 18v3h3c0-1.66-1.34-3-3-3m0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7m18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11M21 3H3C1.9 3 1 3.9 1 5v3c6.08 0 11 4.93 11 11h9c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="fs-osd-bar-wrap">
+              <div class="fs-osd-bar" id="fs-osd-bar"></div>
+            </div>
           </div>
         </div>
         <div class="ch-epg">
@@ -1535,6 +1885,44 @@ body.news-ticker-active.nav-bottom #root{padding-bottom:calc(60px + 36px)}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── TV platform mode ─────────────────────────────────────────────────────────
+// Activated by ?platform=tv (set by the before_request redirect for Android TV
+// and Chromecast user-agents). Adds body.tv-mode which drives the CSS layer,
+// and wires a MutationObserver to tabindex-stamp tiles as they're rendered
+// (channels/movies/radio load via API, so they don't exist at parse time).
+(function () {
+  if (new URLSearchParams(window.location.search).get('platform') !== 'tv') return;
+
+  document.body.classList.add('tv-mode');
+
+  // Selectors that need tabindex=0 to be D-pad focusable (non-native elements).
+  // <button> and <a> are already focusable; only divs/spans used as tiles need it.
+  const TV_FOCUSABLE =
+    '.ch-card,.ch-row,.mv-card,.movie-tile,.station-card,' +
+    '.svc-tile,.info-tile,.sec-link,.info-list-row,.msg-card-inbox';
+
+  function stampFocusable(root) {
+    root.querySelectorAll(TV_FOCUSABLE).forEach(el => {
+      if (!el.hasAttribute('tabindex')) el.tabIndex = 0;
+    });
+  }
+
+  // Stamp anything already in the DOM (static markup, early-rendered content).
+  stampFocusable(document.body);
+
+  // Stamp dynamically rendered tiles as the API populates the page.
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.matches?.(TV_FOCUSABLE) && !node.hasAttribute('tabindex')) node.tabIndex = 0;
+        stampFocusable(node);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+// ─────────────────────────────────────────────────────────────────────────────
+
 const API = window.location.origin + '/api'; // auto-detect server address
 const THEME_KEY = 'nv_theme_mode';
 let allChannels = [], allMovies = [], allRadio = [], allGroups = [];
@@ -1759,6 +2147,11 @@ let _tvSearchQ   = '';
 let _tvGroupId   = null;
 let _tvSearchTimer = null;
 
+// 12 tiles (3×4) in TV remote mode; 100 rows in normal browser mode.
+function tvPageSize() {
+  return document.body.classList.contains('tv-mode') ? 12 : 100;
+}
+
 const channelEmoji = ['📺','🎬','📡','🎭','🏆','🌍','🎵','🎪','📰','🌟','🎯','💫'];
 
 function applyTheme(mode) {
@@ -1788,7 +2181,8 @@ async function api(path, opts={}) {
   } catch(e) { return null; }
 }
 async function apiChannels(params={}) {
-  const p = new URLSearchParams({limit:100, offset: (_tvPage||0)*100, ...params});
+  const size = tvPageSize();
+  const p = new URLSearchParams({limit: size, offset: (_tvPage||0)*size, ...params});
   if (_tvSearchQ) p.set('search', _tvSearchQ);
   if (_tvGroupId)  p.set('group_id', _tvGroupId);
   p.set('active','1');
@@ -1817,6 +2211,193 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ── Fullscreen OSD ────────────────────────────────────────────────────────────
+// Self-contained controller for #fs-osd.  Call show(ch) to reveal it;
+// it auto-hides after HIDE_MS.  Any D-pad keypress while in fullscreen
+// calls show() with no argument to refresh the timer without re-rendering.
+const FsOsd = (() => {
+  const HIDE_MS = 4000;
+  let _hideTimer  = null;
+  let _clockTimer = null;
+  let _epgStart   = 0;   // ms since epoch — current programme start
+  let _epgEnd     = 0;   // ms since epoch — current programme end
+
+  const $  = id => document.getElementById(id);
+  const hm = d  => d.getHours().toString().padStart(2,'0') + ':' +
+                   d.getMinutes().toString().padStart(2,'0');
+
+  function _tickClock() {
+    const el = $('fs-osd-time');
+    if (el) el.textContent = hm(new Date());
+  }
+
+  function _tickBar() {
+    if (!_epgStart || !_epgEnd) return;
+    const pct = Math.min(100, Math.max(0,
+      (Date.now() - _epgStart) / (_epgEnd - _epgStart) * 100
+    ));
+    const el = $('fs-osd-bar');
+    if (el) el.style.width = pct + '%';
+  }
+
+  function _resetTimer() {
+    clearTimeout(_hideTimer);
+    _hideTimer = setTimeout(hide, HIDE_MS);
+  }
+
+  // Called from the EPG fetch callback in playChannel once we know the
+  // current programme's window, giving the bar real timestamps to work with.
+  function setEpg(title, startMs, endMs) {
+    _epgStart = startMs;
+    _epgEnd   = endMs;
+    const el = $('fs-osd-epg');
+    if (el) el.textContent = title ? '▶ ' + title : '';  // ▶ thin-sp title
+    _tickBar();
+  }
+
+  // Populate logo, name, and EPG text from a channel object.
+  function _update(ch) {
+    // Logo
+    const logoEl = $('fs-osd-logo');
+    if (logoEl) {
+      const url = typeof usableLogo === 'function' ? usableLogo(ch.tvg_logo_url) : '';
+      logoEl.innerHTML = url
+        ? `<img src="${url}" style="width:64px;height:64px;object-fit:contain" onerror="this.outerHTML='📺'">`
+        : '📺';
+    }
+    // Name
+    const nameEl = $('fs-osd-name');
+    if (nameEl) nameEl.textContent = ch.name || '—';
+    // EPG title from the live map (may be populated before setEpg fires)
+    const epgEl = $('fs-osd-epg');
+    if (epgEl && !epgEl.textContent) {
+      const t = (typeof _epgNowMap !== 'undefined') && _epgNowMap[ch.id];
+      if (t) epgEl.textContent = '▶ ' + t;
+    }
+  }
+
+  // show(ch) — reveal OSD and start/restart the 4-second hide timer.
+  // Pass a channel object the first time; omit it on subsequent D-pad presses
+  // (content stays the same, only the timer resets).
+  function show(ch) {
+    const osd = $('fs-osd');
+    if (!osd) return;
+    if (ch) {
+      // Clear stale EPG bar whenever a new channel is selected.
+      _epgStart = _epgEnd = 0;
+      $('fs-osd-bar') && ($('fs-osd-bar').style.width = '0%');
+      $('fs-osd-epg') && ($('fs-osd-epg').textContent = '');
+      _update(ch);
+    }
+    _tickClock();
+    _tickBar();
+    osd.classList.add('fs-osd--visible');
+    // Restart per-second ticks while OSD is on screen.
+    clearInterval(_clockTimer);
+    _clockTimer = setInterval(() => { _tickClock(); _tickBar(); }, 1000);
+    _resetTimer();
+  }
+
+  function hide() {
+    clearTimeout(_hideTimer);
+    clearInterval(_clockTimer);
+    _hideTimer = _clockTimer = null;
+    const osd = $('fs-osd');
+    if (osd) osd.classList.remove('fs-osd--visible');
+  }
+
+  return { show, hide, setEpg };
+})();
+
+// ── Google Cast Web Sender ────────────────────────────────────────────────────
+// Replace CAST_APP_ID with your registered receiver App ID from the Cast SDK
+// Developer Console (https://cast.google.com/publish).
+// 'CC1AD845' is Google's built-in Default Media Receiver — works with no
+// registration but has limited branding. Swap once you register a custom one.
+const CAST_APP_ID = 'CC1AD845';
+
+const CastMgr = (() => {
+  let _ctx     = null;  // cast.framework.CastContext
+  let _session = null;  // CastSession, non-null while a device is connected
+
+  // The SDK fires this callback asynchronously after it finishes loading.
+  // Because our main <script> block runs synchronously before the async SDK
+  // fires, this assignment is always in place when the callback lands.
+  window['__onGCastApiAvailable'] = function (isAvailable) {
+    if (!isAvailable) return;
+
+    _ctx = cast.framework.CastContext.getInstance();
+    _ctx.setOptions({
+      receiverApplicationId: CAST_APP_ID,
+      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+    });
+
+    _ctx.addEventListener(
+      cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+      _onSessionState
+    );
+
+    _updateButtons();
+  };
+
+  function _onSessionState(e) {
+    const SS = cast.framework.SessionState;
+    const s  = e.sessionState;
+
+    if (s === SS.SESSION_STARTED || s === SS.SESSION_RESUMED) {
+      _session = _ctx.getCurrentSession();
+      // Auto-cast whatever channel is already playing when a session opens.
+      const ch = allChannels.find(c => c.id === currentChId);
+      if (ch) _doLoad(ch);
+    } else if (s === SS.SESSION_ENDED || s === SS.NO_SESSION) {
+      _session = null;
+    }
+    _updateButtons();
+  }
+
+  function _doLoad(ch) {
+    if (!_session || !ch) return;
+    const url = (ch.stream_url || '').trim();
+    // UDP/RTP multicast is not routable to a Cast receiver.
+    if (!url || url.startsWith('udp://') || url.startsWith('rtp://')) return;
+
+    const mediaInfo = new chrome.cast.media.MediaInfo(url, 'application/x-mpegURL');
+    mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
+
+    const meta = new chrome.cast.media.GenericMediaMetadata();
+    meta.title = ch.name;
+    const logo = (typeof usableLogo === 'function') ? usableLogo(ch.tvg_logo_url) : '';
+    if (logo) meta.images = [new chrome.cast.Image(logo)];
+    mediaInfo.metadata = meta;
+
+    _session.loadMedia(new chrome.cast.media.LoadRequest(mediaInfo))
+      .catch(err => console.warn('[CastMgr] loadMedia failed:', err));
+  }
+
+  function _updateButtons() {
+    const available = !!_ctx;
+    const connected = !!_session;
+    document.querySelectorAll('.cast-btn').forEach(btn => {
+      btn.style.display = available ? '' : 'none';
+      btn.classList.toggle('cast-btn--connected', connected);
+      btn.title = connected ? 'Casting — click to disconnect' : 'Cast to TV';
+    });
+  }
+
+  // Public: open the Cast device-picker dialog.
+  function requestSession() {
+    if (!_ctx) return;
+    _ctx.requestSession().catch(() => {});
+  }
+
+  // Public: called from playChannel() to mirror the live stream to the receiver.
+  function loadMedia(ch) {
+    _doLoad(ch);
+  }
+
+  return { requestSession, loadMedia };
+})();
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 const screenLoaders = {
@@ -2240,11 +2821,41 @@ function renderChGroups() {
 function renderChList(channels) {
   const el = document.getElementById('ch-list');
   if (!el) return;
-  el.innerHTML = channels.map((c)=>{
-    const mono = escHtml((c.name||'TV').substring(0,2).toUpperCase());
+
+  if (document.body.classList.contains('tv-mode')) {
+    // ── TV mode: 3×4 grid of channel cards ──────────────────────────────────
+    el.innerHTML = channels.map(c => {
+      const mono    = escHtml((c.name||'TV').substring(0,2).toUpperCase());
+      const logoUrl = usableLogo(c.tvg_logo_url);
+      const logoHTML = logoUrl
+        ? `<img src="${logoUrl}" data-logo-src="${logoUrl}"
+               style="max-width:100%;max-height:100%;object-fit:contain;display:block"
+               onerror="markLogoFailed(this)">
+           <span class="ch-mono-lbl" style="display:none">${mono}</span>`
+        : `<span class="ch-mono-lbl">${mono}</span>`;
+      return `
+      <div class="ch-card${c.id===currentChId?' playing':''}" id="card-${c.id}"
+           tabindex="0" onclick="playChannel(${c.id})">
+        <div class="ch-img">${logoHTML}</div>
+        <div class="ch-info">
+          <div class="ch-name">${escHtml(c.name||'')}${c._is_vip?'<span class="vip-badge">VIP</span>':''}</div>
+          <div class="ch-num">${escHtml(c.group_title||c.group_name||'Live')}</div>
+          ${_epgNowMap[c.id]?`<div class="ch-epg-now">▶ ${escHtml(_epgNowMap[c.id])}</div>`:''}
+        </div>
+        <div class="ch-play">▶</div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // ── Normal mode: compact vertical list ──────────────────────────────────
+  el.innerHTML = channels.map(c => {
+    const mono    = escHtml((c.name||'TV').substring(0,2).toUpperCase());
     const logoUrl = usableLogo(c.tvg_logo_url);
     const logoHTML = logoUrl
-      ? `<img src="${logoUrl}" data-logo-src="${logoUrl}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;display:block" onerror="markLogoFailed(this)"><span class="ch-mono-lbl" style="display:none">${mono}</span>`
+      ? `<img src="${logoUrl}" data-logo-src="${logoUrl}"
+             style="width:36px;height:36px;object-fit:contain;border-radius:4px;display:block"
+             onerror="markLogoFailed(this)"><span class="ch-mono-lbl" style="display:none">${mono}</span>`
       : `<span class="ch-mono-lbl">${mono}</span>`;
     return `
     <div class="ch-row ${c.id===currentChId?'playing':''}" id="row-${c.id}" onclick="playChannel(${c.id})">
@@ -2282,12 +2893,16 @@ async function tvSearchChannels(q) {
 }
 
 async function tvNextPage() {
-  if ((_tvPage+1)*100 >= _tvTotal) return;
+  const size = tvPageSize();
+  if ((_tvPage+1)*size >= _tvTotal) return;
   _tvPage++;
   await apiChannels();
   renderChList(allChannels);
   updateTvPagination();
-  document.getElementById('ch-list')?.scrollTo(0,0);
+  // Scroll the list to top in normal mode (grid mode has no scroll).
+  if (!document.body.classList.contains('tv-mode')) {
+    document.getElementById('ch-list')?.scrollTo(0, 0);
+  }
 }
 async function tvPrevPage() {
   if (_tvPage <= 0) return;
@@ -2297,7 +2912,8 @@ async function tvPrevPage() {
   updateTvPagination();
 }
 function updateTvPagination() {
-  const offset = _tvPage * 100;
+  const size   = tvPageSize();
+  const offset = _tvPage * size;
   const shown  = Math.min(offset + allChannels.length, _tvTotal);
   const totalEl = document.getElementById('tv-ch-total');
   const pageEl  = document.getElementById('tv-page-info');
@@ -2315,6 +2931,9 @@ function playChannel(channelId) {
   const playSeq = ++_tvPlaySeq;
   currentChId = ch.id;
 
+  // Mirror to Cast receiver if a session is active.
+  CastMgr.loadMedia(ch);
+
   const overlay  = document.getElementById('player-overlay');
   const video    = document.getElementById('player');
   const poIcon   = document.getElementById('po-icon');
@@ -2331,8 +2950,9 @@ function playChannel(channelId) {
   document.getElementById('ctrl-name').textContent = ch.name;
   document.getElementById('ctrl-num').textContent  = ch.group_title || ch.group_name || 'Live';
   document.getElementById('play-btn').textContent  = '⏸';
-  document.querySelectorAll('.ch-row').forEach(r=>r.classList.remove('playing'));
+  document.querySelectorAll('.ch-row,.ch-card').forEach(r=>r.classList.remove('playing'));
   document.getElementById('row-'+ch.id)?.classList.add('playing');
+  document.getElementById('card-'+ch.id)?.classList.add('playing');
 
   // Destroy previous HLS instance
   if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
@@ -2420,6 +3040,23 @@ function playChannel(channelId) {
     document.getElementById('play-btn').textContent = '▶';
   }
 
+  // TV mode: enter fullscreen when a channel is selected.
+  // Called synchronously inside the user-click handler, so the browser's
+  // transient-activation requirement is satisfied.  The container goes
+  // fullscreen immediately; the video stream loads inside it.
+  // Guarded by isHTTP so UDP/unknown-scheme overlays never fullscreen.
+  if (document.body.classList.contains('tv-mode') && isHTTP) {
+    const pw = document.getElementById('player-wrap');
+    if (pw && !document.fullscreenElement) {
+      pw.requestFullscreen().catch(() => {});
+      // fullscreenchange will fire and call FsOsd.show(ch) once FS is granted.
+    } else if (document.fullscreenElement) {
+      // Channel switch while already in fullscreen — fullscreenchange won't
+      // re-fire, so update the OSD directly.
+      FsOsd.show(ch);
+    }
+  }
+
   // EPG panel
   document.getElementById('epg-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;background:var(--bg3);border-radius:10px;padding:18px;border:1px solid var(--border)">
@@ -2440,6 +3077,15 @@ function playChannel(channelId) {
         const cur = data.find(e => parseEpgDate(e.start_time) <= now && parseEpgDate(e.end_time) > now);
         const next = data.find(e => parseEpgDate(e.start_time) > now);
         if (!cur && !next) return;
+        // Feed the OSD bar regardless of whether the overlay is currently
+        // visible — it will animate correctly the next time show() is called.
+        if (cur && document.fullscreenElement) {
+          FsOsd.setEpg(
+            cur.title,
+            parseEpgDate(cur.start_time).getTime(),
+            parseEpgDate(cur.end_time).getTime()
+          );
+        }
         const fmtT = d => d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
         const el = document.getElementById('epg-content');
         if (!el) return;
@@ -4225,6 +4871,253 @@ async function init() {
   }, 1600);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// D-PAD NAVIGATION  (TV mode only — body.tv-mode present)
+//
+// Spatial algorithm: for each arrow direction, scores every visible focusable
+// element by (primary-axis distance) + (cross-axis offset × 2.5).  The ×2.5
+// weight makes alignment dominate over raw closeness, so pressing Down in a
+// grid column lands on the tile directly below, not a diagonal neighbour.
+//
+// Registered with {capture:true} so it runs before the bubble-phase handler
+// below that calls nextChannel/prevChannel — those are superseded in TV mode
+// by focus-driven navigation (Enter on a .ch-row triggers playChannel).
+// ═══════════════════════════════════════════════════════════════════════════
+const DPad = (() => {
+  if (!document.body.classList.contains('tv-mode')) return null;
+
+  // ── Selectors ─────────────────────────────────────────────────────────────
+  // Tiles: non-native interactive elements that need tabindex=0 to be focusable.
+  const TILE_SEL =
+    '.ch-card,.ch-row,.mv-card,.movie-tile,.station-card,' +
+    '.svc-tile,.info-tile,.prayer-tile,.msg-card-inbox,.info-list-row';
+
+  // Full set: tiles + every native focusable in the UI.
+  const ALL_SEL =
+    TILE_SEL +
+    ',.nav-btn,.ch-group-btn,.filter-chip,.country-tab' +
+    ',.ctrl-btn,.epg-btn,.btn-hero,.reg-btn,.h-nav-btn' +
+    ',.vlc-btn,.vlc-play,.vlc-skip,.r-btn,.sec-link' +
+    ',.msg-mark-all,.mb-close,.bday-close,.epg-close' +
+    ',.hdr-msg-btn,.svc-call-btn,.ig-btn,.info-overlay-back,.info-overlay-close' +
+    ',button:not([disabled]),a[href]';
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  // Returns every element that matches ALL_SEL and is actually visible on screen.
+  function visibleFocusables() {
+    return Array.from(document.querySelectorAll(ALL_SEL)).filter(el => {
+      if (el.offsetParent === null) return false;   // display:none ancestor
+      const r = el.getBoundingClientRect();
+      // Must have size and overlap the viewport
+      return r.width > 0 && r.height > 0 &&
+             r.bottom > 0 && r.right > 0 &&
+             r.top < window.innerHeight && r.left < window.innerWidth;
+    });
+  }
+
+  // Centre-point of an element's bounding rect.
+  function centre(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  // ── Spatial move ──────────────────────────────────────────────────────────
+  // Finds the best candidate in `dir` from `current` using a weighted score:
+  //   score = primaryDist + crossDist * 2.5
+  // Low score wins.  The cross-axis weight ensures column/row alignment is
+  // preferred over raw Euclidean distance (critical for grid layouts).
+  function spatialMove(current, dir) {
+    const all = visibleFocusables();
+    const { x: cx, y: cy } = centre(current);
+
+    let best = null;
+    let bestScore = Infinity;
+
+    for (const el of all) {
+      if (el === current) continue;
+      const { x: ex, y: ey } = centre(el);
+      const dx = ex - cx;
+      const dy = ey - cy;
+
+      let primary, cross, inDir;
+      if (dir === 'right') { inDir = dx >  2; primary =  dx; cross = Math.abs(dy); }
+      if (dir === 'left')  { inDir = dx < -2; primary = -dx; cross = Math.abs(dy); }
+      if (dir === 'down')  { inDir = dy >  2; primary =  dy; cross = Math.abs(dx); }
+      if (dir === 'up')    { inDir = dy < -2; primary = -dy; cross = Math.abs(dx); }
+
+      if (!inDir) continue;
+
+      const score = primary + cross * 2.5;
+      if (score < bestScore) { bestScore = score; best = el; }
+    }
+
+    return best;
+  }
+
+  // ── Focus + scroll ────────────────────────────────────────────────────────
+  function focusEl(el) {
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
+
+  // Focus the first tile in the active screen, falling back to first nav-btn.
+  function focusFirst() {
+    const screen = document.querySelector('.screen.active');
+    const tile   = screen && screen.querySelector(TILE_SEL);
+    if (tile) { focusEl(tile); return; }
+    const nav = document.querySelector('#top-nav .nav-btn, #bottom-nav .nav-btn');
+    if (nav) focusEl(nav);
+  }
+
+  // ── Screen history for Backspace ──────────────────────────────────────────
+  const _history = [];
+  const _origShowScreen = window.showScreen;
+
+  window.showScreen = async function (name, ...args) {
+    // Record departing screen so Backspace can return to it.
+    // `activeScreen` is the existing global tracking variable.
+    if (typeof activeScreen !== 'undefined' && activeScreen !== name) {
+      _history.push(activeScreen);
+      if (_history.length > 20) _history.shift();
+    }
+    const result = await _origShowScreen.call(this, name, ...args);
+    // Transition is 300 ms (opacity); give a small buffer before focusing.
+    setTimeout(focusFirst, 360);
+    return result;
+  };
+
+  // ── Key handler ───────────────────────────────────────────────────────────
+  function onKey(e) {
+    // Hands off when a text field is active — let normal typing through.
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    // Hands off when the VOD player modal owns the keyboard.
+    if (document.getElementById('vod-player-modal')?.classList.contains('open')) return;
+
+    // ── Arrow keys ───────────────────────────────────────────────────────────
+    const DIR = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+    const dir = DIR[e.key];
+
+    if (dir) {
+      e.preventDefault();
+      // stopImmediatePropagation prevents the bubble-phase handler below from
+      // also firing nextChannel/prevChannel on the same keystroke.
+      e.stopImmediatePropagation();
+      // Any arrow key while fullscreen wakes the OSD (or resets its timer).
+      if (document.fullscreenElement) FsOsd.show();
+
+      const cur = document.activeElement;
+      if (!cur || cur === document.body || cur === document.documentElement) {
+        focusFirst();
+        return;
+      }
+      const next = spatialMove(cur, dir);
+
+      // Grid edge → flip page instead of wrapping or stopping.
+      // Triggered when there is no focusable candidate in the pressed direction
+      // and the focused element lives inside the channel grid (#ch-list).
+      if (!next && (dir === 'left' || dir === 'right') && cur.closest('#ch-list')) {
+        if (dir === 'right') {
+          tvNextPage().then(() => {
+            const first = document.querySelector('#ch-list .ch-card, #ch-list .ch-row');
+            if (first) focusEl(first);
+          });
+        } else {
+          tvPrevPage().then(() => {
+            const tiles = document.querySelectorAll('#ch-list .ch-card, #ch-list .ch-row');
+            if (tiles.length) focusEl(tiles[tiles.length - 1]);
+          });
+        }
+        return;
+      }
+
+      if (next) focusEl(next);
+      return;
+    }
+
+    // ── Enter → click ────────────────────────────────────────────────────────
+    if (e.key === 'Enter') {
+      // Wake OSD on Enter while fullscreen (e.g. pressing play/mute ctrl-btn).
+      if (document.fullscreenElement) FsOsd.show();
+      const cur = document.activeElement;
+      if (cur && cur !== document.body) {
+        e.preventDefault();
+        cur.click();
+      }
+      return;
+    }
+
+    // ── Backspace → exit fullscreen first, then go back ─────────────────────
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (document.fullscreenElement) {
+        // Let fullscreenchange handle focus restoration after the exit animates.
+        document.exitFullscreen().catch(() => {});
+        return;
+      }
+      const prev = _history.pop();
+      // Call the original directly to avoid re-recording this navigation.
+      if (typeof _origShowScreen === 'function') {
+        _origShowScreen.call(window, prev || 'home');
+        setTimeout(focusFirst, 360);
+      }
+    }
+  }
+
+  // Capture phase: runs before all bubble-phase handlers on document.
+  document.addEventListener('keydown', onKey, { capture: true });
+
+  // ── Initial auto-focus ────────────────────────────────────────────────────
+  // Content loads asynchronously from the API after init().  Watch for the
+  // first batch of tiles to appear, then focus once.
+  let _initialFocusDone = false;
+  new MutationObserver((_, obs) => {
+    if (_initialFocusDone) return;
+    const screen = document.querySelector('.screen.active');
+    if (screen && screen.querySelector(TILE_SEL)) {
+      _initialFocusDone = true;
+      obs.disconnect();
+      setTimeout(focusFirst, 120);
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+
+  return { focusFirst, spatialMove, focusEl };
+})();
+
+// Restore D-pad focus when fullscreen exits in TV mode.
+// Fires whether the user pressed Backspace (our handler), Escape (browser
+// native), or the browser chrome's own exit button.
+document.addEventListener('fullscreenchange', () => {
+  if (!document.body.classList.contains('tv-mode')) return;
+
+  if (document.fullscreenElement) {
+    // Entering fullscreen — show OSD immediately with current channel data.
+    const ch = allChannels.find(c => c.id === currentChId);
+    FsOsd.show(ch || null);
+    return;
+  }
+
+  // Exiting fullscreen — dismiss OSD, then restore D-pad focus.
+  FsOsd.hide();
+  // Small delay: let the browser finish the fullscreen-exit transition before
+  // re-focusing, otherwise the focus call lands on an element still animating
+  // out of the fullscreen layer and the outline ring appears in the wrong place.
+  setTimeout(() => {
+    const playingRow = document.querySelector('.ch-row.playing, .ch-card.playing');
+    if (playingRow) {
+      playingRow.focus({ preventScroll: true });
+      // ch-card is in a non-scrolling grid; ch-row still needs scrollIntoView.
+      if (playingRow.classList.contains('ch-row')) {
+        playingRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (DPad) {
+      DPad.focusFirst();
+    }
+  }, 120);
+});
+
 // Keyboard nav
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -4232,8 +5125,12 @@ document.addEventListener('keydown', e => {
     closeInfoOverlay();
     document.querySelectorAll('div[style*="position:fixed"]').forEach(d=>{ if(d.id!=='splash') d.remove(); });
   }
-  if (e.key === 'ArrowRight' && activeScreen==='tv') nextChannel();
-  if (e.key === 'ArrowLeft'  && activeScreen==='tv') prevChannel();
+  // Arrow-key channel switching is superseded in tv-mode by DPad above.
+  // Kept here for non-tv-mode browser use (mouse/keyboard desktop users).
+  if (!document.body.classList.contains('tv-mode')) {
+    if (e.key === 'ArrowRight' && activeScreen==='tv') nextChannel();
+    if (e.key === 'ArrowLeft'  && activeScreen==='tv') prevChannel();
+  }
 });
 
 init();

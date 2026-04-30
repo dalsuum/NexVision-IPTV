@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android TV launcher banner — must be exactly 320 × 180 dp.
+  Replace with a real PNG (res/drawable-xhdpi/tv_banner.png, 640×360 px)
+  for production. This vector placeholder keeps the build green.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Background -->
+    <path
+        android:fillColor="#06060A"
+        android:pathData="M0,0 H320 V180 H0 Z" />
+
+    <!-- Gold accent bar -->
+    <path
+        android:fillColor="#C9A84C"
+        android:pathData="M0,170 H320 V180 H0 Z" />
+
+    <!-- Wordmark (approximated with rectangles — replace with real asset) -->
+    <path
+        android:fillColor="#C9A84C"
+        android:pathData="M40,72 H58 V108 H40 Z" />
+    <path
+        android:fillColor="#F0F0F8"
+        android:pathData="M64,72 H260 V82 H64 Z" />
+    <path
+        android:fillColor="#F0F0F8"
+        android:pathData="M64,88 H200 V98 H64 Z" />
+    <path
+        android:fillColor="#5A5A6A"
+        android:pathData="M64,104 H160 V110 H64 Z" />
+
+</vector>

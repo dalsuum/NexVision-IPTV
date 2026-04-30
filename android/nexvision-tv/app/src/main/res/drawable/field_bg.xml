@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EditText background: gold border when focused, dim border at rest -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_focused="true">
+        <shape>
+            <solid android:color="#1A1A28" />
+            <stroke android:width="2dp" android:color="#C9A84C" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+    <item>
+        <shape>
+            <solid android:color="#1A1A28" />
+            <stroke android:width="1dp" android:color="#2A2A3A" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+
+</selector>

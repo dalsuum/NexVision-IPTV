@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexVision Cast Receiver</title>
+
+  <!--
+    CAF v3 Receiver SDK — must load synchronously before any cast.framework
+    usage. Registers the <cast-media-player> custom element and the global
+    cast.framework namespace. Load from Google's CDN; do not self-host.
+  -->
+  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+
+  <!--
+    HLS.js — used as the actual MSE playback engine for HLS streams.
+    Pinned to the same version used in tv/index.html for consistency.
+    Attaches to the <video> inside <cast-media-player>'s shadow DOM after
+    the framework has processed the LOAD request.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+
+  <!--
+    NexVision brand fonts — loaded non-blocking; the UI falls back to Georgia
+    while they arrive, so there is no render-blocking penalty.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Mono:wght@300;400&display=swap"
+        rel="stylesheet">
+
+  <style>
+    /* ── Reset ───────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #06060a;   /* NexVision body background */
+      color: #f0f0f8;
+    }
+
+    /* ── CAF player ──────────────────────────────────────────────────────────── */
+    /*
+      <cast-media-player> fills the screen and manages:
+        • sender ↔ receiver state synchronisation (play/pause/seek/volume)
+        • media status broadcasts that keep the sender's seek-bar in sync
+        • the underlying <video> element HLS.js will attach to
+
+      CSS custom properties tune the built-in sender-facing progress ring.
+    */
+    cast-media-player {
+      position: absolute;
+      inset: 0;
+      width:  100vw;
+      height: 100vh;
+      --theme-hue:      46;       /* HSL hue for gold accent (≈ #c9a84c)  */
+      --progress-color: #c9a84c;  /* seek-bar / spinner color              */
+    }
+
+    /* ── Overlay shell ───────────────────────────────────────────────────────── */
+    /*
+      Sits above <cast-media-player> in the stacking context.
+      pointer-events:none lets all touch/click events fall through to the
+      CAF player controls (not used on TV glass but needed for emulator).
+    */
+    #nv-shell {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* ── Buffering spinner ───────────────────────────────────────────────────── */
+    #nv-spinner {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #nv-spinner.show { opacity: 1; }
+
+    .nv-ring {
+      width: 72px; height: 72px;
+      border: 3px solid rgba(255,255,255,0.12);
+      border-top-color: #c9a84c;
+      border-radius: 50%;
+      animation: nv-spin 0.9s linear infinite;
+    }
+    @keyframes nv-spin { to { transform: rotate(360deg); } }
+
+    .nv-wordmark {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 9px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+    }
+
+    /* ── Channel info bar (bottom gradient) ──────────────────────────────────── */
+    /*
+      Fades in on every new LOAD, then auto-hides after INFO_SHOW_MS.
+      Gradient ensures legibility over any video content.
+    */
+    #nv-info {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 100px 72px 68px;
+      background: linear-gradient(transparent, rgba(6,6,10,0.92) 48%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #nv-info.show { opacity: 1; }
+
+    .nv-eyebrow {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: #c9a84c;
+      margin-bottom: 18px;
+    }
+
+    .nv-channel-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    #nv-logo {
+      width: 80px; height: 80px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      flex-shrink: 0;
+    }
+
+    #nv-channel-name {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 56px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: #f0f0f8;
+      /* Prevent very long names from wrapping to a second line */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 1400px;
+    }
+
+    #nv-subtitle {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      color: rgba(240,240,248,0.55);
+      margin-top: 10px;
+      margin-bottom: 20px;
+      max-width: 900px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* LIVE badge */
+    .nv-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #e84855;
+      color: #fff;
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 3px;
+    }
+
+    .nv-live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      animation: nv-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes nv-pulse {
+      0%, 100% { opacity: 1;   transform: scale(1);   }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    /* ── Error overlay ───────────────────────────────────────────────────────── */
+    #nv-error {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(6,6,10,0.72);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    #nv-error.show { opacity: 1; }
+
+    .nv-error-icon {
+      font-size: 52px;
+      line-height: 1;
+    }
+    #nv-error-msg {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      max-width: 600px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!--
+    CAF-managed media player.
+    The framework creates a <video> element inside this custom element's
+    shadow DOM and wires it to all sender ↔ receiver protocol messages.
+    HLS.js will attach to that same <video> after the LOAD interceptor fires.
+  -->
+  <cast-media-player></cast-media-player>
+
+  <!-- NexVision branding overlay — pointer-events:none, never blocks the player -->
+  <div id="nv-shell" aria-hidden="true">
+
+    <!-- Buffering / connecting spinner -->
+    <div id="nv-spinner" class="show">
+      <div class="nv-ring"></div>
+      <div class="nv-wordmark">NexVision</div>
+    </div>
+
+    <!-- Channel info bar: revealed on each LOAD, auto-hides after 5 s -->
+    <div id="nv-info">
+      <div class="nv-eyebrow">NexVision IPTV</div>
+      <div class="nv-channel-row">
+        <img id="nv-logo" alt="" style="display:none">
+        <div id="nv-channel-name">—</div>
+      </div>
+      <div id="nv-subtitle"></div>
+      <div class="nv-live">
+        <div class="nv-live-dot"></div>
+        LIVE
+      </div>
+    </div>
+
+    <!-- Fatal stream error — auto-dismisses after 8 s -->
+    <div id="nv-error">
+      <div class="nv-error-icon">📡</div>
+      <div id="nv-error-msg">Stream unavailable</div>
+    </div>
+
+  </div><!-- #nv-shell -->
+
+  <script>
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CAF context
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const context       = cast.framework.CastReceiverContext.getInstance();
+  const playerManager = context.getPlayerManager();   // correct v3 accessor
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // State
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  let hlsInstance  = null;   // current Hls instance, or null
+  let _infoTimer   = null;   // handle for info-bar auto-hide
+  let _errorTimer  = null;   // handle for error-overlay auto-hide
+
+  // How long (ms) the channel info bar stays visible after a LOAD.
+  const INFO_SHOW_MS = 5000;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOM helpers
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const $  = id => document.getElementById(id);
+
+  function showSpinner(on) {
+    $('nv-spinner').classList.toggle('show', on);
+  }
+
+  function showInfoBar(on) {
+    clearTimeout(_infoTimer);
+    $('nv-info').classList.toggle('show', on);
+    if (on) {
+      _infoTimer = setTimeout(() => $('nv-info').classList.remove('show'), INFO_SHOW_MS);
+    }
+  }
+
+  function showError(msg) {
+    showSpinner(false);
+    $('nv-error-msg').textContent = msg || 'Stream unavailable';
+    $('nv-error').classList.add('show');
+    clearTimeout(_errorTimer);
+    _errorTimer = setTimeout(() => $('nv-error').classList.remove('show'), 8000);
+  }
+
+  // Populate the info bar from the CAF MediaInformation object.
+  function populateInfoBar(media) {
+    if (!media) return;
+
+    // Title: prefer metadata.title, fall back to contentId
+    const title =
+      (media.metadata && media.metadata.title) ||
+      media.contentId ||
+      '—';
+    $('nv-channel-name').textContent = title;
+
+    // EPG description
+    const subtitle = (media.metadata && media.metadata.subtitle) || '';
+    $('nv-subtitle').textContent = subtitle;
+
+    // Logo image
+    const logoEl = $('nv-logo');
+    const imgs   = media.metadata && media.metadata.images;
+    if (imgs && imgs.length > 0 && imgs[0].url) {
+      logoEl.src           = imgs[0].url;
+      logoEl.style.display = 'block';
+      logoEl.onerror       = () => { logoEl.style.display = 'none'; };
+    } else {
+      logoEl.style.display = 'none';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Shadow-DOM video accessor
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // <cast-media-player> renders its <video> element inside a shadow root.
+  // Accessing that element lets HLS.js attach directly via MediaSource
+  // Extensions, taking full control of buffering and segment fetching while
+  // the framework continues to read currentTime / duration / paused for its
+  // sender-facing status broadcasts.
+  //
+  function getCastVideoEl() {
+    const cmp = document.querySelector('cast-media-player');
+    if (!cmp || !cmp.shadowRoot) return null;
+    return cmp.shadowRoot.querySelector('video');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HLS.js engine
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  function destroyHls() {
+    if (hlsInstance) {
+      hlsInstance.destroy();
+      hlsInstance = null;
+    }
+  }
+
+  // attachHls() is called via setTimeout(0) from the LOAD interceptor so
+  // that CAF's synchronous default handler runs first and has the video
+  // element ready in the shadow DOM before we take it over.
+  function attachHls(url) {
+    const video = getCastVideoEl();
+
+    if (!video) {
+      // Shadow DOM not accessible — the framework will handle HLS natively
+      // on Chromecast (Chrome MSE supports application/x-mpegurl directly).
+      showSpinner(false);
+      return;
+    }
+
+    destroyHls();
+
+    // Safari / environments where MSE is unavailable — fall back to native.
+    if (!Hls.isSupported()) {
+      video.src = url;
+      video.play().catch(() => {});
+      showSpinner(false);
+      return;
+    }
+
+    // ── Configure HLS.js for live IPTV streams ────────────────────────────
+    hlsInstance = new Hls({
+      enableWorker:               true,
+      lowLatencyMode:             true,   // target edge of live window
+      maxBufferLength:            30,     // seconds of forward buffer
+      maxMaxBufferLength:         60,
+      liveSyncDurationCount:      3,      // segments behind live edge
+      liveMaxLatencyDurationCount: 6,
+      maxLoadingDelay:            4,
+      manifestLoadingTimeOut:     10000,  // 10 s manifest timeout
+      fragLoadingTimeOut:         20000,  // 20 s segment timeout
+      // Retry transient network errors before declaring fatal
+      manifestLoadingMaxRetry:    3,
+      fragLoadingMaxRetry:        4,
+    });
+
+    hlsInstance.loadSource(url);
+
+    // attachMedia() replaces whatever src the framework set on the video
+    // element with a blob: MediaSource URL — HLS.js owns the pipeline from
+    // this point on.
+    hlsInstance.attachMedia(video);
+
+    // ── Event handlers ────────────────────────────────────────────────────
+
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+      video.play().catch(() => {});
+      showSpinner(false);
+    });
+
+    hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+      if (!data.fatal) return;   // non-fatal: HLS.js self-recovers
+
+      switch (data.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          // Transient network hiccup — ask HLS.js to re-try from where it left off.
+          try { hlsInstance.startLoad(); } catch (_) {}
+          break;
+
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          // Codec / decode error — attempt in-place media recovery.
+          try { hlsInstance.recoverMediaError(); } catch (_) {}
+          break;
+
+        default:
+          // Unrecoverable: destroy instance and surface error to the viewer.
+          destroyHls();
+          showError('Stream error — ' + (data.details || 'unknown'));
+          break;
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOAD message interceptor
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Runs before the framework's default LOAD handler.  We:
+  //   1. Auto-detect HLS content type when the sender omits it
+  //   2. Update the NexVision overlay immediately (before first frame)
+  //   3. Schedule HLS.js attachment on the next tick so the framework can
+  //      process its synchronous setup first
+  //
+  playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    request => {
+      if (!request || !request.media) return request;
+
+      const url = (request.media.contentUrl || request.media.contentId || '').trim();
+
+      // ── Content-type sniffing ────────────────────────────────────────────
+      if (!request.media.contentType) {
+        if (/\.m3u8($|\?)|\/hls\/|\/live\//i.test(url)) {
+          request.media.contentType = 'application/x-mpegurl';
+        } else if (/\.ts($|\?)/i.test(url)) {
+          request.media.contentType = 'video/mp2t';
+        }
+      }
+
+      // ── Overlay update ───────────────────────────────────────────────────
+      $('nv-error').classList.remove('show');
+      populateInfoBar(request.media);
+      showInfoBar(true);
+      showSpinner(true);
+
+      // ── HLS.js takeover (deferred) ───────────────────────────────────────
+      // setTimeout(0) yields control back to the CAF default handler which
+      // sets up the shadow-DOM <video> element, then our callback runs and
+      // calls attachMedia() to hand the MSE pipeline to HLS.js.
+      setTimeout(() => attachHls(url), 0);
+
+      return request;
+    }
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Player state events
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // BUFFERING fires when the video element stalls waiting for data and when
+  // it resumes — keeps the spinner in sync with actual playback health.
+  playerManager.addEventListener(
+    cast.framework.events.EventType.BUFFERING,
+    e => showSpinner(e.isBuffering)
+  );
+
+  // PLAYER_LOAD_COMPLETE fires on the video element's 'canplay' event.
+  // Hide the spinner in case HLS.js MANIFEST_PARSED didn't already do so.
+  playerManager.addEventListener(
+    cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+    () => showSpinner(false)
+  );
+
+  // Clean up HLS.js when the sender ends / replaces the media session.
+  playerManager.addEventListener(
+    cast.framework.events.EventType.MEDIA_FINISHED,
+    () => {
+      destroyHls();
+      showSpinner(false);
+      showInfoBar(false);
+    }
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Start receiver
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const options         = new cast.framework.CastReceiverOptions();
+  options.maxInactivity = 600;   // disconnect idle devices after 10 minutes
+
+  context.start(options);
+  </script>
+</body>
+</html>

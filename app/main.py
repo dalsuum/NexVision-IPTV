@@ -40,7 +40,7 @@ from functools import wraps
 import jwt
 from flask import (
     Flask, request, jsonify, send_from_directory,
-    Response, stream_with_context, abort, make_response
+    Response, stream_with_context, abort, make_response, redirect
 )
 from flask_cors import CORS
 from db.vod_storage_admin import StorageConfig, STORAGE_ADMIN_HTML, create_storage_admin_routes
@@ -48,11 +48,27 @@ from db.vod_storage_admin import StorageConfig, STORAGE_ADMIN_HTML, create_stora
 # Resolve paths relative to this file, so it works regardless of working directory
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ADMIN_DIR = os.path.join(BASE_DIR, 'web', 'admin')
-TV_DIR = os.path.join(BASE_DIR, 'web', 'tv')
+TV_DIR    = os.path.join(BASE_DIR, 'web', 'tv')
+CAST_DIR  = os.path.join(BASE_DIR, 'web', 'cast')
 DB_PATH   = os.path.join(BASE_DIR, 'nexvision.db')
 
 app = Flask(__name__, static_folder=ADMIN_DIR, static_url_path='/admin')
-CORS(app)
+CORS(
+    app,
+    origins='*',
+    # Cast sender SDK and ExoPlayer send Range as a non-simple header, which
+    # triggers an OPTIONS preflight. It must appear in Allow-Headers or the
+    # browser/Cast runtime blocks the request before a single byte is fetched.
+    allow_headers=[
+        'Range', 'Origin', 'Accept', 'X-Requested-With',
+        'Content-Type', 'Authorization', 'X-Room-Token',
+    ],
+    # Players need to read these response headers to track progress and seek.
+    # Non-safelisted headers are invisible to JS/Cast unless explicitly exposed.
+    expose_headers=['Content-Length', 'Content-Range', 'Accept-Ranges'],
+    methods=['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    max_age=600,
+)
 app.config['SECRET_KEY'] = 'nexvision-iptv-secure-secret-key-2024-x7k9'
 APP_VERSION = os.getenv('NEXVISION_VERSION', '8.10')
 
@@ -77,16 +93,17 @@ def get_db():
 def migrate_db(conn):
     """Add columns that might not exist in older databases."""
     cols_to_add = [
-        ("channels",      "channel_type",  "TEXT DEFAULT 'stream_udp'"),
-        ("channels",      "is_vip",        "INTEGER DEFAULT 0"),
-        ("content_items", "content_html",  "TEXT DEFAULT ''"),
-        ("content_items", "photo_url",     "TEXT DEFAULT ''"),
-        ("nav_items",     "target_url",    "TEXT DEFAULT ''"),
-        ("promo_slides",  "video_url",     "TEXT DEFAULT ''"),
-        ("promo_slides",  "media_type",    "TEXT DEFAULT 'image'"),
-        ("rss_feeds",     "text_color",    "TEXT DEFAULT '#ffffff'"),
-        ("rss_feeds",     "bg_color",      "TEXT DEFAULT '#09090f'"),
-        ("rss_feeds",     "bg_opacity",    "INTEGER DEFAULT 92"),
+        ("channels",       "channel_type",  "TEXT DEFAULT 'stream_udp'"),
+        ("channels",       "is_vip",        "INTEGER DEFAULT 0"),
+        ("content_items",  "content_html",  "TEXT DEFAULT ''"),
+        ("content_items",  "photo_url",     "TEXT DEFAULT ''"),
+        ("nav_items",      "target_url",    "TEXT DEFAULT ''"),
+        ("promo_slides",   "video_url",     "TEXT DEFAULT ''"),
+        ("promo_slides",   "media_type",    "TEXT DEFAULT 'image'"),
+        ("rss_feeds",      "text_color",    "TEXT DEFAULT '#ffffff'"),
+        ("rss_feeds",      "bg_color",      "TEXT DEFAULT '#09090f'"),
+        ("rss_feeds",      "bg_opacity",    "INTEGER DEFAULT 92"),
+        ("watch_history",  "device_type",   "TEXT DEFAULT 'browser'"),
     ]
     for table, col, typedef in cols_to_add:
         try:
@@ -166,6 +183,33 @@ def migrate_db(conn):
             PRIMARY KEY (room_id, package_id),
             FOREIGN KEY (room_id)    REFERENCES rooms(id)            ON DELETE CASCADE,
             FOREIGN KEY (package_id) REFERENCES content_packages(id) ON DELETE CASCADE
+        )
+    """)
+    # Cast session tracking
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS cast_sessions (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            room_id          INTEGER,
+            channel_id       INTEGER,
+            started_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ended_at         TIMESTAMP,
+            duration_seconds INTEGER,
+            sender_platform  TEXT DEFAULT '',
+            FOREIGN KEY (room_id)    REFERENCES rooms(id)    ON DELETE SET NULL,
+            FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
+        )
+    """)
+    # Android TV box device registry (heartbeat tracking)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS devices (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            mac_address TEXT NOT NULL UNIQUE,
+            room_number TEXT DEFAULT '',
+            device_name TEXT DEFAULT '',
+            last_seen   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            app_version TEXT DEFAULT '',
+            status      TEXT DEFAULT 'active',
+            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()
@@ -742,6 +786,21 @@ def track_room_presence():
 
     conn.commit()
     conn.close()
+
+
+# ─── TV Platform Redirect ─────────────────────────────────────────────────────
+
+_TV_UA_SIGNALS = ('TV', 'CrKey', 'Chromecast')
+
+@app.before_request
+def redirect_tv_clients():
+    # Skip non-page paths — API calls, VOD routes, admin, and the /tv destination
+    # itself (prevents redirect loop). Only redirect HTML page navigations.
+    if request.path.startswith(('/api/', '/vod/', '/admin', '/tv', '/internal/')):
+        return
+    ua = request.headers.get('User-Agent', '')
+    if 'Android' in ua and any(sig in ua for sig in _TV_UA_SIGNALS):
+        return redirect('/tv?platform=tv', 302)
 
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -1782,6 +1841,51 @@ def delete_skin(sid):
     return jsonify({'ok': True})
 
 
+# ─── Android TV Device Heartbeat ─────────────────────────────────────────────
+
+@app.route('/api/device/heartbeat', methods=['POST'])
+def device_heartbeat():
+    d = request.json or {}
+    mac = (d.get('mac_address') or '').strip().upper()
+    if not mac:
+        return jsonify({'error': 'mac_address required'}), 400
+    app_version = (d.get('app_version') or '').strip()[:50]
+    room_number = (d.get('room_number') or '').strip()[:50]
+    device_name = (d.get('device_name') or '').strip()[:100]
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO devices (mac_address, room_number, device_name, app_version, last_seen, status)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, 'active')
+        ON CONFLICT(mac_address) DO UPDATE SET
+            last_seen    = CURRENT_TIMESTAMP,
+            app_version  = excluded.app_version,
+            room_number  = CASE WHEN excluded.room_number != '' THEN excluded.room_number ELSE room_number END,
+            device_name  = CASE WHEN excluded.device_name != '' THEN excluded.device_name ELSE device_name END,
+            status       = 'active'
+    """, (mac, room_number, device_name, app_version))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/devices', methods=['GET'])
+@admin_required
+def get_devices():
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT *,
+               CASE
+                 WHEN last_seen IS NULL THEN 0
+                 WHEN (strftime('%s','now') - strftime('%s', last_seen)) <= 600
+                 THEN 1 ELSE 0
+               END AS online
+        FROM devices
+        ORDER BY last_seen DESC
+    """).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
 # ─── Reports ─────────────────────────────────────────────────────────────────
 
 @app.route('/api/reports/rooms', methods=['GET'])
@@ -1942,6 +2046,16 @@ def report_summary():
           AND (strftime('%s','now') - strftime('%s', last_seen)) <= ?
     """, (10*60,)).fetchone()[0]
 
+    by_device = conn.execute("""
+        SELECT COALESCE(device_type, 'browser') AS device_type,
+               COUNT(*)                         AS sessions,
+               COALESCE(SUM(duration_minutes), 0) AS total_minutes
+        FROM watch_history
+        WHERE started_at >= datetime('now', ?)
+        GROUP BY device_type
+        ORDER BY sessions DESC
+    """, (since,)).fetchall()
+
     conn.close()
     return jsonify({
         'top_channels': [dict(r) for r in top_channels],
@@ -1949,9 +2063,59 @@ def report_summary():
         'top_vod':      [dict(r) for r in top_vod],
         'hourly':       [dict(r) for r in hourly],
         'daily':        [dict(r) for r in daily],
+        'by_device':    [dict(r) for r in by_device],
         'online_rooms': online_count,
         'days':         days
     })
+
+
+@app.route('/api/watch-event', methods=['POST'])
+def record_watch_event():
+    """
+    Called by TV/browser clients to log a completed watch session.
+    Body (JSON): { room_id, channel_id?, movie_id?, duration_minutes }
+    device_type is auto-detected from the User-Agent header.
+    """
+    d = request.json or {}
+    room_id          = d.get('room_id')
+    channel_id       = d.get('channel_id')
+    movie_id         = d.get('movie_id')
+    duration_minutes = _safe_int(d.get('duration_minutes'), 0)
+
+    if not room_id or (not channel_id and not movie_id):
+        return jsonify({'error': 'room_id and one of channel_id / movie_id required'}), 400
+
+    ua          = request.headers.get('User-Agent', '')[:200]
+    device_type = _detect_device_type(ua)
+
+    conn = get_db()
+    conn.execute(
+        """INSERT INTO watch_history (room_id, channel_id, movie_id, duration_minutes, device_type)
+           VALUES (?, ?, ?, ?, ?)""",
+        (room_id, channel_id, movie_id, duration_minutes, device_type)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'ok', 'device_type': device_type})
+
+
+@app.route('/api/reports/devices', methods=['GET'])
+@admin_required
+def report_devices():
+    """Sessions and watch-minutes grouped by device_type over the requested window."""
+    days = _safe_int(request.args.get('days'), 30)
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT COALESCE(device_type, 'browser') AS device_type,
+               COUNT(*)                         AS sessions,
+               COALESCE(SUM(duration_minutes), 0) AS total_minutes
+        FROM watch_history
+        WHERE started_at >= datetime('now', ?)
+        GROUP BY device_type
+        ORDER BY sessions DESC
+    """, (f'-{days} days',)).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
 
 
 # ─── Users ────────────────────────────────────────────────────────────────────
@@ -3945,6 +4109,65 @@ def serve_admin():
 def serve_admin_static(filename):
     return send_from_directory(ADMIN_DIR, filename)
 
+@app.route('/cast-receiver')
+def serve_cast_receiver():
+    resp = send_from_directory(CAST_DIR, 'receiver.html')
+    # Cast SDK fetches the receiver fresh on every session — never serve stale.
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+
+# ─── Cast Session Tracking ────────────────────────────────────────────────────
+
+@app.route('/api/cast/session', methods=['POST'])
+def cast_session_start():
+    """Record a new Chromecast session when the receiver begins playback."""
+    d = request.get_json(silent=True) or {}
+    room_id         = d.get('room_id')
+    channel_id      = d.get('channel_id')
+    sender_platform = str(d.get('sender_platform', ''))[:64]
+    conn = get_db()
+    cur = conn.execute(
+        """INSERT INTO cast_sessions (room_id, channel_id, sender_platform)
+           VALUES (?, ?, ?)""",
+        (room_id, channel_id, sender_platform),
+    )
+    session_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return jsonify({'id': session_id}), 201
+
+
+@app.route('/api/cast/session/<int:session_id>', methods=['PATCH'])
+def cast_session_end(session_id):
+    """Update ended_at and duration_seconds when the cast session finishes."""
+    d = request.get_json(silent=True) or {}
+    ended_at         = d.get('ended_at')        # ISO-8601 string or None (defaults to NOW)
+    duration_seconds = d.get('duration_seconds') # integer, required
+    conn = get_db()
+    if ended_at:
+        conn.execute(
+            """UPDATE cast_sessions
+               SET ended_at = ?, duration_seconds = ?
+               WHERE id = ?""",
+            (ended_at, duration_seconds, session_id),
+        )
+    else:
+        conn.execute(
+            """UPDATE cast_sessions
+               SET ended_at = CURRENT_TIMESTAMP, duration_seconds = ?
+               WHERE id = ?""",
+            (duration_seconds, session_id),
+        )
+    conn.commit()
+    row = conn.execute("SELECT * FROM cast_sessions WHERE id = ?", (session_id,)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'error': 'Session not found'}), 404
+    return jsonify(dict(row))
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_tv(path):
@@ -4161,6 +4384,14 @@ def vod_init_db():
     for k, v in defaults:
         conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?,?)", (k, v))
     conn.commit()
+
+    # Migrate stream_sessions — add device_type if missing
+    try:
+        conn.execute("ALTER TABLE stream_sessions ADD COLUMN device_type TEXT DEFAULT 'browser'")
+        conn.commit()
+    except Exception:
+        pass  # column already exists
+
     conn.close()
 
 # ─── VOD Auth ─────────────────────────────────────────────────────────────────
@@ -4655,11 +4886,13 @@ def vod_serve_segment(video_id, quality, segment):
         resp.headers['Content-Type']                = 'video/mp2t'
         resp.headers['Cache-Control']               = 'public, max-age=3600'
         resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Accept-Ranges']               = 'bytes'
         return resp
     resp = send_from_directory(str(HLS_DIR / video_id / quality), segment)
     resp.headers['Content-Type']  = 'video/mp2t'
     resp.headers['Cache-Control'] = 'public, max-age=3600'
     resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Accept-Ranges']               = 'bytes'
     return resp
 
 
@@ -4673,18 +4906,35 @@ def vod_serve_upload(filename):
     return send_from_directory(str(UPLOADS_DIR), filename)
 
 
+def _detect_device_type(ua: str) -> str:
+    """Classify a User-Agent string into tv / mobile / tablet / browser."""
+    u = ua.lower()
+    if any(k in u for k in ('tizen', 'webos', 'hbbtv', 'smart-tv', 'smarttv',
+                             'googletv', 'android tv', 'firetv', 'fire tv',
+                             'netcast', 'viera', 'bravia', 'philipstv')):
+        return 'tv'
+    if any(k in u for k in ('iphone', 'windows phone', 'blackberry')):
+        return 'mobile'
+    if 'android' in u:
+        return 'mobile' if 'mobile' in u else 'tablet'
+    if 'ipad' in u:
+        return 'tablet'
+    return 'browser'
+
+
 def _vod_track_session(video_id: str, quality: str):
     """Track a stream session (best-effort, non-blocking)."""
     try:
         sid = request.cookies.get('vod_sid') or request.headers.get('X-Session-Id') or str(uuid.uuid4())
         ip  = request.remote_addr or ''
         ua  = request.headers.get('User-Agent', '')[:200]
+        device_type = _detect_device_type(ua)
         conn = vod_get_db()
         conn.execute("""
-            INSERT INTO stream_sessions (id, video_id, ip, user_agent, quality)
-            VALUES (?,?,?,?,?)
+            INSERT INTO stream_sessions (id, video_id, ip, user_agent, quality, device_type)
+            VALUES (?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET last_seen=CURRENT_TIMESTAMP
-        """, (sid, video_id, ip, ua, quality))
+        """, (sid, video_id, ip, ua, quality, device_type))
         conn.commit(); conn.close()
     except Exception:
         pass
@@ -5088,6 +5338,14 @@ def vod_analytics():
         'categories': [dict(r) for r in conn.execute(
             "SELECT category, COUNT(*) as count FROM videos WHERE category!='' GROUP BY category ORDER BY count DESC"
         ).fetchall()],
+        'by_device': [dict(r) for r in conn.execute("""
+            SELECT COALESCE(device_type, 'browser') AS device_type,
+                   COUNT(DISTINCT id)               AS sessions
+            FROM stream_sessions
+            WHERE last_seen >= datetime('now', '-30 days')
+            GROUP BY device_type
+            ORDER BY sessions DESC
+        """).fetchall()],
     }
     conn.close()
     return jsonify(stats)
@@ -5234,6 +5492,32 @@ def _vod_uptime() -> str:
 
 # ─── VOD Management Dashboard ─────────────────────────────────────────────────
 
+def _vod_embedded_nav(active: str) -> str:
+    """Compact VOD/Admin/Storage tab bar injected when rendered inside admin iframe."""
+    tabs = [
+        ('vod',     '/vod/?embedded=1&inframe=1',       'VOD'),
+        ('admin',   '/vod/admin?embedded=1',             'Admin'),
+        ('storage', '/vod/admin/storage?embedded=1',     'Storage'),
+    ]
+    parts = []
+    for key, href, label in tabs:
+        if key == active:
+            s = ('padding:6px 14px;border-radius:6px;text-decoration:none;'
+                 'background:rgba(201,168,76,.15);border:1px solid #c9a84c;'
+                 'color:#c9a84c;font-size:12px;font-weight:600')
+        else:
+            s = ('padding:6px 14px;border-radius:6px;text-decoration:none;'
+                 'background:#131320;border:1px solid rgba(255,255,255,.12);'
+                 'color:rgba(240,240,248,.6);font-size:12px;font-weight:600')
+        parts.append(f'<a href="{href}" style="{s}">{label}</a>')
+    return (
+        '<div style="background:#0d0d14;border-bottom:1px solid rgba(255,255,255,.06);'
+        'padding:8px 16px;display:flex;gap:8px;align-items:center">'
+        + ''.join(parts)
+        + '</div>'
+    )
+
+
 @app.route('/vod/')
 @app.route('/vod')
 def vod_dashboard():
@@ -5244,10 +5528,9 @@ def vod_dashboard():
     )
     html = _render_vod_ui()
     if embedded:
-        # Strip the VOD page header entirely when rendered inside admin iframe.
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px">.*?</header>\s*',
-            '',
+            _vod_embedded_nav('vod'),
             html,
             flags=re.DOTALL
         )
@@ -6361,7 +6644,7 @@ def vod_admin_hub():
     if embedded:
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
-            '',
+            _vod_embedded_nav('admin'),
             html,
             flags=re.DOTALL
         )
@@ -6645,7 +6928,7 @@ def vod_admin_storage():
     if embedded:
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
-            '',
+            _vod_embedded_nav('storage'),
             html,
             flags=re.DOTALL
         )
