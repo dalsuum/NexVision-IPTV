@@ -3918,6 +3918,8 @@ pages.homeLayout = async function() {
   const showSlides   = s.home_show_slides   !== '0';
   const showFeatured = s.home_show_featured !== '0';
   const showWelcome  = s.home_show_welcome  !== '0';
+  const showChannels = s.home_show_channels !== '0';
+  const showVod      = s.home_show_vod      !== '0';
   const slidesStyle  = s.home_slides_style  || 'full';
   const welcomeType  = s.home_welcome_type  || 'text';
   const welcomeText  = s.home_welcome_text  || s.welcome_message || 'Welcome! Enjoy your stay.';
@@ -4039,13 +4041,35 @@ pages.homeLayout = async function() {
           <span class="big-toggle-track"></span>
         </label>
       </div>
+
+      <div class="home-setting-row" style="margin-bottom:8px">
+        <div>
+          <div class="home-setting-label">📺 Live Channels Row</div>
+          <div class="home-setting-sub">Horizontal scroll of live TV channels</div>
+        </div>
+        <label class="big-toggle">
+          <input type="checkbox" id="hl-channels" ${showChannels?'checked':''}>
+          <span class="big-toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="home-setting-row" style="margin-bottom:8px">
+        <div>
+          <div class="home-setting-label">🎬 Movies / VOD Row</div>
+          <div class="home-setting-sub">Horizontal scroll of VOD movies</div>
+        </div>
+        <label class="big-toggle">
+          <input type="checkbox" id="hl-vod" ${showVod?'checked':''}>
+          <span class="big-toggle-track"></span>
+        </label>
+      </div>
     </div>
 
 
     <div>
       <div class="sec-title" style="font-size:12px;color:var(--text2);margin-bottom:12px">Preview (approximate)</div>
       <div id="hl-preview" style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;overflow:hidden;min-height:320px">
-        ${buildHomePreview(showSlides, showWelcome, welcomeType, welcomeText, welcomePhoto, showFeatured)}
+        ${buildHomePreview(showSlides, showWelcome, welcomeType, welcomeText, welcomePhoto, showFeatured, showChannels, showVod)}
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center">Save settings then refresh TV to see changes live</div>
     </div>
@@ -4060,7 +4084,7 @@ function toggleWelcomeFields() {
   if (ps) ps.style.display = type === 'text'  ? 'none' : '';
 }
 
-function buildHomePreview(slides, welcome, wtype, wtext, wphoto, featured) {
+function buildHomePreview(slides, welcome, wtype, wtext, wphoto, featured, channels=true, vod=true) {
   let html = '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px">';
   // Header bar mock
   html += '<div style="height:28px;background:#111;display:flex;align-items:center;padding:0 10px;gap:6px"><span style="color:#d4a843;font-size:10px;letter-spacing:2px">NV</span><div style="display:flex;gap:4px">';
@@ -4084,10 +4108,16 @@ function buildHomePreview(slides, welcome, wtype, wtext, wphoto, featured) {
   if (featured) {
     html += '<div style="height:70px;background:linear-gradient(to right,#0f0f1e,#1a0a2e);display:flex;align-items:center;padding:0 12px;gap:10px"><div style="width:40px;height:56px;background:#2a1a3e;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎬</div><div><div style="color:rgba(212,168,76,.7);font-size:9px;letter-spacing:1px">FEATURED</div><div style="color:#fff;font-size:12px;font-weight:600">Movie Title</div><div style="display:flex;gap:4px;margin-top:3px"><span style="color:rgba(255,255,255,.4);font-size:9px">★ 8.5</span><span style="color:rgba(255,255,255,.4);font-size:9px">2024</span></div></div></div>';
   }
-  // Channel row mock
-  html += '<div style="padding:8px 12px"><div style="color:rgba(255,255,255,.3);font-size:9px;letter-spacing:1px;margin-bottom:6px">LIVE CHANNELS</div><div style="display:flex;gap:6px overflow:hidden">';
-  for (let i=0;i<4;i++) html += '<div style="width:48px;height:36px;background:#1a1a2e;border-radius:5px;flex-shrink:0"></div>';
-  html += '</div></div>';
+  if (channels) {
+    html += '<div style="padding:8px 12px"><div style="color:rgba(255,255,255,.3);font-size:9px;letter-spacing:1px;margin-bottom:6px">LIVE CHANNELS</div><div style="display:flex;gap:6px;overflow:hidden">';
+    for (let i=0;i<4;i++) html += '<div style="width:48px;height:36px;background:#1a1a2e;border-radius:5px;flex-shrink:0"></div>';
+    html += '</div></div>';
+  }
+  if (vod) {
+    html += '<div style="padding:8px 12px"><div style="color:rgba(255,255,255,.3);font-size:9px;letter-spacing:1px;margin-bottom:6px">MOVIES</div><div style="display:flex;gap:6px;overflow:hidden">';
+    for (let i=0;i<3;i++) html += '<div style="width:36px;height:52px;background:#1a1a2e;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px">🎬</div>';
+    html += '</div></div>';
+  }
   html += '</div>';
   return html;
 }
@@ -4098,6 +4128,8 @@ async function saveHomeLayout() {
     home_show_slides:   document.getElementById('hl-slides')?.checked   ? '1' : '0',
     home_show_welcome:  document.getElementById('hl-welcome')?.checked   ? '1' : '0',
     home_show_featured: document.getElementById('hl-featured')?.checked  ? '1' : '0',
+    home_show_channels: document.getElementById('hl-channels')?.checked  ? '1' : '0',
+    home_show_vod:      document.getElementById('hl-vod')?.checked       ? '1' : '0',
     home_slides_style:  document.getElementById('hl-slides-style')?.value || 'full',
     home_welcome_type:  type,
     home_welcome_text:          document.getElementById('hl-rte-body')?.innerHTML || '',

@@ -2546,6 +2546,8 @@ async function loadHome() {
   const showFeatured = (_settings.home_show_featured !== '0');
   const showSlides   = (_settings.home_show_slides   !== '0');
   const showWelcome  = (_settings.home_show_welcome  === '1');
+  const showChannels = (_settings.home_show_channels !== '0');
+  const showVod      = (_settings.home_show_vod      !== '0');
   const slidesStyle  = _settings.home_slides_style   || 'full';
   const welcomeStyle   = _settings.welcome_style       || _settings.home_welcome_type || 'text';
   const welcomeText    = _settings.home_welcome_text   || _settings.welcome_message   || '';
@@ -2647,7 +2649,8 @@ async function loadHome() {
     </div>`;
   }
 
-  el.innerHTML = heroHTML + `
+  el.innerHTML = heroHTML +
+  (showChannels ? `
   <div class="home-section">
     <div class="sec-header">
       <div class="sec-title">Live Channels</div>
@@ -2675,9 +2678,8 @@ async function loadHome() {
       </div>
       <button class="h-nav-btn right" onclick="scrollHomeRow('home-ch-scroll',1)" aria-label="Scroll channels right">›</button>
     </div>
-  </div>
-
-  ${allMovies.length > 1 ? `
+  </div>` : '') +
+  (showVod && allMovies.length > 1 ? `
   <div class="home-section">
     <div class="sec-header">
       <div class="sec-title">Movies</div>
@@ -2698,7 +2700,7 @@ async function loadHome() {
       </div>
       <button class="h-nav-btn right" onclick="scrollHomeRow('home-mv-scroll',1)" aria-label="Scroll movies right">›</button>
     </div>
-  </div>` : ''}`;
+  </div>` : '');
 
   // Start slide auto-play
   if (showSlides && _promoSlides.length > 1) startSlideshow();

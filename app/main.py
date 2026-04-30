@@ -690,6 +690,9 @@ def init_db():
         ('config_stamp',       '0'),
         # v8.9 — deployment mode: hotel | commercial
         ('deployment_mode',    'hotel'),
+        # v8.11 — home section visibility
+        ('home_show_channels', '1'),
+        ('home_show_vod',      '1'),
     ]
     for k, v in home_defaults:
         conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?,?)", (k, v))
