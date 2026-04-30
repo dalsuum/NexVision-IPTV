@@ -1,4 +1,0 @@
--keep class org.videolan.** { *; }
--keep class com.nexvision.iptv.** { *; }
--keepattributes Signature
--keepattributes *Annotation*

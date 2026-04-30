@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.10
+# NexVision IPTV Platform v8.11
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -10,15 +10,12 @@
 - [Features](#features)
 - [Architecture](#architecture)
 - [Quick Start (Development)](#quick-start-development)
-- [Quick Start (Docker)](#quick-start-docker)
 - [Production Deployment](#production-deployment)
 - [Automation & Monitoring](#automation--monitoring)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
-- [Android APK](#android-apk)
 - [Admin Panel Guide](#admin-panel-guide)
 - [Tech Stack](#tech-stack)
-- [Documentation](#documentation)
 - [Project Structure](#project-structure)
 
 ---
@@ -103,7 +100,7 @@ Hotel WiFi/LAN
 └──────────────────────────────────────────────────────────┘
 ```
 
-See full architecture diagram: [`docs/nexvision-architecture.drawio`](docs/nexvision-architecture.drawio)
+See [`nginx/nexvision.conf`](nginx/nexvision.conf) for the full Nginx configuration.
 
 ---
 
@@ -118,7 +115,7 @@ See full architecture diagram: [`docs/nexvision-architecture.drawio`](docs/nexvi
 ### 1. Install Dependencies
 ```bash
 cd nexvision-iptv
-pip install flask werkzeug feedparser requests
+pip install -r requirements_prod.txt
 ```
 
 ### 2. Run the Server
@@ -149,35 +146,6 @@ Access from phone/TV: `http://YOUR_IP/`
 
 ---
 
-## Quick Start (Docker)
-
-If you want one-command local deployment:
-
-1. Ensure Docker and Docker Compose are installed.
-2. Create your environment file:
-
-```bash
-cp .env.example .env
-```
-
-3. Build and run:
-
-```bash
-docker compose up -d --build
-```
-
-4. Open:
-- TV Client: http://localhost/
-- Admin Panel: http://localhost/admin/
-- VOD Dashboard: http://localhost/vod/
-
-Container files:
-- `Dockerfile`
-- `docker-compose.yml`
-- `.dockerignore`
-
----
-
 ## Production Deployment
 
 For a production environment serving 500+ concurrent users:
@@ -200,8 +168,13 @@ venv/bin/pip install -r requirements_prod.txt
 cp .env.example .env
 nano .env    # Set MySQL, Redis, secrets
 
-# 4. Start services
-sudo systemctl start nexvision nginx redis mysql
+# 4. Configure Nginx
+sudo cp nginx/nexvision.conf /etc/nginx/sites-available/nexvision
+sudo ln -s /etc/nginx/sites-available/nexvision /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# 5. Start services
+sudo systemctl enable --now nexvision redis mysql nginx
 ```
 
 **Production stack:**
@@ -322,92 +295,6 @@ X-Room-Token: <room_token>
 
 ---
 
-## Android APK
-
-The NexVision Android app is a native Kotlin IPTV client with a **libVLC 3.6** video player. It connects directly to the NexVision REST API — no WebView, no hardcoded server URLs.
-
-### Building the APK
-
-**Option 1 — Android Studio (recommended, on your PC/Mac)**
-1. Install [Android Studio](https://developer.android.com/studio)
-2. Open the `nexvision-apk/` folder
-3. Wait for Gradle sync → **Build → Build APK(s)**
-4. Output: `app/build/outputs/apk/debug/app-debug.apk`
-
-**Option 2 — Command line on the Linux server**
-
-The Android SDK is already installed on the server at `/home/a13/android-sdk`.
-
-```bash
-cd nexvision-apk
-
-# Build debug APK (SDK path is set in local.properties)
-ANDROID_HOME=/home/a13/android-sdk ./gradlew assembleDebug
-
-# Output (~91MB)
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-To avoid typing `ANDROID_HOME` every time, add to `~/.bashrc`:
-
-```bash
-export ANDROID_HOME=/home/a13/android-sdk
-export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-```
-
-**Setting up Android SDK from scratch (if needed)**
-
-```bash
-# 1. Download command-line tools
-mkdir -p ~/android-sdk/cmdline-tools
-cd /tmp
-curl -O https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-unzip commandlinetools-linux-11076708_latest.zip -d /tmp/cmdtools-extract
-mv /tmp/cmdtools-extract/cmdline-tools ~/android-sdk/cmdline-tools/latest
-
-# 2. Set environment
-export ANDROID_HOME=~/android-sdk
-export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-
-# 3. Accept licenses and install SDK components
-yes | sdkmanager --licenses
-sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
-
-# 4. Tell Gradle where the SDK is
-echo "sdk.dir=$HOME/android-sdk" > /opt/nexvision/nexvision-apk/local.properties
-
-# 5. Build
-cd /opt/nexvision/nexvision-apk
-./gradlew assembleDebug
-```
-
-> **Note:** `local.properties` is gitignored — each machine needs its own copy with the correct `sdk.dir` path.
-
-### APK Features
-- **Room/Screen registration** — enter server URL + room number (e.g. `101`), same as the browser TV client — no username or password needed
-- **Auto mode detection** — detects hotel vs commercial mode from `/api/settings`, labels show "Room 101" or "Screen 101" accordingly
-- **Channel list** — fetches live channels from `/api/channels` via `X-Room-Token` header, with live search/filter
-- **VLCPlayerActivity** — native fullscreen video player (libVLC 3.6)
-  - Hardware-accelerated decoding
-  - 1.5-second network buffer
-  - Sensor-based screen orientation
-- **Session persistence** — room token stored in SharedPreferences, auto-reconnects on relaunch
-- **Dark theme** — full black UI optimised for TV screens
-
-### First-Time Use
-1. Install the APK and open it
-2. Enter your **Server URL** (e.g. `http://192.168.1.100`) and **Room/Screen number** (e.g. `101`)
-3. Tap **Connect** — app registers with the server and loads channels automatically
-4. Tap any channel to play it full-screen
-5. On next launch, the app reconnects automatically — no re-entry needed
-
-### Installing on Devices
-1. Transfer `app-debug.apk` to Android device
-2. Enable **Install from unknown sources** in Android settings
-3. Open the APK file to install
-
----
-
 ## Admin Panel Guide
 
 ### First Login
@@ -459,9 +346,6 @@ cd /opt/nexvision/nexvision-apk
 | **Streaming** | HLS (HTTP Live Streaming) | Adaptive bitrate video delivery |
 | **TV Client** | Vanilla JS + CSS | Single-page TV interface |
 | **Video Player** | hls.js 1.5 | Browser HLS playback |
-| **Mobile Player** | libVLC Android 3.6 | APK native HLS player |
-| **Android** | Kotlin + RecyclerView | Android APK native client |
-| **Build** | Gradle 8.4 + Android SDK 34 | APK compilation |
 
 ## Core Application Files
 
@@ -479,25 +363,6 @@ cd /opt/nexvision/nexvision-apk
 
 ---
 
-## Documentation
-
-| Document | Location | Description |
-|---|---|---|
-| **System Operations Book** | [`docs/SOB-System-Operations-Book.md`](docs/SOB-System-Operations-Book.md) | Operations reference, monitoring, incident response |
-| **Deployment Guide** | [`docs/DEPLOYMENT-GUIDE.md`](docs/DEPLOYMENT-GUIDE.md) | Step-by-step production deployment |
-| **Server Hardening** | [`docs/Server-Hardening-Procedure.md`](docs/Server-Hardening-Procedure.md) | Security hardening guide |
-| **Architecture Overview** | [`docs/NEXVISION-ARCHITECTURE.md`](docs/NEXVISION-ARCHITECTURE.md) | System architecture deep dive |
-| **Storage Implementation** | [`docs/STORAGE-IMPLEMENTATION-README.md`](docs/STORAGE-IMPLEMENTATION-README.md) | Multi-storage backend details |
-| **Storage Integration** | [`docs/STORAGE-INTEGRATION-GUIDE.md`](docs/STORAGE-INTEGRATION-GUIDE.md) | Storage backend setup and configuration |
-| **Storage Quick Reference** | [`docs/STORAGE-QUICK-REFERENCE.md`](docs/STORAGE-QUICK-REFERENCE.md) | Storage backend comparison |
-| **VOD Server Architecture** | [`docs/VOD-SERVER-ARCHITECTURE.md`](docs/VOD-SERVER-ARCHITECTURE.md) | VOD streaming architecture |
-| **EPG Service** | [`docs/EPG-SERVICE.md`](docs/EPG-SERVICE.md) | Electronic Program Guide integration |
-| **App Integration Code** | [`docs/APP-INTEGRATION-CODE.md`](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
-| **Architecture Diagram** | [`docs/nexvision-architecture.drawio`](docs/nexvision-architecture.drawio) | Full system architecture (draw.io) |
-| **VOD Streaming Diagram** | [`docs/vod-server-architecture.drawio`](docs/vod-server-architecture.drawio) | HLS streaming flow (draw.io) |
-
----
-
 ## Project Structure
 
 ```
@@ -507,13 +372,13 @@ nexvision-iptv/
 ├── requirements_prod.txt     # Production Python dependencies
 ├── .env.example              # Environment variables template
 ├── nexvision.db              # Main SQLite database (dev only)
-├── vod.db                    # VOD SQLite database (dev only)
 │
 ├── web/                      # Frontend layer (static files)
 │   ├── tv/
 │   │   └── index.html        # Guest TV client
-│   └── admin/
-│       └── index.html        # Admin panel
+│   ├── admin/
+│   │   └── index.html        # Admin panel
+│   └── cast/                 # Chromecast receiver
 │
 ├── app/                      # Application layer (Flask API)
 │   ├── __init__.py
@@ -528,29 +393,23 @@ nexvision-iptv/
 │   ├── storage_backends.py   # Multi-storage backend implementation
 │   └── vod_storage_admin.py  # VOD storage administration
 │
-├── videos/                   # Source MP4 video files
-├── hls/                      # Transcoded HLS segments (generated)
-├── thumbnails/               # VOD thumbnails (generated)
-├── uploads/                  # Admin-uploaded images
+├── vod/                      # VOD storage
+│   ├── vod.db                # VOD SQLite database (dev only)
+│   ├── videos/               # Source MP4 video files
+│   ├── hls/                  # Transcoded HLS segments (generated)
+│   ├── thumbnails/           # VOD thumbnails (generated)
+│   ├── uploads/              # VOD-uploaded videos (staging)
+│   └── data/                 # Storage backend state
+│
+├── uploads/                  # Admin-uploaded images (logos, slides)
+├── epg/                      # EPG service (Node.js)
+├── android/                  # Android TV client source
 ├── nginx/
 │   └── nexvision.conf        # Nginx configuration
-├── scripts/                  # Utility scripts
-├── docs/                     # Documentation
-└── nexvision-apk/            # Android APK source
-```
-    ├── build.gradle
-    └── app/src/main/
-        ├── AndroidManifest.xml
-        ├── kotlin/com/nexvision/iptv/
-        │   ├── MainActivity.kt       # Login + channel list + search
-        │   ├── VLCPlayerActivity.kt  # Native fullscreen VLC player
-        │   ├── ChannelAdapter.kt     # RecyclerView adapter
-        │   └── ApiClient.kt         # REST API calls (login, channels)
-        └── res/layout/
-            ├── activity_main.xml
-            ├── activity_vlcplayer.xml
-            ├── item_channel.xml
-            └── dialog_server_config.xml
+├── scripts/
+│   └── check_m3u_health.py   # Daily M3U health check
+└── monitoring/
+    └── m3u-last-checked.json # Latest health check result
 ```
 
 ---
@@ -565,22 +424,7 @@ nexvision-iptv/
 | Birthday not showing | Check server timezone matches hotel timezone |
 | RSS ticker not updating | `redis-cli FLUSHALL` to clear stale cache |
 | Admin panel 403 | Check admin PIN in Settings |
-| APK won't install | Enable "Install from unknown sources" in Android Settings |
 | VOD transcoding stuck | Kill stuck FFmpeg: `ps aux \| grep ffmpeg && kill -9 PID` |
-
----
-
-## 📖 Documentation
-
-For detailed guides, see the [docs/](docs/) directory:
-
-| Guide | Purpose |
-|-------|---------|
-| [docs/DEPLOYMENT-GUIDE.md](docs/DEPLOYMENT-GUIDE.md) | Production deployment step-by-step |
-| [docs/NEXVISION-ARCHITECTURE.md](docs/NEXVISION-ARCHITECTURE.md) | System architecture deep dive |
-| [docs/SOB-System-Operations-Book.md](docs/SOB-System-Operations-Book.md) | Operations manual for admins |
-| [docs/APP-INTEGRATION-CODE.md](docs/APP-INTEGRATION-CODE.md) | Custom API integration examples |
-| [docs/STORAGE-QUICK-REFERENCE.md](docs/STORAGE-QUICK-REFERENCE.md) | Storage backend comparison |
 
 ---
 
@@ -629,5 +473,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.9 — Built with Flask · Nginx · FFmpeg · libVLC*
-*Last updated: 2026-04-01*
+*NexVision IPTV v8.11 — Built with Flask · Nginx · FFmpeg · hls.js*
+*Last updated: 2026-04-30*

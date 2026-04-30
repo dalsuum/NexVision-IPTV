@@ -28,7 +28,7 @@ logger = logging.getLogger('nexvision-storage')
 class StorageConfig:
     """Centralized storage configuration management"""
     
-    CONFIG_FILE = Path(os.environ.get('VOD_DATA_DIR', './vod_data')) / '.storage_config.json'
+    CONFIG_FILE = Path(os.environ.get('VOD_DATA_DIR', './vod/data')) / '.storage_config.json'
     DEFAULT_BACKEND = 'local'
     
     # Supported backends

@@ -2853,7 +2853,7 @@ def get_vip_vod():
         for row in rows:
             vid = row['video_id']
             video = vod_conn.execute(
-                "SELECT id, title, thumbnail_url FROM videos WHERE id=?", (vid,)
+                "SELECT id, title, thumbnail FROM videos WHERE id=?", (vid,)
             ).fetchone()
             if not video:
                 continue
@@ -2865,7 +2865,7 @@ def get_vip_vod():
             result.append({
                 'video_id': vid,
                 'title': video['title'],
-                'thumbnail_url': video['thumbnail_url'] or '',
+                'thumbnail_url': video['thumbnail'] or '',
                 'rooms': [dict(r) for r in rooms]
             })
         vod_conn.close()
@@ -4196,7 +4196,7 @@ def serve_tv(path):
 
 # ─── VOD Config ───────────────────────────────────────────────────────────────
 
-VOD_BASE_DIR   = Path(BASE_DIR)
+VOD_BASE_DIR   = Path(BASE_DIR) / 'vod'
 VIDEOS_DIR     = VOD_BASE_DIR / 'videos'
 HLS_DIR        = VOD_BASE_DIR / 'hls'
 THUMBS_DIR     = VOD_BASE_DIR / 'thumbnails'
@@ -5521,16 +5521,18 @@ def _vod_embedded_nav(active: str) -> str:
 @app.route('/vod/')
 @app.route('/vod')
 def vod_dashboard():
+    inframe = request.args.get('inframe') == '1'
     embedded = (
         request.args.get('embedded') == '1'
-        or request.args.get('inframe') == '1'
+        or inframe
         or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
     )
     html = _render_vod_ui()
     if embedded:
+        nav = '' if inframe else _vod_embedded_nav('vod')
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px">.*?</header>\s*',
-            _vod_embedded_nav('vod'),
+            nav,
             html,
             flags=re.DOTALL
         )
@@ -6636,15 +6638,17 @@ def vod_admin_hub():
     </body>
     </html>
     """
+    inframe = request.args.get('inframe') == '1'
     embedded = (
         request.args.get('embedded') == '1'
-        or request.args.get('inframe') == '1'
+        or inframe
         or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
     )
     if embedded:
+        nav = '' if inframe else _vod_embedded_nav('admin')
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
-            _vod_embedded_nav('admin'),
+            nav,
             html,
             flags=re.DOTALL
         )
@@ -6920,15 +6924,17 @@ def vod_admin_storage():
     html = html.replace('__STORAGE_ADMIN_HTML__', STORAGE_ADMIN_HTML)
     html = html.replace('__QUICK_SETUP_BACKENDS__', json.dumps(quick_setup_backends))
     html = html.replace('__QUICK_SETUP_CURRENT__', json.dumps(current_backend))
+    inframe = request.args.get('inframe') == '1'
     embedded = (
         request.args.get('embedded') == '1'
-        or request.args.get('inframe') == '1'
+        or inframe
         or request.headers.get('Sec-Fetch-Dest', '').lower() == 'iframe'
     )
     if embedded:
+        nav = '' if inframe else _vod_embedded_nav('storage')
         html = re.sub(
             r'<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">.*?</header>\s*',
-            _vod_embedded_nav('storage'),
+            nav,
             html,
             flags=re.DOTALL
         )

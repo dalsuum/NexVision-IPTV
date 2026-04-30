@@ -70,7 +70,7 @@ class LocalStorage(StorageBackend):
     """Local filesystem storage - for dev/small deployments"""
     
     def __init__(self, base_dir: str = None):
-        self.base_dir = Path(base_dir or os.getenv('VOD_DATA_DIR', './vod_data'))
+        self.base_dir = Path(base_dir or os.getenv('VOD_DATA_DIR', './vod/data'))
         self.videos_dir = self.base_dir / 'videos'
         self.hls_dir = self.base_dir / 'hls'
         self.thumbs_dir = self.base_dir / 'thumbnails'
