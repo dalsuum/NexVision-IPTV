@@ -69,7 +69,7 @@
     "@types/pako": "^2.0.4",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
-    "axios": "^1.11.0",
+    "axios": "^1.15.2",
     "axios-cookiejar-support": "^6.0.4",
     "axios-mock-adapter": "^2.1.0",
     "chalk": "^5.4.1",
@@ -124,7 +124,7 @@
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "unzipit": "^1.4.3",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "wildcard-match": "^5.1.4"
   }
 }
