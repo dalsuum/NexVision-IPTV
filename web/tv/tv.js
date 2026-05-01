@@ -168,12 +168,16 @@ async function doRegister() {
       return;
     }
 
-    // Success — save token and room info
+    // Success — save token and room info (including guest data from PMS)
     localStorage.setItem(ROOM_TOKEN_KEY, data.token);
     localStorage.setItem(ROOM_INFO_KEY, JSON.stringify({
-      room_number: data.room_number,
-      tv_name:     data.tv_name
+      room_number:  data.room_number,
+      tv_name:      data.tv_name,
+      guest_name:   data.guest_name   || '',
+      checkin_time: data.checkin_time || '',
+      checkout_time:data.checkout_time|| '',
     }));
+    sessionStorage.removeItem('nv_welcome_shown');
 
     // Hide registration screen
     const regScreen = document.getElementById('register-screen');
@@ -661,6 +665,22 @@ async function loadHome() {
         withEpg = allChannels.filter(c => _epgNowMap[c.id] || _epgNextMap[c.id]);
       }
     } catch (_) {}
+  }
+
+  // Any EPG channel still missing from allChannels (beyond the 3000 limit)?
+  // Fetch them individually so EPG cards always appear on the home screen.
+  if (!withEpg.length && Object.keys(_epgNowMap).length) {
+    const epgIds = [...new Set([...Object.keys(_epgNowMap), ...Object.keys(_epgNextMap)].map(Number))];
+    const knownIds = new Set(allChannels.map(c => c.id));
+    const missingIds = epgIds.filter(id => !knownIds.has(id));
+    if (missingIds.length) {
+      const fetched = await Promise.all(missingIds.map(id => api('/channels/' + id).catch(() => null)));
+      const valid = fetched.filter(Boolean);
+      if (valid.length) {
+        allChannels = [...valid, ...allChannels];
+        withEpg = allChannels.filter(c => _epgNowMap[c.id] || _epgNextMap[c.id]);
+      }
+    }
   }
 
   const withoutEpg = allChannels.filter(c => !(_epgNowMap[c.id] || _epgNextMap[c.id]));
@@ -2963,6 +2983,72 @@ async function loadApp() {
   // Show the app
   document.getElementById('root').classList.add('visible');
   showScreen('home');
+  // Show PMS guest welcome overlay if enabled and not yet shown this session
+  showGuestWelcome();
+}
+
+// ── PMS Guest Welcome Screen ──────────────────────────────────────────────────
+function showGuestWelcome() {
+  if (_settings.pms_enabled !== '1') return;
+  if (sessionStorage.getItem('nv_welcome_shown')) return;
+
+  const roomInfo   = getRoomInfo();
+  const guestName  = roomInfo?.guest_name || '';
+  if (!guestName) return;
+
+  const overlay    = document.getElementById('guest-welcome');
+  if (!overlay) return;
+
+  // Populate content
+  const hotelName  = _settings.hotel_name || 'NexVision';
+  const checkin    = roomInfo.checkin_time  || '';
+  const checkout   = roomInfo.checkout_time || '';
+
+  const gwHotel    = document.getElementById('gw-hotel');
+  const gwGreeting = document.getElementById('gw-greeting');
+  const gwTimes    = document.getElementById('gw-times');
+
+  if (gwHotel)    gwHotel.textContent    = hotelName;
+  if (gwGreeting) gwGreeting.textContent = 'Welcome, ' + guestName;
+  if (gwTimes) {
+    let timeLines = '';
+    if (checkin)  timeLines += `<div>Check-in: <b>${_fmtDT(checkin)}</b></div>`;
+    if (checkout) timeLines += `<div>Check-out: <b>${_fmtDT(checkout)}</b></div>`;
+    gwTimes.innerHTML = timeLines;
+  }
+
+  overlay.style.display = 'flex';
+  sessionStorage.setItem('nv_welcome_shown', '1');
+
+  // Welcome music
+  let _welcomeAudio = null;
+  if (_settings.welcome_music_enabled === '1' && _settings.welcome_music_url) {
+    _welcomeAudio = new Audio(_settings.welcome_music_url);
+    _welcomeAudio.volume = 0.7;
+    _welcomeAudio.play().catch(() => {});
+  }
+
+  function _dismissWelcome() {
+    overlay.style.display = 'none';
+    if (_welcomeAudio) { _welcomeAudio.pause(); _welcomeAudio = null; }
+    showScreen('home');
+    document.removeEventListener('keydown', _dismissWelcome);
+    overlay.removeEventListener('click', _dismissWelcome);
+  }
+
+  // Auto-dismiss after 12 seconds
+  setTimeout(_dismissWelcome, 12000);
+  document.addEventListener('keydown', _dismissWelcome, { once: true });
+  overlay.addEventListener('click', _dismissWelcome, { once: true });
+}
+
+function _fmtDT(dt) {
+  if (!dt) return '';
+  try {
+    const d = new Date(dt.includes('T') ? dt : dt.replace(' ', 'T'));
+    if (isNaN(d)) return dt;
+    return d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  } catch (_) { return dt; }
 }
 
 // ── Auto-sync: detect admin changes and refresh content ───────────────────────

@@ -48,8 +48,15 @@ def create_room(d: dict):
 def update_room(rid: int, d: dict):
     conn = get_db()
     conn.execute(
-        "UPDATE rooms SET room_number=?, tv_name=? WHERE id=?",
-        (d['room_number'], d.get('tv_name', ''), rid),
+        "UPDATE rooms SET room_number=?, tv_name=?, guest_name=?, checkin_time=?, checkout_time=? WHERE id=?",
+        (
+            d['room_number'],
+            d.get('tv_name', ''),
+            d.get('guest_name', ''),
+            d.get('checkin_time', ''),
+            d.get('checkout_time', ''),
+            rid,
+        ),
     )
     conn.commit()
     room = dict(conn.execute(
@@ -121,10 +128,13 @@ def room_register(d: dict, user_agent: str):
     conn.close()
 
     return jsonify({
-        'status':      'ok',
-        'room_number': room['room_number'],
-        'tv_name':     room['tv_name'] or f"TV-{room['room_number']}",
-        'token':       token,
+        'status':       'ok',
+        'room_number':  room['room_number'],
+        'tv_name':      room['tv_name'] or f"TV-{room['room_number']}",
+        'token':        token,
+        'guest_name':   room['guest_name']    if 'guest_name'    in room.keys() else '',
+        'checkin_time': room['checkin_time']  if 'checkin_time'  in room.keys() else '',
+        'checkout_time':room['checkout_time'] if 'checkout_time' in room.keys() else '',
     })
 
 

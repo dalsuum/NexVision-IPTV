@@ -1,6 +1,6 @@
 # NexVision IPTV — Production Dependencies
 # Install: pip install -r requirements_prod.txt
-# Updated: 2026-05-01 - v8.20 - Clock & Alarm, World Clock, EPG/packages improvements
+# Updated: 2026-05-01 - v8.21 - PMS integration, guest welcome overlay, home EPG fix
 # Entry points: app/wsgi.py (gunicorn) or run.py (dev)
 
 # ── Core Flask ────────────────────────────────────────────────────────────────

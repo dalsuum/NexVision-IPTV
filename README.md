@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.20
+# NexVision IPTV Platform v8.21
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -69,6 +69,7 @@ Hotel WiFi/LAN
 | 📢 **Ads Manager** | Pre-roll ads (image/video) before Live TV and VOD; skip-after timer, placement targeting |
 | 🌍 **World Clock** | Multi-timezone clock screen; IANA timezone chips configured by admin |
 | ⏰ **Alarms** | Hotel-wide alarm scheduler — fires on all active TV screens at scheduled time with sound |
+| 🏨 **PMS Integration** | Connect to hotel PMS (Oracle FIAS, GRMS, third-party); guest welcome overlay with name, check-in/out times and welcome music |
 | 🎨 Navigation | Customise menu items, icons, order |
 | ⚙ Settings | Hotel name, logo, feature toggles per room type |
 | 🏠 Rooms | Create rooms, assign packages, generate access tokens |
@@ -77,6 +78,13 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.21 (2026-05-01)
+- **New:** PMS Integration — admin can enable a hotel PMS connection (Oracle FIAS, GRMS, or third-party); settings include PMS host, port, username, password
+- **New:** Guest Info fields on rooms — `guest_name`, `checkin_time`, `checkout_time` stored per room; editable in Rooms admin panel; returned by `POST /api/rooms/register`
+- **New:** Guest Welcome overlay — on first load after registration, a full-screen welcome screen shows hotel name, guest name, and check-in/out times; auto-dismisses after 12 seconds or on any key/tap; shown once per browser session (`sessionStorage`)
+- **New:** Welcome music — optional audio URL played during the guest welcome overlay; configurable in Settings → Guest Info & PMS
+- **Fix:** Home screen EPG cards — when EPG entries reference channel IDs not in the initial channel list (e.g. large playlists > 3000 channels), missing channels are now fetched individually so EPG "Now/Next" cards always render
 
 ### v8.20 (2026-05-01)
 - **New:** World Clock TV screen — multi-timezone card display; admin configures IANA timezone chips via Clock & Alarm panel; city names and day/night indicator per card
@@ -385,7 +393,7 @@ X-Room-Token: <room_token>
 | `GET` | `/api/ads` | Active ads for a placement (`?placement=vod\|live\|both`) |
 | `GET` | `/api/alarms/active` | Active alarms for TV client alarm checker |
 | `GET` | `/api/epg/<channel_id>` | EPG entries (`?hours=48` window, includes `channel_name`) |
-| `POST` | `/api/rooms/register` | Register device by room/screen number, returns room token |
+| `POST` | `/api/rooms/register` | Register device; response includes `guest_name`, `checkin_time`, `checkout_time` |
 | `GET` | `/api/auth/login` | Admin login (username + password), returns JWT — **admin panel only** |
 
 ### HLS Streaming Endpoints
@@ -745,5 +753,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.20 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.21 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-01*

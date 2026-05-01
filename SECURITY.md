@@ -233,7 +233,7 @@ For security issues:
 
 ---
 
-## Application Security Architecture (v8.20+)
+## Application Security Architecture (v8.21+)
 
 ### Authentication & Authorisation
 - JWT tokens validated on every admin/protected endpoint via `@admin_required` / `@token_required` decorators
@@ -250,6 +250,7 @@ For security issues:
 | `SECRET_KEY` | `.env` | `python -c "import secrets; print(secrets.token_hex(32))"` |
 | `VOD_API_KEY` | `.env` | `python -c "import secrets; print(secrets.token_hex(16))"` |
 | `MYSQL_PASSWORD` | `.env` | Change in MySQL + update `.env` |
+| `pms_password` | `settings` table | PMS credential — stored in DB; ensure DB file permissions are 660 |
 
 ### File Permissions (Production)
 ```bash
@@ -268,6 +269,6 @@ ls -la /opt/nexvision/nexvision.db    # should be 660 (or 640)
 
 ---
 
-**Last Updated:** 2026-05-01 (v8.20)
+**Last Updated:** 2026-05-01 (v8.21)
 **Repository:** NexVision  
 **Maintainer:** [dalsuum/nexvision]

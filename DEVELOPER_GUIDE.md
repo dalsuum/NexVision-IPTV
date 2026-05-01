@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.20 — Last updated: 2026-05-01  
+> Version: v8.21 — Last updated: 2026-05-01  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -648,7 +648,18 @@ def get_active():
 | `POST` | `/api/rooms/bulk-add` | Admin | Bulk create rooms |
 
 **Register body:** `{"room_number": "101"}`  
-**Response:** `{"token": "uuid", "room_id": 1, "tv_name": "Room 101 TV"}`
+**Response (v8.21+):** `{"token": "uuid", "room_id": 1, "tv_name": "Room 101 TV", "guest_name": "Mr. Smith", "checkin_time": "2026-05-01 14:00", "checkout_time": "2026-05-03 12:00"}`
+
+**Update room body (v8.21+):**
+```json
+{
+  "room_number": "101",
+  "tv_name": "Room 101 TV",
+  "guest_name": "Mr. John Smith",
+  "checkin_time": "2026-05-01 14:00:00",
+  "checkout_time": "2026-05-03 12:00:00"
+}
+```
 
 ---
 
@@ -778,6 +789,14 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 | `weather_city` | string | Default city for weather widget |
 | `worldclock_zones` | JSON string | Array of IANA timezone IDs shown on World Clock screen |
 | `alarm_enabled` | `0`/`1` | Enable alarm system on TV client |
+| `pms_enabled` | `0`/`1` | Enable PMS integration |
+| `pms_type` | `fias`/`grms`/`thirdparty` | PMS system type |
+| `pms_host` | string | PMS server hostname or IP |
+| `pms_port` | string | PMS server port (default `5010`) |
+| `pms_username` | string | PMS auth username |
+| `pms_password` | string | PMS auth password |
+| `welcome_music_enabled` | `0`/`1` | Play welcome music during guest welcome overlay |
+| `welcome_music_url` | url | Audio file URL for welcome music |
 
 ---
 
@@ -1066,15 +1085,18 @@ CREATE TABLE users (
 );
 
 CREATE TABLE rooms (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    room_number  TEXT NOT NULL,
-    tv_name      TEXT,
-    device_id    TEXT,
-    skin_id      INTEGER,
-    online       INTEGER DEFAULT 0,
-    last_seen    TEXT,
-    room_token   TEXT UNIQUE,          -- UUID v4
-    user_agent   TEXT
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_number   TEXT NOT NULL,
+    tv_name       TEXT,
+    device_id     TEXT,
+    skin_id       INTEGER,
+    online        INTEGER DEFAULT 0,
+    last_seen     TEXT,
+    room_token    TEXT UNIQUE,          -- UUID v4
+    user_agent    TEXT,
+    guest_name    TEXT DEFAULT '',      -- PMS guest name
+    checkin_time  TEXT DEFAULT '',      -- ISO datetime string
+    checkout_time TEXT DEFAULT ''       -- ISO datetime string
 );
 
 CREATE TABLE devices (
@@ -1306,6 +1328,19 @@ applies all three filters in combination client-side against `allMovies`.
 
 Favourites are toggled via the heart button (`.mt-fav-btn`) on each movie tile. The Set
 is serialised to `localStorage` on every toggle so it survives page reloads.
+
+#### PMS Guest Welcome Overlay (v8.21+)
+
+When `settings.pms_enabled === '1'` and the registered room has a non-empty `guest_name`, `showGuestWelcome()` is called once per browser session (guarded by `sessionStorage['nv_welcome_shown']`).
+
+The overlay (`#guest-welcome`) renders:
+- Hotel name (`_settings.hotel_name`)
+- Personalised greeting ("Welcome, \<guest_name\>")
+- Check-in and check-out times formatted via `_fmtDT()`
+
+If `welcome_music_enabled === '1'` and `welcome_music_url` is set, an `Audio` object plays the URL at 70% volume. Auto-dismissed after 12 seconds or on any key/tap.
+
+Guest data (`guest_name`, `checkin_time`, `checkout_time`) is stored in `localStorage` alongside the room token by the registration flow (`POST /api/rooms/register`) and retrieved via `getRoomInfo()`.
 
 #### World Clock Screen (v8.20+)
 
@@ -1562,5 +1597,5 @@ sqlite3 /opt/nexvision/nexvision.db \
 
 ---
 
-*NexVision IPTV Developer Guide — v8.20*  
+*NexVision IPTV Developer Guide — v8.21*  
 *Architecture: Flask Blueprints + Service Layer + Redis + SQLite/MySQL + Nginx/Gunicorn*

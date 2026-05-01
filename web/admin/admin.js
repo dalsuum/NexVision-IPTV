@@ -1356,6 +1356,7 @@ async function eRoom(id){
       <span>${esc(p.name)}</span>
     </label>`).join('');
 
+  const _isHotelMode = (window._deployMode||window._settings?.deployment_mode||'hotel') !== 'commercial';
   openModal(r?`Edit ${unit} ${r.room_number}:`:`Add ${unit}`,`
   <div class="fgrid">
     <div class="fg"><label>${unit} Number *</label><input id="r-num" class="finp" value="${esc(r?.room_number||'')}" placeholder="101" ${r?'readonly':''}></div>
@@ -1364,6 +1365,14 @@ async function eRoom(id){
   ${r?`<div style="margin-top:12px;background:var(--bg3);border-radius:8px;padding:10px;font-size:12px;color:var(--text2)">
     <b style="color:var(--text)">Status:</b> <span class="bdg ${r.online?'bg':'br'}">${r.online?'Online':'Offline'}</span>
     &nbsp; <b style="color:var(--text)">Last Seen:</b> ${r.last_seen?new Date(r.last_seen+'Z').toLocaleString():'Never'}
+  </div>`:''}
+  ${_isHotelMode?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">👤 Guest Info (PMS)</div>
+    <div class="fgrid" style="gap:10px">
+      <div class="fg fcol"><label>Guest Name</label><input id="r-guest-name" class="finp" value="${esc(r?.guest_name||'')}" placeholder="Mr. John Doe"></div>
+      <div class="fg"><label>Check-in Time</label><input id="r-checkin" class="finp" type="datetime-local" value="${esc((r?.checkin_time||'').replace(' ','T').slice(0,16))}"></div>
+      <div class="fg"><label>Check-out Time</label><input id="r-checkout-time" class="finp" type="datetime-local" value="${esc((r?.checkout_time||'').replace(' ','T').slice(0,16))}"></div>
+    </div>
   </div>`:''}
   <div class="fg fcol" style="margin-top:14px">
     <label>Packages <span style="font-weight:400;color:var(--text2);font-size:11px">(no packages = no access to any content)</span></label>
@@ -1376,7 +1385,15 @@ async function eRoom(id){
 }
 
 async function svRoom(id){
-  const d={room_number:document.getElementById('r-num').value.trim(),tv_name:document.getElementById('r-tvname').value.trim()};
+  const checkinRaw  = document.getElementById('r-checkin')?.value||'';
+  const checkoutRaw = document.getElementById('r-checkout-time')?.value||'';
+  const d={
+    room_number:   document.getElementById('r-num').value.trim(),
+    tv_name:       document.getElementById('r-tvname').value.trim(),
+    guest_name:    document.getElementById('r-guest-name')?.value.trim()||'',
+    checkin_time:  checkinRaw  ? checkinRaw.replace('T',' ')  : '',
+    checkout_time: checkoutRaw ? checkoutRaw.replace('T',' ') : '',
+  };
   if(!d.room_number)return;
   const r=id?await req('/rooms/'+id,{method:'PUT',body:JSON.stringify(d)}):await req('/rooms',{method:'POST',body:JSON.stringify(d)});
   if(r?.error){alert(r.error);return;}
@@ -2854,6 +2871,50 @@ pages.settings = async function() {
       </div>
 
 
+      <div class="sec-title hotel-only" style="margin:14px 0 12px;font-size:13px;color:var(--text2);${_isHotel?'':'display:none'}">🏨 Guest Info & PMS</div>
+      <div class="tbl-wrap hotel-only" style="${_isHotel?'':'display:none'}padding:18px">
+        <div class="fgrid" style="gap:12px">
+          <div class="fg fcol" style="grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">PMS Integration</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">Connect to hotel PMS to sync guest name, check-in and check-out times</div>
+            </div>
+            <label class="big-toggle">
+              <input type="checkbox" id="s-pms-enabled" ${s.pms_enabled==='1'?'checked':''} onchange="togglePmsFields()">
+              <span class="big-toggle-track"></span>
+            </label>
+          </div>
+          <div class="fg" id="pms-type-row" style="${s.pms_enabled==='1'?'':'display:none'}"><label>PMS System</label>
+            <select id="s-pms-type" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+              <option value="fias"       ${(s.pms_type||'fias')==='fias'      ?'selected':''}>Oracle FIAS</option>
+              <option value="grms"       ${s.pms_type==='grms'      ?'selected':''}>GRMS System</option>
+              <option value="thirdparty" ${s.pms_type==='thirdparty'?'selected':''}>Third-party PMS</option>
+            </select>
+          </div>
+          <div class="fg" id="pms-host-row" style="${s.pms_enabled==='1'?'':'display:none'}"><label>PMS Host / IP</label><input id="s-pms-host" value="${esc(s.pms_host||'')}" placeholder="192.168.1.100"></div>
+          <div class="fg" id="pms-port-row" style="${s.pms_enabled==='1'?'':'display:none'}"><label>Port</label><input id="s-pms-port" value="${esc(s.pms_port||'5010')}" placeholder="5010"></div>
+          <div class="fg" id="pms-user-row" style="${s.pms_enabled==='1'?'':'display:none'}"><label>Username</label><input id="s-pms-user" value="${esc(s.pms_username||'')}" placeholder="pms_user"></div>
+          <div class="fg" id="pms-pass-row" style="${s.pms_enabled==='1'?'':'display:none'}"><label>Password</label><input type="password" id="s-pms-pass" value="${esc(s.pms_password||'')}" placeholder="••••••••"></div>
+          <div class="fg fcol" id="pms-welcome-row" style="${s.pms_enabled==='1'?'':'display:none'};grid-column:1/-1">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;padding-top:4px;border-top:1px solid var(--border2)">Welcome Screen</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+              <div>
+                <div style="font-size:13px;color:var(--text)">Welcome Music</div>
+                <div style="font-size:11px;color:var(--text2)">Play audio when guest welcome screen appears</div>
+              </div>
+              <label class="big-toggle">
+                <input type="checkbox" id="s-welcome-music-enabled" ${s.welcome_music_enabled==='1'?'checked':''} onchange="toggleWelcomeMusicUrl()">
+                <span class="big-toggle-track"></span>
+              </label>
+            </div>
+            <div id="welcome-music-url-row" style="${s.welcome_music_enabled==='1'?'':'display:none'}">
+              <label>Music URL (.mp3 / .ogg)</label>
+              <input id="s-welcome-music-url" value="${esc(s.welcome_music_url||'')}" placeholder="https://... or /static/welcome.mp3">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">📶 Wi-Fi Info</div>
       <div class="tbl-wrap" style="padding:18px">
         <div class="fgrid" style="gap:12px">
@@ -2992,10 +3053,18 @@ async function saveSettings() {
     admin_title:      document.getElementById('s-admin-title')?.value||'NexVision CMS v5',
     admin_logo_url:   document.getElementById('s-admin-logo')?.value||'',
     weather_city:     document.getElementById('s-weather-city')?.value||'',
-    cast_qr_enabled:  document.getElementById('s-cast-qr-enabled')?.checked  ? '1' : '0',
-    cast_server_url:  document.getElementById('s-cast-server-url')?.value||'',
-    cast_qr_display:  document.getElementById('s-cast-qr-display')?.value||'both',
-    cast_qr_position: document.getElementById('s-cast-qr-position')?.value||'bottom-right',
+    cast_qr_enabled:       document.getElementById('s-cast-qr-enabled')?.checked  ? '1' : '0',
+    cast_server_url:       document.getElementById('s-cast-server-url')?.value||'',
+    cast_qr_display:       document.getElementById('s-cast-qr-display')?.value||'both',
+    cast_qr_position:      document.getElementById('s-cast-qr-position')?.value||'bottom-right',
+    pms_enabled:           document.getElementById('s-pms-enabled')?.checked       ? '1' : '0',
+    pms_type:              document.getElementById('s-pms-type')?.value            || 'fias',
+    pms_host:              document.getElementById('s-pms-host')?.value            || '',
+    pms_port:              document.getElementById('s-pms-port')?.value            || '5010',
+    pms_username:          document.getElementById('s-pms-user')?.value            || '',
+    pms_password:          document.getElementById('s-pms-pass')?.value            || '',
+    welcome_music_enabled: document.getElementById('s-welcome-music-enabled')?.checked ? '1' : '0',
+    welcome_music_url:     document.getElementById('s-welcome-music-url')?.value   || '',
   };
   const r = await req('/settings', {method:'POST', body:JSON.stringify(d)});
   if (r?.ok) {
@@ -3025,6 +3094,18 @@ function setDeployMode(mode) {
   applyDeploymentMode(mode);
 }
 
+function togglePmsFields() {
+  const on = document.getElementById('s-pms-enabled')?.checked;
+  ['pms-type-row','pms-host-row','pms-port-row','pms-user-row','pms-pass-row','pms-welcome-row']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; });
+  if (!on) { const mu = document.getElementById('welcome-music-url-row'); if (mu) mu.style.display = 'none'; }
+}
+
+function toggleWelcomeMusicUrl() {
+  const on = document.getElementById('s-welcome-music-enabled')?.checked;
+  const el = document.getElementById('welcome-music-url-row');
+  if (el) el.style.display = on ? '' : 'none';
+}
 
 
 // ═══════════════════════════════════════════════════════════════════════════════

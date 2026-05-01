@@ -391,7 +391,13 @@ def init_db():
             pass
 
     # Migrate rooms table — add token columns if missing
-    for col, defval in [('room_token', 'NULL'), ('user_agent', "''")]:
+    for col, defval in [
+        ('room_token',    'NULL'),
+        ('user_agent',    "''"),
+        ('guest_name',    "''"),
+        ('checkin_time',  "''"),
+        ('checkout_time', "''"),
+    ]:
         try:
             cur.execute(f"ALTER TABLE rooms ADD COLUMN {col} TEXT DEFAULT {defval}")
         except Exception:
