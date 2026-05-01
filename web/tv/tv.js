@@ -245,7 +245,7 @@ function updateRoomBadge() {
   if (info && info.room_number) {
     const isHotel = (window._deployMode || 'hotel') !== 'commercial';
     el.textContent = (isHotel ? 'Room ' : 'Screen ') + info.room_number;
-    el.style.display = 'inline';
+    el.style.display = 'inline-flex';
   } else {
     el.style.display = 'none';
   }

@@ -161,10 +161,27 @@ nav{display:flex;gap:4px;flex:1}
 .nav-btn{padding:8px 18px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:.2s;letter-spacing:.5px}
 .nav-btn:hover{color:var(--white);background:var(--bg3)}
 .nav-btn.active{color:var(--gold);background:var(--gold4)}
-.hdr-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
-.theme-toggle{padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--dimmed);font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.6px;cursor:pointer;transition:.15s}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+/* ── Unified header chips (theme · room · messages · time) ── */
+.theme-toggle,#hdr-room,.hdr-msg-btn,.hdr-time{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;height:26px;
+  border-radius:20px;border:1px solid var(--border2);
+  background:var(--bg3);
+  font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.7px;
+  white-space:nowrap;line-height:1;color:var(--dimmed);
+  box-sizing:border-box;
+}
+/* Theme toggle — interactive */
+.theme-toggle{cursor:pointer;transition:border-color .15s,color .15s}
 .theme-toggle:hover{color:var(--white);border-color:var(--gold)}
-.hdr-time{font-family:'DM Mono',monospace;font-size:13px;color:var(--silver)}
+/* Room — gold accent */
+#hdr-room{color:var(--gold);border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.1)}
+/* Time — silver, not interactive */
+.hdr-time{color:var(--silver)}
+/* Message button — interactive, badge anchor */
+.hdr-msg-btn{cursor:pointer;position:relative;transition:border-color .15s,color .15s}
+.hdr-msg-btn:hover{color:var(--white);border-color:var(--border2)}
 .hdr-weather{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dimmed)}
 .hdr-weather .temp{font-family:'DM Mono',monospace;color:var(--gold);font-size:14px}
 
@@ -523,8 +540,8 @@ main{flex:1;overflow:hidden;position:relative}
   header{padding:0 20px;gap:12px}
   .nav-btn{padding:6px 12px;font-size:12px}
   #screen-tv{flex-direction:column}
-  .ch-sidebar{width:100%;height:240px;border-right:none;border-bottom:1px solid var(--border)}
-  .ch-list{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 12px}
+  .ch-sidebar{width:100%;height:300px;border-right:none;border-bottom:1px solid var(--border);display:flex;flex-direction:column}
+  .ch-list{flex:1;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 12px;min-height:0}
   .ch-row{flex-shrink:0;width:160px}
   .tv-player-area{flex:1}
   .movie-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
@@ -767,13 +784,6 @@ body.emergency-active .register-screen{padding-top:32px}
    ════════════════════════════════════════════════════════════════════════ */
 
 /* ── Header message bell ──────────────────────────────────────────────── */
-.hdr-msg-btn {
-  position:relative;cursor:pointer;background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.08);border-radius:8px;
-  padding:5px 10px;display:flex;align-items:center;gap:6px;
-  font-size:13px;color:var(--dimmed);transition:.2s;
-}
-.hdr-msg-btn:hover{background:rgba(255,255,255,0.09);color:var(--white)}
 .hdr-msg-badge {
   position:absolute;top:-5px;right:-5px;
   background:var(--red);color:#fff;
@@ -1847,3 +1857,398 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   animation: gwFadeIn .6s ease;
 }
 @keyframes gwFadeIn { from { opacity:0; transform:scale(.97) } to { opacity:1; transform:scale(1) } }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Apple HIG quality — v8 refresh
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── 900px: Tablet / landscape phone ──────────────────────────────── */
+@media(max-width:900px){
+  /* Header */
+  header{height:54px;padding:0 24px;gap:16px}
+  .hdr-logo{font-size:18px;letter-spacing:4px}
+  .nav-btn{padding:6px 12px;font-size:12px}
+  .hdr-weather{display:none}
+
+  /* Home hero */
+  .hero-banner{height:36vh;padding:28px 28px}
+  .hero-title{font-size:36px}
+  .hero-meta{gap:14px}
+
+  /* Home sections */
+  .home-section{padding:20px 24px 0}
+
+  /* H-scroll padding */
+  .h-scroll{padding:4px 18px 14px}
+  .h-nav-btn{display:none}
+
+  /* Channel cards slightly smaller */
+  .ch-card{width:155px}
+  .ch-img{height:78px}
+
+  /* Movie cards */
+  .mv-card{width:148px}
+  .mv-poster{height:214px}
+
+  /* Movie grid */
+  .movie-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+
+  /* Weather */
+  .w-details{grid-template-columns:repeat(2,1fr)}
+  .w-forecast{grid-template-columns:repeat(2,1fr)}
+
+  /* VOD */
+  .vod-search{max-width:none;width:100%}
+}
+
+/* ── 640px: Mobile phones ──────────────────────────────────────────── */
+@media(max-width:640px){
+  /* Switch to bottom nav — already in place, enhancing: */
+  #top-nav{display:none !important}
+  #bottom-nav{display:flex !important}
+  body #root{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
+
+  /* ── RSS ticker floats ABOVE the bottom nav, never hides it ── */
+  #news-ticker{
+    bottom:calc(64px + env(safe-area-inset-bottom,0px));
+    border-top:1px solid rgba(255,255,255,0.1);
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    border-radius:0;
+  }
+  /* Root padding = nav + ticker combined */
+  body.news-ticker-active #root{
+    padding-bottom:calc(68px + 34px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+
+  /* ── Header ── */
+  header{
+    height:52px;padding:0 16px;gap:12px;
+    background:rgba(11,11,20,0.92);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;
+  }
+  .hdr-logo{font-size:16px;letter-spacing:3px}
+
+  /* ── Bottom nav — Apple iOS tab bar quality ── */
+  #bottom-nav{
+    height:calc(64px + env(safe-area-inset-bottom,0px));
+    padding:0 4px env(safe-area-inset-bottom,0px);
+    background:rgba(11,11,20,0.95);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    -webkit-saturate:180%;
+    border-top:1px solid rgba(255,255,255,0.08);
+    gap:0;
+  }
+  .bn-item{
+    flex:1;min-width:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:4px;padding:8px 2px 4px;
+    border:none;background:transparent;
+    cursor:pointer;color:var(--muted);
+    transition:color .18s, transform .12s;
+    -webkit-tap-highlight-color:transparent;
+    min-height:44px;position:relative;
+  }
+  .bn-item.active{color:var(--gold)}
+  /* Active indicator: pill above the icon */
+  .bn-item.active::before{
+    content:'';
+    position:absolute;top:4px;
+    left:50%;transform:translateX(-50%);
+    width:28px;height:3px;
+    background:var(--gold);
+    border-radius:0 0 3px 3px;
+    box-shadow:0 0 8px rgba(201,168,76,0.5);
+  }
+  .bn-item:active{transform:scale(0.88)}
+  .bn-icon{font-size:22px;line-height:1;display:block;transition:transform .18s}
+  .bn-item.active .bn-icon{transform:scale(1.08)}
+  .bn-label{
+    font-size:9px;font-family:'DM Mono',monospace;
+    letter-spacing:.4px;text-transform:uppercase;
+    line-height:1;display:block;
+    transition:opacity .18s;
+  }
+  .bn-item:not(.active) .bn-label{opacity:0.5}
+  .bn-top-bar{display:none}
+
+  /* ── Home screen ── */
+  .hero-banner{height:30vh;min-height:200px;padding:20px 18px}
+  .hero-title{font-size:clamp(24px,6vw,36px)}
+  .hero-label{font-size:9px;letter-spacing:2px;margin-bottom:8px}
+  .hero-meta{font-size:11px;gap:12px;margin-bottom:14px}
+  .btn-hero{padding:9px 18px;font-size:12px}
+  .hero-overlay{background:linear-gradient(to right,var(--bg) 0%,rgba(11,11,20,0.6) 70%,var(--bg) 100%)}
+
+  .home-section{padding:16px 14px 0}
+  .sec-header{margin-bottom:14px}
+  .sec-title{font-size:18px}
+  .sec-count{font-size:10px}
+
+  /* Break scroll row out of section padding so cards go edge-to-edge */
+  .h-scroll-wrap{margin:0 -14px}
+  .h-scroll{padding:4px 14px 12px;gap:10px}
+  .h-nav-btn{display:none}
+
+  /* Channel cards on mobile — compact, no "Next" clutter */
+  .ch-card{width:140px}
+  .ch-img{height:70px;font-size:24px}
+  .ch-name{font-size:11px;min-height:unset;-webkit-line-clamp:1;line-clamp:1}
+  .ch-num{font-size:9px}
+  .ch-info{padding:8px 8px 10px}
+  /* Hide "Next:" program on home cards — too verbose on small screen */
+  .ch-epg-next{display:none}
+  /* Now-playing: single line with ellipsis */
+  .ch-epg-now{
+    -webkit-line-clamp:1;line-clamp:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:block;font-size:9px;margin-top:3px;
+  }
+  .ch-epg-time-red{font-size:8px}
+
+  /* ── Header chips: uniform compact size on mobile ── */
+  .theme-toggle,#hdr-room,.hdr-msg-btn,.hdr-time{
+    padding:3px 8px;height:24px;font-size:10px;letter-spacing:.5px;
+  }
+  /* Theme toggle: icon-only emoji, no text */
+  .theme-toggle{font-size:0;min-width:28px;padding:3px 6px}
+  html[data-theme='dark']  .theme-toggle::after{content:'🌙';font-size:13px}
+  html[data-theme='light'] .theme-toggle::after{content:'☀️';font-size:13px}
+  /* Message button: icon-only, always shown on mobile */
+  .hdr-msg-btn{display:inline-flex;font-size:0;min-width:28px;padding:3px 6px}
+  .hdr-msg-btn::before{content:'✉';font-size:13px}
+  .hdr-msg-badge{font-size:9px !important;top:-4px;right:-4px}
+
+  /* Movie cards */
+  .mv-card{width:130px}
+  .mv-poster{height:188px;font-size:36px}
+  .mv-title{font-size:12px}
+  .mv-sub{font-size:10px}
+
+  /* ── Movie / VOD grid ── */
+  .movie-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:14px}
+
+  /* ── TV channel list (mobile: horizontal strip above player) ── */
+  #screen-tv{flex-direction:column}
+  /* Sidebar takes 48% of available height so the player is still visible */
+  .ch-sidebar{width:100%;height:48vh;max-height:340px;min-height:260px;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column}
+  /* Compact the sidebar header on mobile */
+  .ch-sidebar-hdr{padding:10px 12px 8px}
+  .ch-sidebar-hdr h2{font-size:14px;margin-bottom:6px}
+  .ch-search{padding:7px 10px;font-size:12px}
+  .ch-groups-wrap{min-height:36px}
+  .ch-groups{padding:6px 4px 0}
+  .ch-group-btn{padding:4px 10px;font-size:10px}
+  /* Channel list: horizontal scroll strip */
+  .ch-list{flex:1;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 10px;scrollbar-width:none;min-height:0}
+  .ch-list::-webkit-scrollbar{display:none}
+  /* Each channel card in the strip */
+  .ch-row{flex-shrink:0;width:130px;flex-direction:column;align-items:center;text-align:center;padding:8px 6px;gap:5px;border-radius:8px}
+  .ch-row-logo{width:48px;height:48px;border-radius:8px;font-size:18px}
+  .ch-row-name{font-size:11px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+  .ch-row-num{font-size:9px}
+  .ch-row-epg{font-size:9px}
+  .ch-row-live{font-size:8px;margin-top:2px}
+  /* Pagination bar: compact */
+  .ch-sidebar > div[style*="border-top"]{padding:5px 10px}
+  .tv-player-area{flex:1;min-height:0}
+
+  /* ── Radio screen ── */
+  .radio-player{padding:20px 16px}
+  .radio-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px}
+  .station-card{padding:14px 10px}
+
+  /* ── Weather screen ── */
+  .w-details{grid-template-columns:repeat(2,1fr);gap:8px;padding:14px}
+  .w-forecast{grid-template-columns:repeat(2,1fr);gap:8px;padding:0 14px 14px}
+  .w-current{padding:20px 16px}
+  .w-temp{font-size:clamp(52px,14vw,88px)}
+
+  /* ── World Clock screen ── */
+  .wc-header{padding:16px 14px 14px}
+  .wc-header-title{font-size:20px}
+  .wc-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;padding:0 14px 14px}
+
+  /* ── Prayer times ── */
+  .prayer-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:14px}
+  .prayer-hero{padding:20px 16px}
+
+  /* ── Messages ── */
+  .msg-list{padding:14px}
+  .msg-card-inbox{padding:14px 14px}
+  .mci-subject{font-size:13px}
+
+  /* ── Services ── */
+  .svc-grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
+  .svc-tile{padding:18px 12px;border-radius:12px}
+  .svc-icon{font-size:28px}
+  .svc-name{font-size:12px}
+
+  /* ── Info tiles ── */
+  .info-grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
+  .info-tile{padding:16px 12px}
+
+  /* ── Cast screen ── */
+  .cast-inner{padding:24px 16px}
+  .cast-title{font-size:20px}
+
+  /* ── EPG overlay ── */
+  #epg-overlay{
+    border-radius:20px 20px 0 0;
+    bottom:0;top:auto;
+    max-height:75vh;
+  }
+  .epg-header{padding:16px 16px 12px}
+
+  /* ── Promo slides ── */
+  #promo-slides-wrap.style-full{height:36vh;min-height:180px}
+  #promo-slides-wrap.style-side{grid-template-columns:1fr;height:auto}
+  #promo-slides-wrap.style-side .promo-slide:not(.side-a){display:none}
+  .promo-slide-content{padding:16px 18px}
+  .promo-slide-title{font-size:20px}
+
+  /* ── Registration screen ── */
+  .reg-card{padding:32px 20px;border-radius:20px}
+  .reg-logo{font-size:28px;letter-spacing:6px}
+  .reg-numpad button{height:52px;font-size:18px;border-radius:14px}
+
+  /* ── Toasts / notifications ── */
+  #prayer-notify{padding:12px 16px;gap:12px}
+  .pn-name{font-size:16px}
+  .pn-arabic{font-size:14px}
+
+  /* ── Message banners ── */
+  #msg-banner{padding:14px 14px;gap:10px}
+  .mb-title{font-size:13px}
+  .mb-body{font-size:12px}
+
+  /* ── Screensaver ── */
+  .ss-time{font-size:clamp(52px,18vw,88px)}
+  .ss-date{font-size:clamp(13px,3.5vw,18px)}
+
+  /* ── Alarm overlay ── */
+  .alarm-clock{font-size:clamp(48px,14vw,80px)}
+  .alarm-dismiss{padding:15px 48px;font-size:17px;border-radius:14px}
+}
+
+/* ── 400px: Very small phones ──────────────────────────────────────── */
+@media(max-width:400px){
+  .hero-title{font-size:22px}
+  .hero-btns{flex-direction:column;gap:8px}
+  .btn-hero{width:100%;justify-content:center}
+
+  .ch-card{width:122px}
+  .ch-img{height:64px}
+
+  .mv-card{width:112px}
+  .mv-poster{height:160px}
+
+  .movie-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+
+  .svc-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .info-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .prayer-grid{grid-template-columns:1fr}
+
+  .home-section{padding:12px 10px 0}
+  .h-scroll{padding:4px 8px 10px;gap:8px}
+
+  .bn-icon{font-size:18px}
+  .bn-label{font-size:8px}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VOD PLAYER — RESPONSIVE  (phones ≤ 640 px)
+   Layout: 2-row control bar
+     Row 1  [mute][vol][title ···················][fullscreen][close]
+     ──────  seek track ──────────────────────────────────────────────
+     Row 2  [‹30] [‹10]  [ ▶ / ⏸ ]  [10›] [30›]
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media(max-width:640px){
+
+  /* Back button: safe-area top */
+  #vod-back-btn{
+    top:calc(12px + env(safe-area-inset-top, 0px));
+    left:12px;
+    width:40px;height:40px;
+  }
+
+  /* Control bar: safe-area bottom, tighter side padding */
+  .vlc-bar{
+    padding:0 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Seek row: taller touch zone */
+  .vlc-seek-row{padding:8px 0 4px;gap:8px}
+  .vlc-cur,.vlc-dur{font-size:11px;min-width:36px}
+  .vlc-track{height:32px}
+  .vlc-track-bg,.vlc-track-buf,.vlc-track-fill{height:4px}
+  /* Thumb always visible on touch — no hover available */
+  .vlc-track-thumb{width:16px;height:16px;opacity:1}
+
+  /* Controls: wrap so center skips drop to their own row */
+  .vlc-controls{flex-wrap:wrap;gap:2px 4px;align-items:center}
+
+  /* Row 1 — left: mute + slim vol + truncated title */
+  .vlc-left{
+    order:1;
+    flex:1;
+    min-width:0;
+    gap:4px;
+  }
+  .vlc-vol{width:52px}
+  .vlc-title{
+    flex:1;
+    min-width:0;
+    max-width:none;
+    font-size:11px;
+  }
+
+  /* Row 1 — right: fullscreen + close pushed to far end */
+  .vlc-right{
+    order:2;
+    flex-shrink:0;
+    gap:2px;
+  }
+  .vlc-right .vlc-btn{padding:9px 10px}
+  .vlc-right .vlc-btn svg{width:20px;height:20px}
+
+  /* Row 2 — center: skip controls, full width, centered */
+  .vlc-center{
+    order:3;
+    width:100%;
+    justify-content:center;
+    gap:4px;
+    padding:4px 0 2px;
+  }
+
+  /* Play button: bigger touch target */
+  .vlc-play{
+    width:58px;height:58px;
+    font-size:24px;
+    margin:0 8px;
+  }
+
+  /* Skip buttons: bigger touch area */
+  .vlc-skip{
+    min-width:46px;
+    padding:5px 6px;
+  }
+  .vlc-skip svg{width:28px;height:28px}
+  .vlc-skip-lbl{font-size:8px}
+
+  /* Mute button */
+  .vlc-btn{padding:9px 10px}
+  .vlc-btn svg{width:18px;height:18px}
+}
+
+/* Very small phones (≤ 400 px): hide 30 s skips to keep row in one line */
+@media(max-width:400px){
+  .vlc-skip[onclick*="-30"],
+  .vlc-skip[onclick*="(30)"]{display:none}
+  .vlc-play{width:52px;height:52px;font-size:22px;margin:0 4px}
+  .vlc-skip{min-width:42px}
+}

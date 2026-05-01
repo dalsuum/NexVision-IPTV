@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexVision — Responsive Nav</title>
+
+  <style>
+    /* ─── Design Tokens ───────────────────────────────────────── */
+    :root {
+      --sidebar-width:     260px;
+      --topbar-height:     56px;
+
+      --color-bg:          #0f0f1a;
+      --color-sidebar:     #1a1a2e;
+      --color-sidebar-alt: #16213e;
+      --color-accent:      #e94560;
+      --color-accent-soft: rgba(233, 69, 96, 0.12);
+      --color-text:        #e2e2f0;
+      --color-muted:       #7a7a9a;
+      --color-border:      rgba(255,255,255,0.06);
+      --color-scrim:       rgba(0, 0, 0, 0.55);
+
+      --radius:            10px;
+      --transition:        0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+      --font:              "Inter", system-ui, -apple-system, sans-serif;
+    }
+
+    /* ─── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font);
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    /* ─── Sidebar ─────────────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-width);
+      height: 100%;
+      background: var(--color-sidebar);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      /* mobile: hidden off-canvas */
+      transform: translateX(calc(-1 * var(--sidebar-width)));
+      transition: transform var(--transition);
+      will-change: transform;
+    }
+
+    .sidebar.active { transform: translateX(0); }
+
+    /* ─── Sidebar — Logo ──────────────────────────────────────── */
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .sidebar__logo-mark {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: var(--color-accent);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar__logo-mark svg { width: 20px; height: 20px; fill: #fff; }
+    .sidebar__logo-name { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.02em; }
+    .sidebar__logo-name span { color: var(--color-accent); }
+
+    /* ─── Sidebar — Search ────────────────────────────────────── */
+    .sidebar__search {
+      padding: 14px 16px 10px;
+    }
+    .sidebar__search-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 7px 12px;
+      transition: border-color var(--transition);
+    }
+    .sidebar__search-inner:focus-within { border-color: var(--color-accent); }
+    .sidebar__search-inner svg { width: 15px; height: 15px; fill: var(--color-muted); flex-shrink: 0; }
+    .sidebar__search-inner input {
+      background: none; border: none; outline: none;
+      color: var(--color-text);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .sidebar__search-inner input::placeholder { color: var(--color-muted); }
+
+    /* ─── Sidebar — Nav ───────────────────────────────────────── */
+    .sidebar__nav { flex: 1; overflow-y: auto; padding: 6px 0 10px; }
+    .sidebar__nav::-webkit-scrollbar { width: 4px; }
+    .sidebar__nav::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+    .nav-section { padding: 16px 20px 6px; }
+    .nav-section__label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 4px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 20px;
+      border-radius: 0;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--color-muted);
+      transition: color var(--transition), background var(--transition);
+      position: relative;
+    }
+    .nav-item a svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
+    .nav-item a:hover {
+      color: var(--color-text);
+      background: rgba(255,255,255,0.04);
+    }
+    .nav-item a.active {
+      color: var(--color-accent);
+      background: var(--color-accent-soft);
+    }
+    .nav-item a.active::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 6px; bottom: 6px;
+      width: 3px;
+      background: var(--color-accent);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-item__badge {
+      margin-left: auto;
+      background: var(--color-accent);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 20px;
+      line-height: 1.6;
+    }
+
+    /* ─── Sidebar — User Card ─────────────────────────────────── */
+    .sidebar__user {
+      padding: 14px 16px;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background var(--transition);
+      border-radius: 0;
+    }
+    .sidebar__user:hover { background: rgba(255,255,255,0.04); }
+    .sidebar__avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e94560, #0f3460);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .sidebar__user-info { flex: 1; min-width: 0; }
+    .sidebar__user-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__user-role { font-size: 0.72rem; color: var(--color-muted); }
+    .sidebar__user svg { width: 16px; height: 16px; fill: var(--color-muted); flex-shrink: 0; }
+
+    /* ─── Scrim (mobile overlay) ──────────────────────────────── */
+    .scrim {
+      position: fixed;
+      inset: 0;
+      background: var(--color-scrim);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    .scrim.active { opacity: 1; pointer-events: all; }
+
+    /* ─── Topbar (mobile only) ────────────────────────────────── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--topbar-height);
+      background: var(--color-sidebar-alt);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 14px;
+      z-index: 100;
+    }
+    .hamburger {
+      width: 38px; height: 38px;
+      border: none;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      flex-shrink: 0;
+      transition: background var(--transition);
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .hamburger span {
+      display: block;
+      width: 18px; height: 2px;
+      background: var(--color-text);
+      border-radius: 2px;
+      transform-origin: center;
+      transition: transform var(--transition), opacity var(--transition), width var(--transition);
+    }
+    /* Animated X on open */
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .topbar__title { font-size: 1rem; font-weight: 700; }
+    .topbar__title span { color: var(--color-accent); }
+
+    /* ─── Main Content ────────────────────────────────────────── */
+    .main {
+      min-height: 100vh;
+      padding: var(--topbar-height) 0 0; /* offset for mobile topbar */
+      transition: margin-left var(--transition);
+    }
+
+    .content-inner {
+      padding: 32px 24px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* Page header */
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 6px; }
+    .page-header p { color: var(--color-muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* Stat cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .card {
+      background: var(--color-sidebar);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .card:hover { border-color: rgba(233,69,96,0.3); transform: translateY(-2px); }
+    .card__icon {
+      width: 38px; height: 38px;
+      border-radius: 9px;
+      background: var(--color-accent-soft);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card__icon svg { width: 20px; height: 20px; fill: var(--color-accent); }
+    .card__value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+    .card__label { font-size: 0.78rem; color: var(--color-muted); }
+
+    /* Activity feed */
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--color-text);
+    }
+    .feed { display: flex; flex-direction: column; gap: 2px; }
+    .feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      transition: background var(--transition);
+    }
+    .feed-item:hover { background: rgba(255,255,255,0.03); }
+    .feed-item__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .feed-item__dot--green { background: #2ecc71; }
+    .feed-item__dot--blue  { background: #3498db; }
+    .feed-item__text { font-size: 0.85rem; line-height: 1.5; }
+    .feed-item__time { font-size: 0.75rem; color: var(--color-muted); margin-top: 2px; }
+
+    /* Resize hint pill */
+    .hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--color-accent-soft);
+      border: 1px solid rgba(233,69,96,0.25);
+      font-size: 0.78rem;
+      color: var(--color-accent);
+      margin-bottom: 28px;
+    }
+    .hint svg { width: 13px; height: 13px; fill: currentColor; }
+
+    /* ─── Topbar right cluster ───────────────────────────────── */
+    .topbar__right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Live clock */
+    .topbar__clock {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: 0.03em;
+      padding: 0 6px;
+      white-space: nowrap;
+      opacity: 0.85;
+    }
+
+    /* Room number pill */
+    .topbar__room {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--color-border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .topbar__room svg { width: 12px; height: 12px; fill: var(--color-accent); flex-shrink: 0; }
+
+    /* Icon buttons (message + theme) */
+    .topbar__icon-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border: none;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background var(--transition);
+      color: var(--color-text);
+    }
+    .topbar__icon-btn:hover { background: rgba(255,255,255,0.12); }
+    .topbar__icon-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* Notification badge on message button */
+    .topbar__badge {
+      position: absolute;
+      top: 5px; right: 5px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      border: 2px solid var(--color-sidebar-alt);
+      font-size: 0.55rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* Theme toggle — pill track */
+    .theme-toggle {
+      width: 46px; height: 26px;
+      border: none;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      transition: background var(--transition), border-color var(--transition);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.13); }
+    .theme-toggle__knob {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform var(--transition), background var(--transition);
+      flex-shrink: 0;
+    }
+    .theme-toggle__knob svg { width: 11px; height: 11px; fill: #fff; }
+    /* Light mode: knob slides to the right */
+    body.light-mode .theme-toggle__knob { transform: translateX(20px); background: #f39c12; }
+
+    /* Message dropdown panel */
+    .msg-panel {
+      position: absolute;
+      top: calc(var(--topbar-height) + 6px);
+      right: 12px;
+      width: 300px;
+      background: var(--color-sidebar);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      z-index: 300;
+      overflow: hidden;
+      /* hidden by default */
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px) scale(0.97);
+      transform-origin: top right;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .msg-panel.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0) scale(1);
+    }
+    .msg-panel__header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .msg-panel__mark {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--color-accent);
+      cursor: pointer;
+    }
+    .msg-panel__mark:hover { opacity: 0.75; }
+    .msg-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border);
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+    .msg-row:last-child { border-bottom: none; }
+    .msg-row:hover { background: rgba(255,255,255,0.03); }
+    .msg-row.unread { background: rgba(233,69,96,0.05); }
+    .msg-row__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .msg-row.read .msg-row__dot { opacity: 0; }
+    .msg-row__body { flex: 1; min-width: 0; }
+    .msg-row__from { font-size: 0.78rem; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-row__preview { font-size: 0.72rem; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-row__time { font-size: 0.65rem; color: var(--color-muted); flex-shrink: 0; }
+
+    /* ─── Light Mode overrides ────────────────────────────────── */
+    body.light-mode {
+      --color-bg:          #f0f2f5;
+      --color-sidebar:     #ffffff;
+      --color-sidebar-alt: #f8f9fb;
+      --color-text:        #1a1a2e;
+      --color-muted:       #6b7280;
+      --color-border:      rgba(0,0,0,0.08);
+      --color-scrim:       rgba(0,0,0,0.4);
+      --color-accent-soft: rgba(233,69,96,0.08);
+    }
+    body.light-mode .sidebar { box-shadow: 2px 0 16px rgba(0,0,0,0.06); }
+    body.light-mode .topbar  { background: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    body.light-mode .hamburger,
+    body.light-mode .topbar__icon-btn { background: rgba(0,0,0,0.05); }
+    body.light-mode .hamburger:hover,
+    body.light-mode .topbar__icon-btn:hover { background: rgba(0,0,0,0.1); }
+    body.light-mode .hamburger span { background: var(--color-text); }
+    body.light-mode .topbar__room { background: rgba(0,0,0,0.05); }
+    body.light-mode .theme-toggle { background: rgba(0,0,0,0.06); }
+    body.light-mode .topbar__badge { border-color: #ffffff; }
+    body.light-mode .msg-panel { box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+    body.light-mode .card { background: #ffffff; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+
+    /* ─── Desktop / Tablet (>= 768px) ────────────────────────── */
+    @media (min-width: 768px) {
+      .topbar   { display: none; }
+      .hamburger { display: none; }
+
+      .sidebar {
+        transform: translateX(0) !important;
+        box-shadow: none;
+      }
+
+      .scrim { display: none; }
+
+      .main {
+        margin-left: var(--sidebar-width);
+        padding-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+
+    <!-- Logo -->
+    <div class="sidebar__logo">
+      <div class="sidebar__logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M4 8h16v2H4zm0 6h10v2H4z"/></svg>
+      </div>
+      <span class="sidebar__logo-name">Nex<span>Vision</span></span>
+    </div>
+
+    <!-- Search -->
+    <div class="sidebar__search">
+      <div class="sidebar__search-inner">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="search" placeholder="Search…" aria-label="Search" />
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar__nav">
+
+      <div class="nav-section">
+        <div class="nav-section__label">Main</div>
+        <ul>
+          <li class="nav-item">
+            <a href="#" class="active" aria-current="page">
+              <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+              Live TV
+              <span class="nav-item__badge">LIVE</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+              VOD Library
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+              EPG Schedule
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section__label">Management</div>
+        <ul>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+              Users
+              <span class="nav-item__badge">3</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+              Packages
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+              Billing
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+              Settings
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section__label">System</div>
+        <ul>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              Logs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              About
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </nav>
+
+    <!-- User card -->
+    <div class="sidebar__user" role="button" tabindex="0" aria-label="User profile">
+      <div class="sidebar__avatar">AD</div>
+      <div class="sidebar__user-info">
+        <div class="sidebar__user-name">Admin User</div>
+        <div class="sidebar__user-role">Super Administrator</div>
+      </div>
+      <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+    </div>
+
+  </aside>
+
+  <!-- ════════════ SCRIM ════════════ -->
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+  <!-- ════════════ TOPBAR (mobile) ════════════ -->
+  <header class="topbar">
+
+    <!-- Left: hamburger + logo -->
+    <button class="hamburger" id="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="topbar__title">Nex<span>Vision</span></span>
+
+    <!-- Right cluster -->
+    <div class="topbar__right">
+
+      <!-- Live clock -->
+      <span class="topbar__clock" id="topClock">00:00</span>
+
+      <!-- Room number -->
+      <div class="topbar__room" aria-label="Room number">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        101
+      </div>
+
+      <!-- Message notification -->
+      <button class="topbar__icon-btn" id="msgBtn" aria-label="Messages" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+        <span class="topbar__badge" id="msgBadge">3</span>
+      </button>
+
+      <!-- Theme toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">
+        <div class="theme-toggle__knob" id="themeKnob">
+          <!-- moon icon (dark mode) -->
+          <svg id="iconMoon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+          <!-- sun icon (light mode) — hidden by default -->
+          <svg id="iconSun"  viewBox="0 0 24 24" style="display:none"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+        </div>
+      </button>
+
+    </div>
+  </header>
+
+  <!-- Message dropdown panel -->
+  <div class="msg-panel" id="msgPanel" role="dialog" aria-label="Messages">
+    <div class="msg-panel__header">
+      <span>Messages</span>
+      <span class="msg-panel__mark" id="markAllRead">Mark all read</span>
+    </div>
+    <div class="msg-row unread">
+      <div class="msg-row__dot"></div>
+      <div class="msg-row__body">
+        <div class="msg-row__from">System Alert</div>
+        <div class="msg-row__preview">EPG sync failed for 3 channels</div>
+      </div>
+      <div class="msg-row__time">2m</div>
+    </div>
+    <div class="msg-row unread">
+      <div class="msg-row__dot"></div>
+      <div class="msg-row__body">
+        <div class="msg-row__from">john_doe</div>
+        <div class="msg-row__preview">Hi, I can't access my account</div>
+      </div>
+      <div class="msg-row__time">18m</div>
+    </div>
+    <div class="msg-row unread">
+      <div class="msg-row__dot"></div>
+      <div class="msg-row__body">
+        <div class="msg-row__from">Billing</div>
+        <div class="msg-row__preview">Invoice #1048 payment received</div>
+      </div>
+      <div class="msg-row__time">1h</div>
+    </div>
+    <div class="msg-row read">
+      <div class="msg-row__dot"></div>
+      <div class="msg-row__body">
+        <div class="msg-row__from">sarah_k</div>
+        <div class="msg-row__preview">Thanks for the help earlier!</div>
+      </div>
+      <div class="msg-row__time">3h</div>
+    </div>
+  </div>
+
+  <!-- ════════════ MAIN CONTENT ════════════ -->
+  <main class="main" id="main">
+    <div class="content-inner">
+
+      <!-- Resize hint -->
+      <div class="hint" id="resizeHint">
+        <svg viewBox="0 0 24 24"><path d="M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22V8h-7.01V5L11 9l3.99 4z"/></svg>
+        <span id="hintText">Resize the window to see the layout switch</span>
+      </div>
+
+      <!-- Page header -->
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back, Admin. Here's what's happening with your NexVision platform today.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="cards">
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+          </div>
+          <div class="card__value">1,482</div>
+          <div class="card__label">Live Channels</div>
+        </div>
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="card__value">347</div>
+          <div class="card__label">Active Users</div>
+        </div>
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+          </div>
+          <div class="card__value">8,914</div>
+          <div class="card__label">VOD Titles</div>
+        </div>
+        <div class="card">
+          <div class="card__icon">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          </div>
+          <div class="card__value">12</div>
+          <div class="card__label">Staff Accounts</div>
+        </div>
+      </div>
+
+      <!-- Activity feed -->
+      <div class="section-title">Recent Activity</div>
+      <div class="feed">
+        <div class="feed-item">
+          <div class="feed-item__dot"></div>
+          <div>
+            <div class="feed-item__text">New user <strong>john_doe</strong> registered via Package "Gold"</div>
+            <div class="feed-item__time">2 minutes ago</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item__dot feed-item__dot--green"></div>
+          <div>
+            <div class="feed-item__text">EPG sync completed — 1,482 channels updated</div>
+            <div class="feed-item__time">15 minutes ago</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item__dot feed-item__dot--blue"></div>
+          <div>
+            <div class="feed-item__text">VOD library refreshed — 42 new titles added</div>
+            <div class="feed-item__time">1 hour ago</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item__dot"></div>
+          <div>
+            <div class="feed-item__text">Package "Platinum" price updated to $29.99/mo</div>
+            <div class="feed-item__time">3 hours ago</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-item__dot feed-item__dot--green"></div>
+          <div>
+            <div class="feed-item__text">SSL certificate renewed — valid for 90 days</div>
+            <div class="feed-item__time">Yesterday at 11:42 PM</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ════════════ JAVASCRIPT ════════════ -->
+  <script>
+    const sidebar     = document.getElementById('sidebar');
+    const scrim       = document.getElementById('scrim');
+    const hamburger   = document.getElementById('hamburger');
+    const hintText    = document.getElementById('hintText');
+    const msgBtn      = document.getElementById('msgBtn');
+    const msgPanel    = document.getElementById('msgPanel');
+    const msgBadge    = document.getElementById('msgBadge');
+    const markAllRead = document.getElementById('markAllRead');
+    const themeToggle = document.getElementById('themeToggle');
+    const iconMoon    = document.getElementById('iconMoon');
+    const iconSun     = document.getElementById('iconSun');
+    const topClock    = document.getElementById('topClock');
+
+    /* ── Drawer toggle ────────────────────────────────────────── */
+    function toggleNav(forceClose = false) {
+      const isOpen = sidebar.classList.contains('active');
+      if (forceClose || isOpen) {
+        sidebar.classList.remove('active');
+        scrim.classList.remove('active');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      } else {
+        sidebar.classList.add('active');
+        scrim.classList.add('active');
+        hamburger.classList.add('open');
+        hamburger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    hamburger.addEventListener('click', () => toggleNav());
+    scrim.addEventListener('click', () => { toggleNav(true); closeMsgPanel(); });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { toggleNav(true); closeMsgPanel(); }
+    });
+
+    sidebar.querySelectorAll('.nav-item a').forEach(link => {
+      link.addEventListener('click', function () {
+        sidebar.querySelectorAll('.nav-item a').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        if (window.innerWidth < 768) toggleNav(true);
+      });
+    });
+
+    /* ── Resize hint ──────────────────────────────────────────── */
+    function updateHint() {
+      hintText.textContent = window.innerWidth >= 768
+        ? 'Sidebar is pinned — resize below 768 px for drawer mode'
+        : 'Tap ☰ to open the side drawer navigation';
+    }
+    updateHint();
+    window.addEventListener('resize', updateHint);
+
+    /* ── Live clock (updates every second) ───────────────────── */
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      topClock.textContent = `${h}:${m}:${s}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* ── Message panel ────────────────────────────────────────── */
+    let unreadCount = document.querySelectorAll('.msg-row.unread').length;
+
+    function updateBadge() {
+      msgBadge.textContent = unreadCount;
+      msgBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+    }
+    updateBadge();
+
+    function closeMsgPanel() {
+      msgPanel.classList.remove('open');
+      msgBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    msgBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = msgPanel.classList.contains('open');
+      if (isOpen) {
+        closeMsgPanel();
+      } else {
+        msgPanel.classList.add('open');
+        msgBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    /* Close panel when clicking anywhere outside */
+    document.addEventListener('click', e => {
+      if (!msgPanel.contains(e.target) && e.target !== msgBtn) closeMsgPanel();
+    });
+
+    /* Mark all read */
+    markAllRead.addEventListener('click', () => {
+      document.querySelectorAll('.msg-row.unread').forEach(row => {
+        row.classList.remove('unread');
+        row.classList.add('read');
+      });
+      unreadCount = 0;
+      updateBadge();
+    });
+
+    /* ── Dark / Light mode toggle ─────────────────────────────── */
+    let isDark = true;
+
+    themeToggle.addEventListener('click', () => {
+      isDark = !isDark;
+      document.body.classList.toggle('light-mode', !isDark);
+      iconMoon.style.display = isDark  ? 'block' : 'none';
+      iconSun.style.display  = !isDark ? 'block' : 'none';
+      themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    });
+  </script>
+
+</body>
+</html>
