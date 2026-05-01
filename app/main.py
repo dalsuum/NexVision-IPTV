@@ -5558,6 +5558,7 @@ def _render_vod_ui() -> str:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NexVision VOD</title>
+
 <script>
 (function () {
   if (new URLSearchParams(window.location.search).get('embedded') === '1') {
@@ -5565,14 +5566,14 @@ def _render_vod_ui() -> str:
   }
 })();
 </script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#06060a;--bg2:#0d0d14;--bg3:#131320;--bg4:#1a1a2e;--gold:#c9a84c;--gold2:#e8c56a;--gold3:rgba(201,168,76,.15);--white:#f0f0f8;--muted:rgba(240,240,248,.35);--dimmed:rgba(240,240,248,.6);--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);--red:#e84855;--green:#52d98e;--blue:#4a9eff}
 body{background:var(--bg);color:var(--white);font-family:system-ui,sans-serif;min-height:100vh}
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;gap:16px}
-.logo{font-size:20px;font-weight:700;color:var(--gold);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:10px;min-height:32px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:10px 16px;border-radius:14px}
-.logo span{color:var(--white)}
-.logo img{display:block;max-height:32px;max-width:180px;width:auto;object-fit:contain}
+
+.logo{font-size:20px;font-weight:700;color:var(--gold);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:10px;min-height:32px}.logo span{color:var(--white)}.logo img{display:block;max-height:32px;max-width:180px;width:auto;object-fit:contain}.hdr-badge{font-size:10px;background:var(--gold3);border:1px solid var(--gold);color:var(--gold);padding:2px 10px;border-radius:20px;letter-spacing:1px}.container{max-width:1200px;margin:0 auto;padding:32px}
 .hdr-badge{font-size:10px;background:var(--gold3);border:1px solid var(--gold);color:var(--gold);padding:2px 10px;border-radius:20px;letter-spacing:1px}
 .container{max-width:1200px;margin:0 auto;padding:32px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:32px}
@@ -5634,7 +5635,9 @@ body[data-theme='light']{--bg:#f4f6fb;--bg2:#ffffff;--bg3:#eef2fb;--bg4:#dfe5f2;
 </style>
 </head>
 <body>
-<header style="display:flex;align-items:center;gap:20px">
+<header style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
+          <div class="logo" id="vod-public-logo"><span>VOD</span></div>
+          <div class="hdr-badge" id="vod-public-badge">nexvision</div>
   <nav class="topnav">
     <a href="/vod" class="active">VOD</a>
     <a href="/vod/admin">Admin</a>

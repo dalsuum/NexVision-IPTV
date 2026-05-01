@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.12
+# NexVision IPTV Platform v8.13
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -489,6 +489,7 @@ The sync matches channels by **tvg_id** first (most accurate), then by display n
 | EPG Sync Now does nothing | The EPG Source URL must be an external XMLTV URL from your provider, not `localhost:3000/guide.xml` |
 | EPG service not running | `cd /opt/nexvision/epg && npx pm2 start pm2.config.js && npx pm2 save` |
 | EPG 0 matches after sync | Channel `tvg_id` values in the DB must match channel IDs in the XMLTV file |
+| VOD page logo not showing custom branding | Fixed in v8.13 — corrected element IDs so `applyPublicBranding()` can target the logo and badge on `/vod/` |
 
 ---
 
@@ -537,5 +538,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.12 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
-*Last updated: 2026-04-30*
+*NexVision IPTV v8.13 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*Last updated: 2026-05-01*
