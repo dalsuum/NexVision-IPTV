@@ -157,13 +157,16 @@ def set_room_packages(rid: int, d: dict):
 def get_rooms_packages_map():
     conn = get_db()
     rows = conn.execute(
-        "SELECT rp.room_id, rp.package_id, r.room_number, p.name as package_name "
+        "SELECT rp.room_id, p.name as package_name "
         "FROM room_packages rp "
-        "JOIN rooms r ON r.id=rp.room_id "
         "JOIN content_packages p ON p.id=rp.package_id"
     ).fetchall()
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    result = {}
+    for r in rows:
+        key = str(r['room_id'])
+        result.setdefault(key, []).append(r['package_name'])
+    return jsonify(result)
 
 
 def bulk_delete(ids: list):

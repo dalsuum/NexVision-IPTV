@@ -106,6 +106,7 @@ def migrate_db(conn):
         ("rss_feeds",      "bg_color",      "TEXT DEFAULT '#09090f'"),
         ("rss_feeds",      "bg_opacity",    "INTEGER DEFAULT 92"),
         ("watch_history",  "device_type",   "TEXT DEFAULT 'browser'"),
+        ("users",          "city",          "TEXT DEFAULT ''"),
     ]
     for table, col, typedef in cols_to_add:
         try:
@@ -234,6 +235,7 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT 'viewer',
+        city TEXT DEFAULT '',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 

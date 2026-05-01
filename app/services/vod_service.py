@@ -46,7 +46,7 @@ def list_movies(genre=None, search='', package_id=None,
             )
             OR EXISTS (
                 SELECT 1 FROM vip_vod_access vva
-                WHERE vva.vod_id=vod_movies.id AND vva.room_id=?
+                WHERE vva.video_id=vod_movies.id AND vva.room_id=?
             )
         )""")
         params += [room_id, room_id]

@@ -3,6 +3,36 @@ const API=window.location.origin+'/api'; // auto-detect server address
 const THEME_KEY='nv_theme_mode';
 let jwt=localStorage.getItem('nv_jwt'),me=null,curPage='dashboard',rtimer=null;
 
+// ── City picker ───────────────────────────────────────────────────────────────
+let _citiesCache=null;
+async function loadCities(){
+  if(_citiesCache)return _citiesCache;
+  try{const r=await fetch('/admin/cities.json');_citiesCache=await r.json();}
+  catch(e){_citiesCache=[];}
+  return _citiesCache;
+}
+function cityPickerHtml(id,val=''){
+  return `<div class="cs-wrap"><input id="${id}" value="${esc(val)}" placeholder="Type to search city..." autocomplete="off" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:.2s;box-sizing:border-box" oninput="onCityInput(this)" onfocus="onCityInput(this)" onblur="hideCityDrop(this)"><div class="cs-drop" id="${id}-drop"></div></div>`;
+}
+async function onCityInput(el){
+  const cities=await loadCities();
+  const q=el.value.toLowerCase().trim();
+  const drop=document.getElementById(el.id+'-drop');
+  if(!drop)return;
+  if(!q){drop.style.display='none';return;}
+  const matches=cities.filter(c=>c.toLowerCase().includes(q)).slice(0,80);
+  if(!matches.length){drop.innerHTML='<div class="cs-none">No cities found</div>';drop.style.display='block';return;}
+  drop.innerHTML=matches.map(c=>`<div class="cs-opt" onmousedown="pickCity('${el.id}','${c.replace(/'/g,"\\'")}')">${c}</div>`).join('');
+  drop.style.display='block';
+}
+function pickCity(id,city){
+  const el=document.getElementById(id);if(el)el.value=city;
+  const drop=document.getElementById(id+'-drop');if(drop)drop.style.display='none';
+}
+function hideCityDrop(el){
+  setTimeout(()=>{const d=document.getElementById(el.id+'-drop');if(d)d.style.display='none';},200);
+}
+
 function applyTheme(mode){
   const m=(mode==='light')?'light':'dark';
   document.documentElement.setAttribute('data-theme',m);
@@ -663,11 +693,12 @@ async users(){
   const users=await req('/users');if(!users)return;
   document.getElementById('content').innerHTML=`
   <div class="sec-hdr"><div class="sec-title">System Users</div><button class="btn btn-p" onclick="eUser()">+ Add User</button></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+  <div class="tbl-wrap"><table><thead><tr><th>Username</th><th>Role</th><th>City / Region</th><th>Created</th><th>Actions</th></tr></thead>
   <tbody>${users.map(u=>`<tr><td><b>${esc(u.username)}</b>${u.id===me?.id?' <span class="bdg bg" style="font-size:9px">You</span>':''}</td>
   <td><span class="bdg ${u.role==='admin'?'bo':u.role==='operator'?'bb':'bg'}">${u.role}</span></td>
+  <td style="font-size:12px;color:var(--text2)">${u.city?'🌍 '+esc(u.city):'<span style="color:var(--text3)">—</span>'}</td>
   <td style="font-size:11px;color:var(--text2)">${u.created_at||'—'}</td>
-  <td>${u.id!==me?.id?'<button class="btn btn-d btn-sm" onclick="dUser('+u.id+',\''+esc(u.username)+'\')">Delete</button>':''}</td></tr>`).join('')}
+  <td style="display:flex;gap:6px"><button class="btn btn-g btn-sm" onclick="eEditUser(${u.id},'${esc(u.username)}','${esc(u.city||'')}','${u.role}')">Edit</button>${u.id!==me?.id?'<button class="btn btn-d btn-sm" onclick="dUser('+u.id+',\''+esc(u.username)+'\')">Delete</button>':''}</td></tr>`).join('')}
   </tbody></table></div>`;
 },
 
@@ -1373,9 +1404,16 @@ function eUser(){openModal('Add User',`<div class="fgrid">
 <div class="fg"><label>Username *</label><input id="u-name"></div>
 <div class="fg"><label>Password *</label><input id="u-pass" type="password"></div>
 <div class="fg"><label>Role</label><select id="u-role"><option value="viewer">Viewer</option><option value="operator">Operator</option><option value="admin">Admin</option></select></div>
+<div class="fg"><label>City / Region</label>${cityPickerHtml('u-city')}</div>
 </div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svUser()">Create</button>`);}
-async function svUser(){const d={username:document.getElementById('u-name').value.trim(),password:document.getElementById('u-pass').value,role:document.getElementById('u-role').value};if(!d.username||!d.password)return;const r=await req('/users',{method:'POST',body:JSON.stringify(d)});if(r?.error){alert(r.error);return;}closeModal();toast('✅ User created');await pages.users();}
+async function svUser(){const d={username:document.getElementById('u-name').value.trim(),password:document.getElementById('u-pass').value,role:document.getElementById('u-role').value,city:document.getElementById('u-city').value.trim()};if(!d.username||!d.password)return;const r=await req('/users',{method:'POST',body:JSON.stringify(d)});if(r?.error){alert(r.error);return;}closeModal();toast('✅ User created');await pages.users();}
 async function dUser(id,name){if(!confirm('Delete "'+name+'"?'))return;await req('/users/'+id,{method:'DELETE'});toast('🗑 Deleted');await pages.users();}
+function eEditUser(id,username,city,role){openModal('Edit User — '+username,`<div class="fgrid">
+<div class="fg"><label>City / Region</label>${cityPickerHtml('eu-city',city)}</div>
+<div class="fg"><label>Role</label><select id="eu-role"><option value="viewer"${role==='viewer'?' selected':''}>Viewer</option><option value="operator"${role==='operator'?' selected':''}>Operator</option><option value="admin"${role==='admin'?' selected':''}>Admin</option></select></div>
+<div class="fg" style="grid-column:span 2"><label>New Password <span style="font-weight:400;color:var(--text3)">(leave blank to keep)</span></label><input id="eu-pass" type="password"></div>
+</div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svEditUser(${id})">Save</button>`);}
+async function svEditUser(id){const d={city:document.getElementById('eu-city').value.trim(),role:document.getElementById('eu-role').value,password:document.getElementById('eu-pass').value};if(!d.password)delete d.password;const r=await req('/users/'+id,{method:'PUT',body:JSON.stringify(d)});if(r?.error){alert(r.error);return;}closeModal();toast('✅ User updated');await pages.users();}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // REPORTS + EXPORT

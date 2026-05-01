@@ -17,6 +17,12 @@ def create_user():
     return user_service.create_user(request.json or {})
 
 
+@users_bp.route('/<int:uid>', methods=['PUT'])
+@admin_required
+def update_user(uid):
+    return user_service.update_user(uid, request.json or {})
+
+
 @users_bp.route('/<int:uid>', methods=['DELETE'])
 @admin_required
 def delete_user(uid):

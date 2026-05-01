@@ -180,7 +180,7 @@ def get_vip_vod(room_id=None):
         rows = conn.execute(
             "SELECT m.*, vva.room_id "
             "FROM vod_movies m "
-            "JOIN vip_vod_access vva ON vva.vod_id=m.id "
+            "JOIN vip_vod_access vva ON vva.video_id=m.id "
             "WHERE vva.room_id=?",
             (int(room_id),),
         ).fetchall()
@@ -188,7 +188,7 @@ def get_vip_vod(room_id=None):
         rows = conn.execute(
             "SELECT m.*, vva.room_id "
             "FROM vod_movies m "
-            "JOIN vip_vod_access vva ON vva.vod_id=m.id"
+            "JOIN vip_vod_access vva ON vva.video_id=m.id"
         ).fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
@@ -197,7 +197,7 @@ def get_vip_vod(room_id=None):
 def grant_vip_vod_access(d: dict):
     conn = get_db()
     conn.execute(
-        "INSERT OR IGNORE INTO vip_vod_access (vod_id, room_id) VALUES (?,?)",
+        "INSERT OR IGNORE INTO vip_vod_access (video_id, room_id) VALUES (?,?)",
         (d['vod_id'], d['room_id']),
     )
     conn.commit()
@@ -208,7 +208,7 @@ def grant_vip_vod_access(d: dict):
 def revoke_vip_vod_access(d: dict):
     conn = get_db()
     conn.execute(
-        "DELETE FROM vip_vod_access WHERE vod_id=? AND room_id=?",
+        "DELETE FROM vip_vod_access WHERE video_id=? AND room_id=?",
         (d['vod_id'], d['room_id']),
     )
     conn.commit()
@@ -228,7 +228,7 @@ def get_my_vip_vod(room_token: str):
     if room_id:
         rows = conn.execute(
             "SELECT m.* FROM vod_movies m "
-            "JOIN vip_vod_access vva ON vva.vod_id=m.id "
+            "JOIN vip_vod_access vva ON vva.video_id=m.id "
             "WHERE vva.room_id=?",
             (room_id,),
         ).fetchall()
