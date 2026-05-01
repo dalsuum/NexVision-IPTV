@@ -2,7 +2,7 @@ import json
 import urllib.request
 import xml.etree.ElementTree as ET
 from flask import jsonify
-from ..extensions import get_db, cache, TTL_RSS, invalidate_rss
+from ..extensions import get_db, cache, TTL_RSS, invalidate_rss, bump_config_stamp
 
 
 def list_feeds():
@@ -25,7 +25,7 @@ def get_public_feeds():
 
     result = []
     for feed in feeds:
-        items = _fetch_feed(feed['url'], limit=feed.get('item_limit', 10))
+        items = _fetch_feed(feed['url'], limit=feed['refresh_minutes'] or 10)
         result.append({**dict(feed), 'items': items})
 
     cache.set('nv:rss_public', json.dumps(result), timeout=TTL_RSS)
@@ -57,10 +57,10 @@ def _fetch_feed(url: str, limit: int = 10) -> list:
 def create_feed(d: dict):
     conn = get_db()
     cur = conn.execute(
-        "INSERT INTO rss_feeds (name, url, active, sort_order, item_limit, "
+        "INSERT INTO rss_feeds (title, url, type, active, refresh_minutes, "
         "text_color, bg_color, bg_opacity) VALUES (?,?,?,?,?,?,?,?)",
-        (d['name'], d['url'], d.get('active', 1), d.get('sort_order', 0),
-         d.get('item_limit', 10), d.get('text_color', '#ffffff'),
+        (d['title'], d['url'], d.get('type', 'normal'), d.get('active', 1),
+         d.get('refresh_minutes', 15), d.get('text_color', '#ffffff'),
          d.get('bg_color', '#09090f'), d.get('bg_opacity', 92)),
     )
     conn.commit()
@@ -69,16 +69,17 @@ def create_feed(d: dict):
     ).fetchone())
     conn.close()
     invalidate_rss()
+    bump_config_stamp()
     return jsonify(feed), 201
 
 
 def update_feed(fid: int, d: dict):
     conn = get_db()
     conn.execute(
-        "UPDATE rss_feeds SET name=?, url=?, active=?, sort_order=?, "
-        "item_limit=?, text_color=?, bg_color=?, bg_opacity=? WHERE id=?",
-        (d['name'], d['url'], d.get('active', 1), d.get('sort_order', 0),
-         d.get('item_limit', 10), d.get('text_color', '#ffffff'),
+        "UPDATE rss_feeds SET title=?, url=?, type=?, active=?, "
+        "refresh_minutes=?, text_color=?, bg_color=?, bg_opacity=? WHERE id=?",
+        (d['title'], d['url'], d.get('type', 'normal'), d.get('active', 1),
+         d.get('refresh_minutes', 15), d.get('text_color', '#ffffff'),
          d.get('bg_color', '#09090f'), d.get('bg_opacity', 92), fid),
     )
     conn.commit()
@@ -87,6 +88,7 @@ def update_feed(fid: int, d: dict):
     ).fetchone())
     conn.close()
     invalidate_rss()
+    bump_config_stamp()
     return jsonify(feed)
 
 
@@ -96,4 +98,5 @@ def delete_feed(fid: int):
     conn.commit()
     conn.close()
     invalidate_rss()
+    bump_config_stamp()
     return jsonify({'ok': True})

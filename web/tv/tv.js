@@ -39,6 +39,8 @@
 const API = window.location.origin + '/api'; // auto-detect server address
 const THEME_KEY = 'nv_theme_mode';
 let allChannels = [], allMovies = [], allRadio = [], allGroups = [];
+let _vodSearchQ = '', _vodActiveGenre = null, _vodShowFavs = false;
+let _vodFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_movies') || '[]'));
 let currentChId  = -1;
 let currentStation = null;
 let _epgNowMap = {};  // channel_id → current programme title
@@ -290,7 +292,8 @@ async function api(path, opts={}) {
     const t = getRoomToken();
     if (t) headers['X-Room-Token'] = t;
     const res = await fetch(API + path, { ...opts, headers });
-    return res.json();
+    if (!res.ok) return null;
+    return await res.json();
   } catch(e) { return null; }
 }
 async function apiChannels(params={}) {
@@ -1292,42 +1295,106 @@ function nextChannel() {
 // ── VoD ───────────────────────────────────────────────────────────────────────
 async function loadVoD() {
   if (!allMovies.length) allMovies = await api('/vod') || [];
+  _vodSearchQ = ''; _vodActiveGenre = null; _vodShowFavs = false;
   const genres = [...new Set(allMovies.flatMap(m=>m.genre.split('/')))].sort();
   renderVoD(allMovies, genres, null);
 }
 
 function renderVoD(movies, genres, activeGenre) {
   const el = document.getElementById('screen-vod');
+  const favCount = _vodFavs.size;
   el.innerHTML = `
-    <div class="vod-filters">
+    <div class="vod-header">
       <h2>Video on Demand</h2>
-      <button class="filter-chip ${!activeGenre?'active':''}" onclick="filterVoD(null)">All</button>
+      <div class="vod-search-wrap">
+        <svg class="vod-search-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input class="vod-search" id="vod-search-input" placeholder="Search movies…"
+          value="${_vodSearchQ.replace(/"/g,'&quot;')}"
+          oninput="searchVoD(this.value)" autocomplete="off">
+        ${_vodSearchQ ? `<button class="vod-search-clear" onclick="searchVoD('');document.getElementById('vod-search-input').value=''">✕</button>` : ''}
+      </div>
+    </div>
+    <div class="vod-filters">
+      <button class="filter-chip ${!activeGenre&&!_vodShowFavs?'active':''}" onclick="filterVoD(null)">All</button>
+      <button class="filter-chip fav-chip ${_vodShowFavs?'active':''}" onclick="showFavourites()">♥ Favourites${favCount>0?` <span class="fav-count">${favCount}</span>`:''}</button>
       ${genres.map(g=>`<button class="filter-chip ${activeGenre===g?'active':''}" onclick="filterVoD('${g}')">${g}</button>`).join('')}
     </div>
     <div class="movie-grid">
-      ${movies.map(m=>`
-        <div class="movie-tile" onclick="openMovieDetail(${m.id})">
-          <div class="mt-poster">🎬
+      ${movies.length ? movies.map(m=>`
+        <div class="movie-tile" onclick="openMovieDetail(${m.id})" tabindex="0">
+          <div class="mt-poster">
+            ${m.poster ? `<img src="${m.poster}" alt="" loading="lazy" onerror="this.style.display='none'">` : '🎬'}
             <div class="mt-rating">★ ${m.rating}</div>
+            <button class="mt-fav-btn${_vodFavs.has(m.id)?' active':''}" onclick="toggleFav(${m.id},event)" title="${_vodFavs.has(m.id)?'Remove from favourites':'Add to favourites'}" aria-label="Favourite">♥</button>
             <div class="mt-overlay"><div class="mt-play-btn">▶</div></div>
           </div>
           <div class="mt-title">${m.title}</div>
           <div class="mt-sub">${m.year} · ${m.genre.split('/')[0]}</div>
           <div class="mt-price">${m.price>0?'$'+m.price:'Free'}</div>
-        </div>`).join('')}
+        </div>`).join('') : `<div class="vod-empty">${_vodShowFavs?'No favourites yet — tap ♥ on any movie':'No movies found'}</div>`}
     </div>`;
 }
 
 function filterVoD(genre) {
-  const filtered = genre ? allMovies.filter(m=>m.genre.includes(genre)) : allMovies;
+  _vodActiveGenre = genre;
+  _vodShowFavs = false;
+  _vodApplyFilters();
+}
+
+function showFavourites() {
+  _vodShowFavs = true;
+  _vodActiveGenre = null;
+  _vodApplyFilters();
+}
+
+function searchVoD(q) {
+  _vodSearchQ = q.trim().toLowerCase();
+  _vodApplyFilters();
+}
+
+function _vodApplyFilters() {
+  let movies = allMovies;
+  if (_vodShowFavs) {
+    movies = movies.filter(m => _vodFavs.has(m.id));
+  } else if (_vodActiveGenre) {
+    movies = movies.filter(m => m.genre.includes(_vodActiveGenre));
+  }
+  if (_vodSearchQ) {
+    movies = movies.filter(m =>
+      m.title.toLowerCase().includes(_vodSearchQ) ||
+      (m.description || '').toLowerCase().includes(_vodSearchQ)
+    );
+  }
   const genres = [...new Set(allMovies.flatMap(m=>m.genre.split('/')))].sort();
-  renderVoD(filtered, genres, genre);
+  renderVoD(movies, genres, _vodActiveGenre);
+}
+
+function toggleFav(id, e) {
+  e.stopPropagation();
+  if (_vodFavs.has(id)) { _vodFavs.delete(id); toast('Removed from favourites'); }
+  else                   { _vodFavs.add(id);    toast('Added to favourites ♥');   }
+  localStorage.setItem('nv_fav_movies', JSON.stringify([..._vodFavs]));
+  _vodApplyFilters();
+}
+
+function toggleFavDetail(id) {
+  if (_vodFavs.has(id)) { _vodFavs.delete(id); toast('Removed from favourites'); }
+  else                   { _vodFavs.add(id);    toast('Added to favourites ♥');   }
+  localStorage.setItem('nv_fav_movies', JSON.stringify([..._vodFavs]));
+  const btn = document.getElementById('md-fav-btn');
+  const isFav = _vodFavs.has(id);
+  if (btn) { btn.textContent = isFav ? '♥ Favourited' : '♡ Favourite'; btn.className = `btn-hero ${isFav?'btn-hero-fav':'btn-hero-ghost'}`; }
+  _vodApplyFilters();
 }
 
 async function openMovieDetail(id) {
   const m = allMovies.find(x=>x.id===id) || await api(`/vod/${id}`);
   if (!m) return;
-  document.getElementById('md-backdrop').textContent = '🎬';
+  const bd = document.getElementById('md-backdrop');
+  if (m.backdrop) { bd.innerHTML = `<img src="${m.backdrop}" alt="" style="width:100%;height:100%;object-fit:cover">`; }
+  else if (m.poster) { bd.innerHTML = `<img src="${m.poster}" alt="" style="width:100%;height:100%;object-fit:cover">`; }
+  else { bd.textContent = '🎬'; }
+  const isFav = _vodFavs.has(m.id);
   document.getElementById('md-body').innerHTML = `
     <div class="md-title">${m.title}</div>
     <div class="md-meta">
@@ -1342,6 +1409,7 @@ async function openMovieDetail(id) {
       ${m.stream_url
         ? `<button class="btn-hero btn-hero-primary" onclick="startVoD('${m.stream_url}','${m.title.replace(/'/g,"\\'")}')">▶ Play Now</button>`
         : `<button class="btn-hero btn-hero-primary" onclick="toast('Stream not configured')">▶ Rent — $${m.price}</button>`}
+      <button class="btn-hero ${isFav?'btn-hero-fav':'btn-hero-ghost'}" id="md-fav-btn" onclick="toggleFavDetail(${m.id})">${isFav?'♥ Favourited':'♡ Favourite'}</button>
       <button class="btn-hero btn-hero-ghost" onclick="closeMovieDetail()">✕ Close</button>
     </div>`;
   document.getElementById('movie-detail').classList.add('open');
@@ -2945,7 +3013,11 @@ async function loadSkin() {
     root.style.backgroundRepeat   = 'no-repeat';
     root.style.backgroundAttachment = 'fixed';
   } else {
-    root.style.backgroundImage = '';
+    root.style.backgroundImage    = '';
+    root.style.backgroundSize     = '';
+    root.style.backgroundPosition = '';
+    root.style.backgroundRepeat   = '';
+    root.style.backgroundAttachment = '';
   }
 }
 

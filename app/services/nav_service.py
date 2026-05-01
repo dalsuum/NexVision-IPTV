@@ -1,6 +1,6 @@
 import json
 from flask import jsonify
-from ..extensions import get_db, invalidate_nav
+from ..extensions import get_db, invalidate_nav, bump_config_stamp
 
 
 def get_nav(room_token: str):
@@ -47,6 +47,7 @@ def create_item(d: dict):
     ).fetchone())
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify(item), 201
 
 
@@ -63,6 +64,7 @@ def update_item(nid: int, d: dict):
     ).fetchone())
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify(item)
 
 
@@ -78,6 +80,7 @@ def toggle_item(nid: int):
     ).fetchone())
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify(item)
 
 
@@ -87,6 +90,7 @@ def delete_item(nid: int):
     conn.commit()
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify({'ok': True})
 
 
@@ -99,6 +103,7 @@ def reorder(ids: list):
     conn.commit()
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify({'ok': True})
 
 
@@ -117,4 +122,5 @@ def set_position(d: dict):
     conn.commit()
     conn.close()
     invalidate_nav()
+    bump_config_stamp()
     return jsonify({'ok': True, 'position': position, 'style': style})

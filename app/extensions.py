@@ -42,6 +42,19 @@ def get_db():
     return conn
 
 
+def bump_config_stamp():
+    """Bump config_stamp so TV clients detect any admin change on next poll."""
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO settings (key, value) "
+        "VALUES ('config_stamp', CAST(strftime('%s','now') AS TEXT))"
+    )
+    conn.commit()
+    conn.close()
+    cache.delete('nv:settings_stamp')
+    cache.delete('nv:settings')
+
+
 def get_vod_db():
     """Return an open VOD-database connection (SQLite or MySQL)."""
     if _USE_MYSQL:

@@ -11,7 +11,7 @@ from collections import Counter
 
 from flask import jsonify, Response
 
-from ..extensions import get_db, invalidate_channels
+from ..extensions import get_db, invalidate_channels, bump_config_stamp
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -148,6 +148,7 @@ def create_channel(d: dict):
     ).fetchone())
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify(ch), 201
 
 
@@ -169,6 +170,7 @@ def update_channel(cid: int, d: dict):
     ).fetchone())
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify(ch)
 
 
@@ -178,6 +180,7 @@ def delete_channel(cid: int):
     conn.commit()
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify({'ok': True})
 
 
@@ -190,6 +193,7 @@ def bulk_delete(ids: list):
     conn.commit()
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify({'deleted': len(ids)})
 
 
@@ -276,6 +280,7 @@ def import_m3u(request):
     conn.commit()
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify({'inserted': inserted, 'total': len(channels)})
 
 
@@ -322,4 +327,5 @@ def bulk_import_csv(request):
     conn.commit()
     conn.close()
     invalidate_channels()
+    bump_config_stamp()
     return jsonify({'inserted': inserted})

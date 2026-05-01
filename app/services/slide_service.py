@@ -1,5 +1,5 @@
 from flask import jsonify
-from ..extensions import get_db, invalidate_slides
+from ..extensions import get_db, invalidate_slides, bump_config_stamp
 
 
 def get_public(room_token: str):
@@ -36,6 +36,7 @@ def create_slide(d: dict):
     ).fetchone())
     conn.close()
     invalidate_slides()
+    bump_config_stamp()
     return jsonify(slide), 201
 
 
@@ -54,6 +55,7 @@ def update_slide(sid: int, d: dict):
     ).fetchone())
     conn.close()
     invalidate_slides()
+    bump_config_stamp()
     return jsonify(slide)
 
 
@@ -63,6 +65,7 @@ def delete_slide(sid: int):
     conn.commit()
     conn.close()
     invalidate_slides()
+    bump_config_stamp()
     return jsonify({'ok': True})
 
 
@@ -75,4 +78,5 @@ def reorder(ids: list):
     conn.commit()
     conn.close()
     invalidate_slides()
+    bump_config_stamp()
     return jsonify({'ok': True})

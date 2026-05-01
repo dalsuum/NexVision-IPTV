@@ -1,6 +1,6 @@
 """VOD movie catalogue — the IPTV side (not the streaming/transcoding server)."""
 from flask import jsonify
-from ..extensions import get_db, invalidate_vod
+from ..extensions import get_db, invalidate_vod, bump_config_stamp
 
 
 def _safe_int(val, default=0):
@@ -88,6 +88,7 @@ def create_movie(d: dict):
     ).fetchone())
     conn.close()
     invalidate_vod()
+    bump_config_stamp()
     return jsonify(m), 201
 
 
@@ -111,6 +112,7 @@ def update_movie(mid: int, d: dict):
     ).fetchone())
     conn.close()
     invalidate_vod()
+    bump_config_stamp()
     return jsonify(m)
 
 
@@ -120,6 +122,7 @@ def delete_movie(mid: int):
     conn.commit()
     conn.close()
     invalidate_vod()
+    bump_config_stamp()
     return jsonify({'ok': True})
 
 
@@ -196,6 +199,7 @@ def bulk_delete(ids: list):
     conn.commit()
     conn.close()
     invalidate_vod()
+    bump_config_stamp()
     return jsonify({'deleted': len(ids)})
 
 
@@ -219,6 +223,7 @@ def bulk_add(d: dict):
     conn.commit()
     conn.close()
     invalidate_vod()
+    bump_config_stamp()
     return jsonify({'added': added})
 
 

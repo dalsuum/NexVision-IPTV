@@ -16,15 +16,18 @@ def register_hooks(app):
         token = request.headers.get('X-Room-Token', '').strip()
         if not token:
             return
-        from .extensions import get_db
-        conn = get_db()
-        conn.execute(
-            "UPDATE rooms SET last_seen=CURRENT_TIMESTAMP, online=1 "
-            "WHERE room_token=?",
-            (token,)
-        )
-        conn.commit()
-        conn.close()
+        try:
+            from .extensions import get_db
+            conn = get_db()
+            conn.execute(
+                "UPDATE rooms SET last_seen=CURRENT_TIMESTAMP, online=1 "
+                "WHERE room_token=?",
+                (token,)
+            )
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
     @app.before_request
     def redirect_tv_clients():
