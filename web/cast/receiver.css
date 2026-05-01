@@ -1,0 +1,194 @@
+    /* ── Reset ───────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #06060a;   /* NexVision body background */
+      color: #f0f0f8;
+    }
+
+    /* ── CAF player ──────────────────────────────────────────────────────────── */
+    /*
+      <cast-media-player> fills the screen and manages:
+        • sender ↔ receiver state synchronisation (play/pause/seek/volume)
+        • media status broadcasts that keep the sender's seek-bar in sync
+        • the underlying <video> element HLS.js will attach to
+
+      CSS custom properties tune the built-in sender-facing progress ring.
+    */
+    cast-media-player {
+      position: absolute;
+      inset: 0;
+      width:  100vw;
+      height: 100vh;
+      --theme-hue:      46;       /* HSL hue for gold accent (≈ #c9a84c)  */
+      --progress-color: #c9a84c;  /* seek-bar / spinner color              */
+    }
+
+    /* ── Overlay shell ───────────────────────────────────────────────────────── */
+    /*
+      Sits above <cast-media-player> in the stacking context.
+      pointer-events:none lets all touch/click events fall through to the
+      CAF player controls (not used on TV glass but needed for emulator).
+    */
+    #nv-shell {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* ── Buffering spinner ───────────────────────────────────────────────────── */
+    #nv-spinner {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #nv-spinner.show { opacity: 1; }
+
+    .nv-ring {
+      width: 72px; height: 72px;
+      border: 3px solid rgba(255,255,255,0.12);
+      border-top-color: #c9a84c;
+      border-radius: 50%;
+      animation: nv-spin 0.9s linear infinite;
+    }
+    @keyframes nv-spin { to { transform: rotate(360deg); } }
+
+    .nv-wordmark {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 9px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+    }
+
+    /* ── Channel info bar (bottom gradient) ──────────────────────────────────── */
+    /*
+      Fades in on every new LOAD, then auto-hides after INFO_SHOW_MS.
+      Gradient ensures legibility over any video content.
+    */
+    #nv-info {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 100px 72px 68px;
+      background: linear-gradient(transparent, rgba(6,6,10,0.92) 48%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #nv-info.show { opacity: 1; }
+
+    .nv-eyebrow {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: #c9a84c;
+      margin-bottom: 18px;
+    }
+
+    .nv-channel-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    #nv-logo {
+      width: 80px; height: 80px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      flex-shrink: 0;
+    }
+
+    #nv-channel-name {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 56px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: #f0f0f8;
+      /* Prevent very long names from wrapping to a second line */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 1400px;
+    }
+
+    #nv-subtitle {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      color: rgba(240,240,248,0.55);
+      margin-top: 10px;
+      margin-bottom: 20px;
+      max-width: 900px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* LIVE badge */
+    .nv-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #e84855;
+      color: #fff;
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 3px;
+    }
+
+    .nv-live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      animation: nv-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes nv-pulse {
+      0%, 100% { opacity: 1;   transform: scale(1);   }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    /* ── Error overlay ───────────────────────────────────────────────────────── */
+    #nv-error {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(6,6,10,0.72);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    #nv-error.show { opacity: 1; }
+
+    .nv-error-icon {
+      font-size: 52px;
+      line-height: 1;
+    }
+    #nv-error-msg {
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      max-width: 600px;
+    }

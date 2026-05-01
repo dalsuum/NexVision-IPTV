@@ -4123,6 +4123,10 @@ def serve_cast_receiver():
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
+@app.route('/cast-receiver/<path:filename>')
+def serve_cast_static(filename):
+    return send_from_directory(CAST_DIR, filename)
+
 
 # ─── Cast Session Tracking ────────────────────────────────────────────────────
 
