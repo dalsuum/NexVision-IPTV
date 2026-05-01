@@ -110,7 +110,7 @@ vod_data/
 
 
 # EPG
-epg/sites/tv.yandex.ru/__data__/
+epg/sites/*/__data__/
 
 # Local secret-scanning tooling
 git-secrets/
