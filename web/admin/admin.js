@@ -2861,6 +2861,37 @@ pages.settings = async function() {
           <div class="fg"><label>Wi-Fi Password</label><input id="s-wifi-pass" value="${esc(s.wifi_password||'')}"></div>
         </div>
       </div>
+
+      <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">📡 Cast QR</div>
+      <div class="tbl-wrap" style="padding:18px">
+        <div class="fgrid" style="gap:12px">
+          <div class="fg" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <label style="margin:0">Show Cast QR on TV</label>
+            <label class="big-toggle">
+              <input type="checkbox" id="s-cast-qr-enabled" ${s.cast_qr_enabled==='1'?'checked':''}>
+              <span class="big-toggle-track"></span>
+            </label>
+          </div>
+          <div class="fg fcol"><label>Cast Server URL</label>
+            <input id="s-cast-server-url" value="${esc(s.cast_server_url||'')}" placeholder="https://cast.yourdomain.com">
+          </div>
+          <div class="fg"><label>Show On</label>
+            <select id="s-cast-qr-display" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+              <option value="both"        ${(s.cast_qr_display||'both')==='both'       ?'selected':''}>Home + Screensaver</option>
+              <option value="home"        ${s.cast_qr_display==='home'       ?'selected':''}>Home Screen Only</option>
+              <option value="screensaver" ${s.cast_qr_display==='screensaver'?'selected':''}>Screensaver Only</option>
+            </select>
+          </div>
+          <div class="fg"><label>Position (Home Screen)</label>
+            <select id="s-cast-qr-position" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+              <option value="bottom-right" ${(s.cast_qr_position||'bottom-right')==='bottom-right'?'selected':''}>↘ Bottom Right</option>
+              <option value="bottom-left"  ${s.cast_qr_position==='bottom-left' ?'selected':''}>↙ Bottom Left</option>
+              <option value="top-right"    ${s.cast_qr_position==='top-right'   ?'selected':''}>↗ Top Right</option>
+              <option value="top-left"     ${s.cast_qr_position==='top-left'    ?'selected':''}>↖ Top Left</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
     <div>
       <div class="sec-title" style="margin-bottom:12px;font-size:13px;color:var(--text2)">🖥 TV / Screensaver</div>
@@ -2925,6 +2956,10 @@ async function saveSettings() {
     admin_mode_label: document.getElementById('s-admin-mode-label')?.value||'',
     admin_title:      document.getElementById('s-admin-title')?.value||'NexVision CMS v5',
     admin_logo_url:   document.getElementById('s-admin-logo')?.value||'',
+    cast_qr_enabled:  document.getElementById('s-cast-qr-enabled')?.checked  ? '1' : '0',
+    cast_server_url:  document.getElementById('s-cast-server-url')?.value||'',
+    cast_qr_display:  document.getElementById('s-cast-qr-display')?.value||'both',
+    cast_qr_position: document.getElementById('s-cast-qr-position')?.value||'bottom-right',
   };
   const r = await req('/settings', {method:'POST', body:JSON.stringify(d)});
   if (r?.ok) {

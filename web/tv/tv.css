@@ -1503,3 +1503,105 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 .et-inner:focus,
 .nt-inner:focus { animation-play-state: paused; outline: none; }
 
+
+/* ── CAST QR BADGE ──────────────────────────────────────────────────────────── */
+.cast-qr-badge{
+  position:fixed;z-index:150;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.96);border-radius:10px;padding:8px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.35);pointer-events:none;
+}
+.cast-qr-badge canvas{border-radius:4px;display:block}
+.cqr-label{
+  font-size:9px;font-family:'DM Mono',monospace;
+  color:#333;letter-spacing:1px;text-align:center;white-space:nowrap;
+}
+.cqr-pos-bottom-right{bottom:24px;right:24px}
+.cqr-pos-bottom-left {bottom:24px;left:24px}
+.cqr-pos-top-right   {top:80px;right:24px}
+.cqr-pos-top-left    {top:80px;left:24px}
+
+/* Cast QR inside screensaver */
+#ss-cast-qr{
+  position:absolute;bottom:32px;right:32px;
+  display:none;flex-direction:column;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.95);border-radius:10px;padding:10px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+#ss-cast-qr canvas{border-radius:4px;display:block}
+.ss-cast-label{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:#333;letter-spacing:2px;text-align:center;
+}
+
+/* ── CAST FULL PAGE ─────────────────────────────────────────────────────────── */
+.cast-pg{
+  min-height:100%;padding:40px 48px;
+  display:flex;flex-direction:column;gap:32px;
+}
+.cast-pg-hdr{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.cpg-title{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(26px,4vw,42px);
+  font-weight:300;color:var(--text);letter-spacing:-0.5px;
+}
+.cpg-room{
+  font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);
+  background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);
+  padding:4px 12px;border-radius:20px;letter-spacing:1px;
+}
+.cast-pg-body{
+  display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;
+}
+.cpg-qr-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:12px;flex-shrink:0;
+}
+.cpg-qr-box{
+  background:#fff;border-radius:14px;padding:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.cpg-qr-box canvas{display:block;border-radius:6px}
+.cpg-scan-hint{
+  font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--muted);letter-spacing:2px;text-transform:uppercase;text-align:center;
+}
+.cpg-info{
+  flex:1;min-width:240px;display:flex;flex-direction:column;gap:18px;padding-top:4px;
+}
+.cpg-steps-title{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  color:var(--muted);letter-spacing:2px;text-transform:uppercase;
+}
+.cpg-steps{display:flex;flex-direction:column;gap:14px}
+.cpg-step{
+  display:flex;align-items:center;gap:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;color:var(--text2);line-height:1.4;
+}
+.cpg-step-n{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);font-weight:600;
+}
+.cpg-divider{height:1px;background:var(--border);margin:4px 0}
+.cpg-url-label{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:2px;text-transform:uppercase;
+}
+.cpg-url{
+  font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);
+  background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.18);
+  border-radius:8px;padding:10px 14px;word-break:break-all;
+}
+/* Empty / unconfigured state */
+.cast-pg-empty{
+  min-height:60vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;padding:40px;
+}
+.cpe-icon{font-size:52px;opacity:.4}
+.cpe-title{
+  font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;
+  color:var(--text);text-align:center;
+}
+.cpe-sub{
+  font-size:14px;color:var(--muted);text-align:center;line-height:1.6;max-width:360px;
+}

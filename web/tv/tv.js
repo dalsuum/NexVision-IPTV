@@ -190,6 +190,7 @@ async function doRegister() {
 
     // Load the app
     await loadApp();
+    initCastQR();
 
   } catch(e) {
     if (err) err.textContent = 'Cannot reach server. Check network connection.';
@@ -518,7 +519,7 @@ const CastMgr = (() => {
 // ── Screen ────────────────────────────────────────────────────────────────────
 const screenLoaders = {
   home: loadHome, tv: loadTV, vod: loadVoD,
-  radio: loadRadio, weather: loadWeather, info: loadInfo
+  radio: loadRadio, weather: loadWeather, info: loadInfo, cast: loadCast
 };
 let loadedScreens = new Set();
 
@@ -575,6 +576,7 @@ async function showScreen(name) {
     if (name === 'services') { _services = []; renderServicesScreen(); } // always fresh
     if (name === 'messages') { loadInbox().then(() => renderInbox()).catch(()=>{}); }
     if (name === 'prayers')  { renderPrayerScreen(); }
+    if (name === 'cast')     { loadedScreens.delete('cast'); } // always re-render (settings may change)
     requestAnimationFrame(()=>el.classList.add('show'));
   }
   activeScreen = name;
@@ -2445,6 +2447,7 @@ async function loadSettings() {
   // Start screensaver with configured delay
   const delay = parseInt(s.screensaver_delay ?? 600) * 1000;
   resetScreensaverTimer(delay);
+  initCastQR();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3003,6 +3006,7 @@ async function pollConfigChanges() {
     loadedScreens.delete('info');
 
     applyClientBranding(s);
+    initCastQR();
 
     // Reload skin (admin may have changed background image)
     await loadSkin();
@@ -3419,6 +3423,119 @@ function showAdOverlay(placement) {
 
 function skipAd() {
   if (window._finishAd) window._finishAd();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAST FULL PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadCast() {
+  const el = document.getElementById('screen-cast');
+  if (!el) return;
+
+  const enabled   = _settings.cast_qr_enabled === '1';
+  const serverUrl = (_settings.cast_server_url || '').trim().replace(/\/$/, '');
+  const roomInfo  = getRoomInfo();
+  const roomNum   = roomInfo?.room_number;
+
+  if (!enabled || !serverUrl) {
+    el.innerHTML = `
+      <div class="cast-pg-empty">
+        <div class="cpe-icon">📡</div>
+        <div class="cpe-title">Cast Not Available</div>
+        <div class="cpe-sub">Casting has not been configured on this property.<br>Please contact the front desk for assistance.</div>
+      </div>`;
+    return;
+  }
+
+  if (!roomNum) {
+    el.innerHTML = `
+      <div class="cast-pg-empty">
+        <div class="cpe-icon">📡</div>
+        <div class="cpe-title">Room Not Registered</div>
+        <div class="cpe-sub">This TV has not been assigned to a room.<br>Please register this TV to enable casting.</div>
+      </div>`;
+    return;
+  }
+
+  const castUrl = serverUrl + '/room/' + encodeURIComponent(roomNum);
+
+  el.innerHTML = `
+    <div class="cast-pg">
+      <div class="cast-pg-hdr">
+        <div class="cpg-title">Cast to This TV</div>
+        <div class="cpg-room">Room ${escHtml(String(roomNum))}</div>
+      </div>
+      <div class="cast-pg-body">
+        <div class="cpg-qr-wrap">
+          <div class="cpg-qr-box">
+            <canvas id="cast-page-canvas"></canvas>
+          </div>
+          <div class="cpg-scan-hint">Scan with your phone</div>
+        </div>
+        <div class="cpg-info">
+          <div class="cpg-steps-title">How to Cast</div>
+          <div class="cpg-steps">
+            <div class="cpg-step"><span class="cpg-step-n">1</span><span>Scan the QR code with your phone</span></div>
+            <div class="cpg-step"><span class="cpg-step-n">2</span><span>Open Netflix, YouTube or any streaming app</span></div>
+            <div class="cpg-step"><span class="cpg-step-n">3</span><span>Tap the Cast icon and select this TV</span></div>
+          </div>
+          <div class="cpg-divider"></div>
+          <div class="cpg-url-label">Or visit on your browser</div>
+          <div class="cpg-url">${escHtml(castUrl)}</div>
+        </div>
+      </div>
+    </div>`;
+
+  requestAnimationFrame(() => { _renderQR('cast-page-canvas', castUrl, 200); });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAST QR BADGE
+// ═══════════════════════════════════════════════════════════════════════════════
+function _renderQR(canvasId, text, size) {
+  if (typeof QRCode === 'undefined') return;
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  QRCode.toCanvas(canvas, text, { width: size, margin: 1, color: { dark: '#000000', light: '#ffffff' } }, () => {});
+}
+
+function initCastQR() {
+  const enabled   = _settings.cast_qr_enabled === '1';
+  const serverUrl = (_settings.cast_server_url || '').trim().replace(/\/$/, '');
+  const position  = _settings.cast_qr_position || 'bottom-right';
+  const display   = _settings.cast_qr_display  || 'both';
+
+  const badge   = document.getElementById('cast-qr-badge');
+  const ssBadge = document.getElementById('ss-cast-qr');
+
+  if (!enabled || !serverUrl) {
+    if (badge)   badge.style.display = 'none';
+    if (ssBadge) ssBadge.style.display = 'none';
+    return;
+  }
+
+  const roomInfo = getRoomInfo();
+  const roomNum  = roomInfo?.room_number;
+  if (!roomNum) {
+    if (badge)   badge.style.display = 'none';
+    if (ssBadge) ssBadge.style.display = 'none';
+    return;
+  }
+
+  const castUrl  = serverUrl + '/room/' + encodeURIComponent(roomNum);
+  const showHome = display === 'home' || display === 'both';
+  const showSS   = display === 'screensaver' || display === 'both';
+
+  if (badge) {
+    badge.className = 'cast-qr-badge cqr-pos-' + position;
+    badge.style.display = showHome ? 'flex' : 'none';
+    _renderQR('cast-qr-canvas', castUrl, 96);
+  }
+
+  if (ssBadge) {
+    ssBadge.style.display = showSS ? 'flex' : 'none';
+    _renderQR('ss-cast-qr-canvas', castUrl, 140);
+  }
 }
 
 init();

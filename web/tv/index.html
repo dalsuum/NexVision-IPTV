@@ -94,6 +94,11 @@
   <div class="ss-date" id="ss-date">Monday, 1 January</div>
   <div class="ss-hotel" id="ss-hotel">Grand Hotel</div>
   <div class="ss-hint">Tap to wake</div>
+  <!-- Cast QR on screensaver (shown when cast_qr_display = screensaver or both) -->
+  <div id="ss-cast-qr" style="display:none">
+    <canvas id="ss-cast-qr-canvas"></canvas>
+    <div class="ss-cast-label">Scan to cast</div>
+  </div>
 </div>
 
 <!-- v7: EPG OVERLAY -->
@@ -260,6 +265,8 @@
     <div class="screen" id="screen-services"></div>
     <!-- INFO -->
     <div class="screen" id="screen-info"></div>
+    <!-- CAST -->
+    <div class="screen" id="screen-cast"></div>
   </main>
 </div>
 
@@ -372,6 +379,12 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- CAST QR BADGE (home screen corner) -->
+<div id="cast-qr-badge" class="cast-qr-badge cqr-pos-bottom-right" style="display:none">
+  <canvas id="cast-qr-canvas"></canvas>
+  <div class="cqr-label">Cast to this TV</div>
+</div>
+
 <!-- AD OVERLAY -->
 <div id="ad-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;align-items:center;justify-content:center;flex-direction:column">
   <img id="ad-img-el" alt="Ad" style="max-width:100%;max-height:100%;object-fit:contain;display:none">
@@ -380,6 +393,7 @@
   <button id="ad-skip-btn" onclick="skipAd()" style="display:none;position:absolute;bottom:34px;right:34px;background:rgba(20,20,20,.75);border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .2s">Skip Ad ›</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="tv.js"></script>
 </body>
 </html>

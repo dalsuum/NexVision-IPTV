@@ -743,6 +743,7 @@ def init_db():
         ('services', 'Services',   '🛎', 1, 6,  1),
         ('prayers',  'Prayer',     '🕌', 0, 7,  1),
         ('messages', 'Messages',   '💬', 1, 8,  1),  # enabled by default
+        ('cast',     'Cast',       '📡', 1, 9,  1),
     ]
     for key, label, icon, enabled, sort_order, is_sys in nav_defaults:
         conn.execute(
