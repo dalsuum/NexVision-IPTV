@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.13
+# NexVision IPTV Platform v8.14
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -429,8 +429,16 @@ NexVision supports casting Live TV channels to any Chromecast device on the same
 
 | File | Layer | Lines | Purpose |
 |---|---|---|---|
-| `web/tv/index.html` | Web | ~500 | Guest TV client interface |
-| `web/admin/index.html` | Web | ~2000 | Admin panel single-page app |
+| `web/tv/index.html` | Web | ~380 | Guest TV client (HTML structure) |
+| `web/tv/tv.css` | Web | ~1480 | Guest TV client styles |
+| `web/tv/tv.js` | Web | ~3260 | Guest TV client application logic |
+| `web/tv/sw-cleanup.js` | Web | ~30 | Service worker cleanup on VOD paths |
+| `web/admin/index.html` | Web | ~92 | Admin panel (HTML structure) |
+| `web/admin/admin.css` | Web | ~261 | Admin panel styles |
+| `web/admin/admin.js` | Web | ~3842 | Admin panel application logic |
+| `web/cast/receiver.html` | Web | ~77 | Chromecast receiver (HTML structure) |
+| `web/cast/receiver.css` | Web | ~194 | Cast receiver styles |
+| `web/cast/receiver.js` | Web | ~254 | Cast receiver HLS + CAF logic |
 | `app/main.py` | App | ~8000 | Main Flask application with all routes and business logic |
 | `app/wsgi.py` | App | ~50 | Gunicorn production entry point |
 | `app/gunicorn.conf.py` | App | ~100 | Gunicorn worker and server configuration |
@@ -453,10 +461,20 @@ nexvision-iptv/
 │
 ├── web/                      # Frontend layer (static files)
 │   ├── tv/
-│   │   └── index.html        # Guest TV client
+│   │   ├── index.html        # Guest TV client (HTML structure)
+│   │   ├── tv.css            # TV client styles
+│   │   ├── tv.js             # TV client application logic
+│   │   ├── sw-cleanup.js     # Service worker cleanup on VOD paths
+│   │   ├── manifest.json     # PWA manifest
+│   │   └── sw.js             # Service worker
 │   ├── admin/
-│   │   └── index.html        # Admin panel
-│   └── cast/                 # Chromecast receiver
+│   │   ├── index.html        # Admin panel (HTML structure)
+│   │   ├── admin.css         # Admin panel styles
+│   │   └── admin.js          # Admin panel application logic
+│   └── cast/
+│       ├── receiver.html     # Chromecast receiver (HTML structure)
+│       ├── receiver.css      # Cast receiver styles
+│       └── receiver.js       # Cast receiver HLS + CAF logic
 │
 ├── app/                      # Application layer (Flask API)
 │   ├── __init__.py
@@ -565,6 +583,7 @@ The sync matches channels by **tvg_id** first (most accurate), then by display n
 | EPG service not running | `cd /opt/nexvision/epg && npx pm2 start pm2.config.js && npx pm2 save` |
 | EPG 0 matches after sync | Channel `tvg_id` values in the DB must match channel IDs in the XMLTV file |
 | VOD page logo not showing custom branding | Fixed in v8.13 — corrected element IDs so `applyPublicBranding()` can target the logo and badge on `/vod/` |
+| Cast receiver CSS/JS not loading | Ensure `sudo systemctl restart nexvision` has been run after v8.14 upgrade — the new `/cast-receiver/<filename>` static route must be active |
 
 ---
 
@@ -613,5 +632,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.13 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.14 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-01*
