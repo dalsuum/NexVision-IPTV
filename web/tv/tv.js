@@ -961,6 +961,25 @@ function renderChGroups() {
   if (!el) return;
   el.innerHTML = `<button class="ch-group-btn active" onclick="filterByGroup(null,this)">All</button>`
     + allGroups.map(g=>`<button class="ch-group-btn" onclick="filterByGroup(${g.id},this)">${g.name}</button>`).join('');
+  updateChGroupArrows();
+  el.addEventListener('scroll', updateChGroupArrows, { passive: true });
+}
+
+function scrollChGroups(dir) {
+  const el = document.getElementById('ch-groups');
+  if (!el) return;
+  el.scrollBy({ left: dir * 150, behavior: 'smooth' });
+}
+
+function updateChGroupArrows() {
+  const el = document.getElementById('ch-groups');
+  const lBtn = document.getElementById('ch-grp-left');
+  const rBtn = document.getElementById('ch-grp-right');
+  if (!el || !lBtn || !rBtn) return;
+  const atStart = el.scrollLeft <= 2;
+  const atEnd   = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+  lBtn.classList.toggle('hidden', atStart);
+  rBtn.classList.toggle('hidden', atEnd);
 }
 
 function renderChList(channels) {

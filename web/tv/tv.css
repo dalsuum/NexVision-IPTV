@@ -237,7 +237,13 @@ main{flex:1;overflow:hidden;position:relative}
 .ch-sidebar-hdr h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;margin-bottom:12px}
 .ch-search{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--white);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:.2s}
 .ch-search:focus{border-color:var(--gold)}
-.ch-groups{display:flex;gap:6px;overflow-x:auto;padding:10px 20px 0;scrollbar-width:none}
+.ch-groups-wrap{position:relative;display:flex;align-items:center;gap:0}
+.ch-grp-arrow{flex-shrink:0;width:24px;height:28px;background:transparent;border:none;color:var(--dimmed);font-size:18px;line-height:1;cursor:pointer;padding:0;transition:.15s;display:flex;align-items:center;justify-content:center}
+.ch-grp-arrow:hover{color:var(--white)}
+.ch-grp-arrow:first-child{padding-left:8px}
+.ch-grp-arrow:last-child{padding-right:8px}
+.ch-grp-arrow.hidden{opacity:0;pointer-events:none}
+.ch-groups{flex:1;display:flex;gap:6px;overflow-x:auto;padding:10px 4px 0;scrollbar-width:none}
 .ch-groups::-webkit-scrollbar{display:none}
 .ch-group-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dimmed);font-size:11px;cursor:pointer;transition:.15s}
 .ch-group-btn:hover{border-color:var(--border2);color:var(--white)}

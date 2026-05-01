@@ -206,7 +206,11 @@
           </div>
           <input class="ch-search" placeholder="Search channels..." oninput="tvSearchChannels(this.value)" id="tv-ch-search">
         </div>
-        <div class="ch-groups" id="ch-groups"></div>
+        <div class="ch-groups-wrap">
+          <button class="ch-grp-arrow" id="ch-grp-left"  onclick="scrollChGroups(-1)">&#8249;</button>
+          <div class="ch-groups" id="ch-groups"></div>
+          <button class="ch-grp-arrow" id="ch-grp-right" onclick="scrollChGroups(1)">&#8250;</button>
+        </div>
         <div class="ch-list" id="ch-list"></div>
         <div style="display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border)">
           <button class="btn btn-ghost btn-sm" id="tv-prev-btn" onclick="tvPrevPage()" style="flex:1;font-size:11px">← Prev</button>
