@@ -1,11 +1,32 @@
 """EPG (Electronic Programme Guide) — schedule entries for channels."""
 import os
+import re
 import threading
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import jsonify
 from ..extensions import get_db
+
+
+def _parse_xmltv_time(t: str) -> str:
+    """Convert XMLTV time '20260501030000 +0000' or ISO '2026-05-01T03:00:00' to 'YYYY-MM-DD HH:MM:SS'."""
+    if not t:
+        return t
+    t = t.strip()
+    if '-' in t[:10]:
+        return t.replace('T', ' ')[:19]
+    m = re.match(r'(\d{14})\s*([+-]\d{4})?', t)
+    if not m:
+        return t
+    ts, tz = m.group(1), m.group(2) or '+0000'
+    dt_str = f'{ts[:4]}-{ts[4:6]}-{ts[6:8]} {ts[8:10]}:{ts[10:12]}:{ts[12:14]}'
+    if tz != '+0000':
+        sign = 1 if tz[0] == '+' else -1
+        offset = timedelta(hours=sign * int(tz[1:3]), minutes=sign * int(tz[3:5]))
+        dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S') - offset
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+    return dt_str
 
 
 def get_epg(channel_id=None, date=None, hours=None):
@@ -107,6 +128,7 @@ def delete_entry(eid: int):
 
 def clear_old():
     conn = get_db()
+    conn.execute("DELETE FROM epg_entries WHERE channel_id NOT IN (SELECT id FROM channels)")
     result = conn.execute(
         "DELETE FROM epg_entries WHERE end_time < datetime('now','-1 day')"
     )
@@ -130,11 +152,23 @@ def sync_now(d: dict):
     if not url:
         return jsonify({'error': 'No EPG URL configured'}), 400
 
+    _set_settings({'epg_last_status': 'running', 'epg_last_message': 'Sync in progress...'})
     threading.Thread(target=_do_sync, args=(url,), daemon=True).start()
     return jsonify({'status': 'sync started', 'url': url})
 
 
+def _set_settings(kv: dict):
+    conn = get_db()
+    for key, val in kv.items():
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)", (key, str(val))
+        )
+    conn.commit()
+    conn.close()
+
+
 def _do_sync(url: str):
+    started = datetime.utcnow()
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'NexVision/1.0'})
         with urllib.request.urlopen(req, timeout=60) as resp:
@@ -158,11 +192,13 @@ def _do_sync(url: str):
                 name_map[row['name'].strip().lower()] = row['id']
             id_map[row['id']] = row['id']
 
+        all_progs = root.findall('.//programme')
+        total_parsed = len(all_progs)
         entries = []
-        for prog in root.findall('.//programme'):
+        for prog in all_progs:
             channel_id_str = prog.get('channel', '').strip()
-            start = prog.get('start', '').strip()
-            stop  = prog.get('stop', '').strip()
+            start = _parse_xmltv_time(prog.get('start', '').strip())
+            stop  = _parse_xmltv_time(prog.get('stop', '').strip())
             title = (prog.findtext('title') or '').strip()
             desc  = (prog.findtext('desc') or '').strip()
             cat   = (prog.findtext('category') or '').strip()
@@ -184,6 +220,8 @@ def _do_sync(url: str):
             if ch_id:
                 entries.append((ch_id, title, desc, start, stop, cat))
 
+        # Remove orphaned entries (no matching channel) and old entries
+        conn.execute("DELETE FROM epg_entries WHERE channel_id NOT IN (SELECT id FROM channels)")
         conn.execute("DELETE FROM epg_entries WHERE end_time < datetime('now','-1 day')")
         conn.executemany(
             "INSERT OR REPLACE INTO epg_entries "
@@ -193,8 +231,27 @@ def _do_sync(url: str):
         )
         conn.commit()
         conn.close()
-    except Exception:
-        pass
+
+        imported = len(entries)
+        unmatched = total_parsed - imported
+        duration_ms = int((datetime.utcnow() - started).total_seconds() * 1000)
+        msg = (f'Imported {imported}/{total_parsed} entries'
+               + (f' — {unmatched} XML channels not matched to your channels' if unmatched else ''))
+        _set_settings({
+            'epg_last_sync_at':          datetime.utcnow().isoformat(),
+            'epg_last_imported':         imported,
+            'epg_last_parsed':           total_parsed,
+            'epg_last_unmatched':        unmatched,
+            'epg_last_status':           'ok' if imported else 'unmatched',
+            'epg_last_message':          msg,
+            'epg_last_duration_ms':      duration_ms,
+        })
+    except Exception as e:
+        _set_settings({
+            'epg_last_status':   'error',
+            'epg_last_message':  str(e)[:200],
+            'epg_last_sync_at':  datetime.utcnow().isoformat(),
+        })
 
 
 def generate_guide(d: dict):
@@ -253,17 +310,68 @@ def get_monitor():
         "SELECT key, value FROM settings WHERE key LIKE 'epg_%'"
     ).fetchall():
         settings[row['key'].replace('epg_', '')] = row['value']
+
+    total_channels = (conn.execute("SELECT COUNT(*) FROM channels").fetchone() or [0])[0]
+    covered_channels = (conn.execute(
+        "SELECT COUNT(DISTINCT e.channel_id) FROM epg_entries e"
+        " JOIN channels c ON c.id = e.channel_id"
+        " WHERE e.end_time > datetime('now','-1 hour')"
+    ).fetchone() or [0])[0]
+    upcoming_entries = (conn.execute(
+        "SELECT COUNT(*) FROM epg_entries e"
+        " JOIN channels c ON c.id = e.channel_id"
+        " WHERE e.start_time > datetime('now')"
+    ).fetchone() or [0])[0]
     conn.close()
 
     return jsonify({
-        'auto_url': settings.get('auto_url', ''),
-        'auto_enabled': int(settings.get('auto_enabled', 0)),
+        'auto_url':              settings.get('auto_url', ''),
+        'auto_enabled':          int(settings.get('auto_enabled', 0)),
         'auto_interval_minutes': int(settings.get('auto_interval_minutes', 360)),
-        'last_sync_at': settings.get('last_sync_at', 'Never'),
-        'last_message': settings.get('last_message', ''),
-        'last_status': settings.get('last_status', ''),
-        'last_imported': int(settings.get('last_imported', 0)),
-        'last_parsed': int(settings.get('last_parsed', 0)),
-        'last_unmatched': int(settings.get('last_unmatched', 0)),
-        'last_duration_ms': settings.get('last_duration_ms', ''),
+        'last_sync_at':          settings.get('last_sync_at', 'Never'),
+        'last_message':          settings.get('last_message', ''),
+        'last_status':           settings.get('last_status', ''),
+        'last_imported':         int(settings.get('last_imported', 0)),
+        'last_parsed':           int(settings.get('last_parsed', 0)),
+        'last_unmatched':        int(settings.get('last_unmatched', 0)),
+        'last_duration_ms':      settings.get('last_duration_ms', ''),
+        'covered_channels':      covered_channels,
+        'total_channels':        total_channels,
+        'upcoming_entries':      upcoming_entries,
     })
+
+
+def auto_sync_if_due():
+    """Called by the background scheduler every minute — syncs if the configured interval has elapsed."""
+    try:
+        conn = get_db()
+        rows = {r['key']: r['value'] for r in conn.execute(
+            "SELECT key, value FROM settings WHERE key IN ("
+            "'epg_auto_enabled','epg_auto_url','epg_auto_interval_minutes',"
+            "'epg_last_sync_at','epg_last_status')"
+        ).fetchall()}
+        conn.close()
+    except Exception:
+        return
+
+    if rows.get('epg_auto_enabled') != '1':
+        return
+    if rows.get('epg_last_status') == 'running':
+        return
+
+    url = rows.get('epg_auto_url', '').strip()
+    if not url:
+        return
+
+    interval = int(rows.get('epg_auto_interval_minutes') or 360)
+    last_sync = rows.get('epg_last_sync_at', '')
+    if last_sync and last_sync != 'Never':
+        try:
+            elapsed = (datetime.utcnow() - datetime.fromisoformat(last_sync)).total_seconds()
+            if elapsed < interval * 60:
+                return
+        except Exception:
+            pass
+
+    _set_settings({'epg_last_status': 'running', 'epg_last_message': 'Auto-sync in progress...'})
+    threading.Thread(target=_do_sync, args=(url,), daemon=True).start()

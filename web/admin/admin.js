@@ -2787,15 +2787,29 @@ async function syncEpgNow(){
     return;
   }
   if(url === 'http://localhost:3000/guide.xml' || url === 'http://127.0.0.1:3000/guide.xml'){
-    msg.innerHTML='<span style="color:var(--red)">⚠️ That URL is the local output file — enter your IPTV provider\'s XMLTV EPG URL instead (e.g. http://your-provider.com/epg.xml)</span>';
+    msg.innerHTML='<span style="color:var(--red)">⚠️ That URL is the local output file — enter your IPTV provider\'s XMLTV EPG URL instead.</span>';
     return;
   }
 
-  msg.innerHTML='Syncing EPG...';
+  msg.innerHTML='⏳ Sync started — fetching and importing EPG data...';
   const r = await req('/epg/sync-now',{method:'POST',body:JSON.stringify({url})});
   if(!r || r.error){msg.innerHTML='<span style="color:var(--red)">Sync failed: '+esc(r?.error||'unknown error')+'</span>';return;}
-  msg.innerHTML='<span style="color:var(--green)">✅ Synced: imported '+fmtNum(r.imported||0)+' / parsed '+fmtNum(r.total_parsed||0)+' (unmatched '+fmtNum(r.unmatched||0)+')</span>';
-  await pages.epg();
+  msg.innerHTML='⏳ Importing EPG in background — stats will update automatically...';
+  // Poll for completion: refresh every 4s up to 5 times
+  let polls = 0;
+  const poll = setInterval(async()=>{
+    polls++;
+    const m2 = await req('/epg/monitor');
+    const curMsg = document.getElementById('epg-monitor-msg');
+    if(!curMsg){clearInterval(poll);return;}
+    if(m2 && m2.last_status && m2.last_status !== 'running'){
+      clearInterval(poll);
+      await pages.epg();
+    } else if(polls >= 5){
+      clearInterval(poll);
+      await pages.epg();
+    }
+  }, 4000);
 }
 
 async function generateEpgGuideXml(){

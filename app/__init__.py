@@ -6,10 +6,35 @@ Usage:
     application = create_app()
 """
 
+import threading
+import time
+
 from flask import Flask
 from flask_cors import CORS
 
 from .config import Config
+
+_epg_scheduler_started = False
+
+
+def _start_epg_scheduler():
+    global _epg_scheduler_started
+    if _epg_scheduler_started:
+        return
+    _epg_scheduler_started = True
+
+    def _loop():
+        time.sleep(30)  # let gunicorn fully start before first check
+        while True:
+            try:
+                from .services.epg_service import auto_sync_if_due
+                auto_sync_if_due()
+            except Exception:
+                pass
+            time.sleep(60)
+
+    t = threading.Thread(target=_loop, daemon=True, name='epg-auto-sync')
+    t.start()
 
 
 def create_app(config_class=Config):
@@ -47,5 +72,8 @@ def create_app(config_class=Config):
     # ── Request hooks ─────────────────────────────────────────────────────────
     from .hooks import register_hooks
     register_hooks(app)
+
+    # ── EPG auto-sync background scheduler ────────────────────────────────────
+    _start_epg_scheduler()
 
     return app
