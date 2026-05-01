@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.14
+# NexVision IPTV Platform v8.16
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -73,6 +73,32 @@ Hotel WiFi/LAN
 
 ---
 
+## Changelog
+
+### v8.16 (2026-05-01)
+- **Fix:** Navigation Menu admin panel was always rendering an empty list after the blueprint migration
+  - `list_items_admin()` was returning a plain array but the admin JS expected `{items, position, style}` — so `data.items` was always `undefined`
+  - Fixed: service now returns the full object shape (items + navbar position + navbar style) to match what the UI consumes
+- **Fix:** "Save Order" on the Navigation Menu page was silently failing
+  - JS was sending `{order: [{id, sort_order}]}` but the API expected `{ids: [1,2,3]}` — mismatch left sort order unchanged
+  - Fixed: payload now sends the plain ID array the service iterates over
+
+### v8.15 (2026-05-01)
+- **Refactor:** Split monolithic `app.py` into modular blueprint + service architecture
+  - `app/blueprints/` — one file per domain (auth, channels, vod, messages, birthdays, devices, cast, packages, rooms, reports, stats, …)
+  - `app/services/` — business logic and DB queries isolated from HTTP layer
+  - `app/config.py`, `app/extensions.py`, `app/decorators.py`, `app/hooks.py` — shared utilities
+- **Bug fixes after refactor:**
+  - `birthday_service`: fixed column names (`guest_name`, `message` — was `name`, `note`)
+  - `cast_service`: fixed insert to use `channel_id`; removed non-existent `bytes_sent` / `content_type` / `content_id`
+  - `device_service`: fixed heartbeat INSERT and `list_devices` query to match actual `devices` schema (no `room_id`/`ip_address`)
+  - `package_service`: fixed all queries from `packages` → `content_packages` (correct table name)
+  - `room_service`: removed non-existent `active` column from INSERT; fixed `packages` → `content_packages` in package queries
+  - `vod_service`: fixed column names (`poster`, `stream_url` — was `poster_url`, `video_url`)
+  - `report_service`: fixed `devices_report` to query actual `devices` columns without bad JOIN
+
+---
+
 ## Architecture
 
 ```
@@ -101,6 +127,44 @@ Hotel WiFi/LAN
 │  DISK STORAGE                                             │
 │  /videos/  /hls/  /thumbnails/  /uploads/  /ffmpeg/      │
 └──────────────────────────────────────────────────────────┘
+```
+
+### Application Code Structure (v8.15+)
+```
+app/
+├── __init__.py          # Application factory (create_app)
+├── config.py            # Config class + filesystem paths
+├── extensions.py        # get_db(), get_vod_db(), cache singleton
+├── decorators.py        # @admin_required, @token_required, @require_api_key
+├── hooks.py             # before_request hooks (room presence, TV redirect)
+├── main.py              # init_db(), migrate_db(), vod_init_db() helpers
+├── wsgi.py              # Production Gunicorn entry point
+├── blueprints/          # One file per HTTP domain
+│   ├── auth.py          # POST /api/auth/login
+│   ├── channels.py      # /api/channels/*
+│   ├── vod_api.py       # /api/vod/*
+│   ├── messages.py      # /api/messages/*
+│   ├── birthdays.py     # /api/birthdays/*
+│   ├── devices.py       # /api/devices, /api/device/heartbeat
+│   ├── cast.py          # /api/cast/*
+│   ├── packages.py      # /api/packages/*, /api/vip/*
+│   ├── rooms.py         # /api/rooms/*
+│   ├── stats.py         # /api/stats/*
+│   ├── reports.py       # /api/reports/*
+│   └── …               # radio, rss, slides, nav, settings, epg, prayer, …
+└── services/            # Business logic + SQL — no Flask imports except jsonify
+    ├── auth_service.py
+    ├── channel_service.py
+    ├── vod_service.py
+    ├── message_service.py
+    ├── birthday_service.py
+    ├── device_service.py
+    ├── cast_service.py
+    ├── package_service.py
+    ├── room_service.py
+    ├── stat_service.py
+    ├── report_service.py
+    └── …
 ```
 
 See [`nginx/nexvision.conf`](nginx/nexvision.conf) for the full Nginx configuration.
@@ -435,11 +499,11 @@ NexVision supports casting Live TV channels to any Chromecast device on the same
 | `web/tv/sw-cleanup.js` | Web | ~30 | Service worker cleanup on VOD paths |
 | `web/admin/index.html` | Web | ~92 | Admin panel (HTML structure) |
 | `web/admin/admin.css` | Web | ~261 | Admin panel styles |
-| `web/admin/admin.js` | Web | ~3842 | Admin panel application logic |
+| `web/admin/admin.js` | Web | ~3841 | Admin panel application logic |
 | `web/cast/receiver.html` | Web | ~77 | Chromecast receiver (HTML structure) |
 | `web/cast/receiver.css` | Web | ~194 | Cast receiver styles |
 | `web/cast/receiver.js` | Web | ~254 | Cast receiver HLS + CAF logic |
-| `app/main.py` | App | ~8000 | Main Flask application with all routes and business logic |
+| `app/main.py` | App | ~700 | Flask init, DB helpers (create_app, init_db, migrate_db) |
 | `app/wsgi.py` | App | ~50 | Gunicorn production entry point |
 | `app/gunicorn.conf.py` | App | ~100 | Gunicorn worker and server configuration |
 | `db/db_mysql.py` | DB | ~500 | MySQL compatibility layer providing sqlite3-like API |
@@ -632,5 +696,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.14 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.16 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-01*

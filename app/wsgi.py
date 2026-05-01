@@ -1,21 +1,24 @@
 """
-wsgi.py — Production entry point for Gunicorn + gevent
+wsgi.py — Production entry point for Gunicorn + gevent.
+
 Run with:
     gunicorn -c gunicorn.conf.py wsgi:application
 """
 
 import os
 
-# ── Load .env file if python-dotenv is available ─────────────────────────────
+# Load .env before importing anything that reads environment variables
 try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 except ImportError:
     pass
 
-# ── Import and initialise the Flask app ──────────────────────────────────────
-from .main import app, init_db, migrate_db, get_db, vod_init_db
-from db.cache_setup import init_cache
+# Create app via factory
+from app import create_app
+from app.main import init_db, migrate_db, get_db, vod_init_db   # legacy init helpers
+
+application = create_app()
 
 # Initialise databases on first worker startup
 import time as _time
@@ -25,19 +28,15 @@ for _attempt in range(5):
         break
     except Exception:
         _time.sleep(0.5 + _attempt * 0.5)
+
 try:
-    conn = get_db()
-    migrate_db(conn)
-    conn.close()
+    _conn = get_db()
+    migrate_db(_conn)
+    _conn.close()
 except Exception:
     pass
+
 try:
     vod_init_db()
 except Exception:
     pass
-
-# Attach Redis cache
-init_cache(app)
-
-# Gunicorn expects an `application` callable
-application = app

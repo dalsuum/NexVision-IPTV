@@ -231,6 +231,41 @@ For security issues:
 
 ---
 
-**Last Updated:** April 2026  
+---
+
+## Application Security Architecture (v8.16+)
+
+### Authentication & Authorisation
+- JWT tokens validated on every admin/protected endpoint via `@admin_required` / `@token_required` decorators
+- Roles: `admin` and `operator` (both can manage content); `viewer` has read-only access
+- Room clients authenticate with `X-Room-Token` UUID header — no password required (low-privilege)
+
+### API Key Protection (VOD)
+- `@require_api_key` decorator checks `X-API-Key` header or `?api_key=` param against `VOD_API_KEY` env var
+- VOD upload and admin routes are additionally protected
+
+### Secrets Management
+| Secret | Location | Rotation Command |
+|---|---|---|
+| `SECRET_KEY` | `.env` | `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `VOD_API_KEY` | `.env` | `python -c "import secrets; print(secrets.token_hex(16))"` |
+| `MYSQL_PASSWORD` | `.env` | Change in MySQL + update `.env` |
+
+### File Permissions (Production)
+```bash
+# Verify correct permissions
+ls -la /opt/nexvision/.env            # should be 600
+ls -la /opt/nexvision/app/*.py        # should be 640
+ls -la /opt/nexvision/nexvision.db    # should be 660 (or 640)
+```
+
+### Hardened Routes
+- All admin CRUD endpoints (`/api/channels`, `/api/rooms`, `/api/packages`, etc.) require `admin`/`operator` JWT
+- Public endpoints (TV client, settings read, channel list with room token) require `X-Room-Token` for content filtering
+- `message_dismissals` and `message_reads` tables use room-scoped tokens — no cross-room leakage
+
+---
+
+**Last Updated:** 2026-05-01 (v8.16)
 **Repository:** NexVision  
 **Maintainer:** [dalsuum/nexvision]

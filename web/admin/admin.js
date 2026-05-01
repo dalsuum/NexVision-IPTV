@@ -3022,7 +3022,6 @@ async function savePrayerSettings() {
   const r = await req('/prayer/settings', {method:'POST', body:JSON.stringify(d)});
   if (r?.ok) {
     toast('✅ Prayer settings saved');
-    triggerPreviewRefresh();
     await pages.prayer(); // refresh to show updated times
   }
 }
@@ -3149,8 +3148,8 @@ async function setNavStyle(style) {
 // ── Save order ────────────────────────────────────────────────────────────────
 async function saveNavOrder() {
   const rows = document.querySelectorAll('#nav-item-list .ni-row');
-  const order = [...rows].map((r, i) => ({id: parseInt(r.dataset.id), sort_order: i}));
-  const res = await req('/nav/reorder', {method:'POST', body:JSON.stringify({order})});
+  const ids = [...rows].map(r => parseInt(r.dataset.id));
+  const res = await req('/nav/reorder', {method:'POST', body:JSON.stringify({ids})});
   if (res?.ok) {
     toast('✅ Order saved');
     // Update local copy

@@ -1,6 +1,7 @@
 # NexVision IPTV — Production Dependencies
 # Install: pip install -r requirements_prod.txt
-# Updated: 2026-05-01 - v8.14 - Verified against live venv (Python 3.12)
+# Updated: 2026-05-01 - v8.16 - Blueprint/service architecture + nav menu admin fix
+# Entry points: app/wsgi.py (gunicorn) or run.py (dev)
 
 # ── Core Flask ────────────────────────────────────────────────────────────────
 Flask==3.1.3
