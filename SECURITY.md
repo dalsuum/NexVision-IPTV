@@ -266,6 +266,6 @@ ls -la /opt/nexvision/nexvision.db    # should be 660 (or 640)
 
 ---
 
-**Last Updated:** 2026-05-01 (v8.16)
+**Last Updated:** 2026-05-01 (v8.17)
 **Repository:** NexVision  
 **Maintainer:** [dalsuum/nexvision]

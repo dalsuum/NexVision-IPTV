@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.16
+# NexVision IPTV Platform v8.17
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -47,7 +47,7 @@ Hotel WiFi/LAN
 |---|---|
 | 📺 **Live TV** | IPTV channels from M3U sources, grouped by category |
 | 📅 **EPG / Programme Guide** | Current & upcoming programme info while watching live TV |
-| 🎬 **Video on Demand** | Multi-quality HLS streaming (480p / 720p / 1080p) |
+| 🎬 **Video on Demand** | Multi-quality HLS streaming (480p / 720p / 1080p) with inline search and favourites |
 | 📻 **Radio** | Internet radio stations with vinyl animation |
 | 💬 **Messages** | Room-specific messages + birthday popup notifications |
 | 📰 **RSS Ticker** | Scrolling news ticker with custom color, background & opacity |
@@ -74,6 +74,15 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.17 (2026-05-01)
+- **New:** VOD Search — inline live-search box in the VOD header; results filter in real time as the guest types
+- **New:** VOD Favourites — heart button on every movie tile; favourites persisted to `localStorage` (`nv_fav_movies`); filterable via "Favourites" chip next to genre filters
+- **Fix:** `app/wsgi.py` — wrapped `init_db()` in an `fcntl.LOCK_EX` file lock so only one Gunicorn worker initialises the database when multiple workers start simultaneously (prevents race-condition corruption on restart)
+- **Fix:** `app/hooks.py` — room-token heartbeat `UPDATE` wrapped in `try/except`; a transient DB error no longer aborts the entire request
+- **Fix:** `api()` in `tv.js` — non-2xx HTTP responses now return `null` instead of throwing a JSON parse error, preventing unhandled promise rejections across the TV client
+- **Style:** Dark color palette slightly lightened (`--bg` #09090f → #0b0b14 etc.) for better contrast on OLED displays
+- **Style:** Extensive light-mode CSS overhaul — elements outside `.screen` (screensaver, header buttons, nav) now correctly inherit light-mode variables; removed hardcoded dark overrides that were leaking into light theme
 
 ### v8.16 (2026-05-01)
 - **Fix:** Navigation Menu admin panel was always rendering an empty list after the blueprint migration

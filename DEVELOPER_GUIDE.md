@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.16 — Last updated: 2026-05-01  
+> Version: v8.17 — Last updated: 2026-05-01  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -1174,6 +1174,10 @@ Key globals in `tv.js`:
 - `API` — base URL: `window.location.origin + '/api'`
 - `ROOM_TOKEN` — loaded from `localStorage`, sent as `X-Room-Token` header
 - `window._settings` — cached settings object fetched on load
+- `_vodSearchQ` — current VOD search query string (live-filter state)
+- `_vodActiveGenre` — currently selected genre chip (`null` = All)
+- `_vodShowFavs` — whether the Favourites filter chip is active
+- `_vodFavs` — `Set<number>` of favourited movie IDs, persisted as `localStorage['nv_fav_movies']`
 
 Boot sequence:
 1. Check `localStorage` for `room_token`
@@ -1181,6 +1185,23 @@ Boot sequence:
 3. `POST /api/rooms/register` → save token
 4. Fetch settings, nav items, skin
 5. Render home screen
+
+#### VOD Search & Favourites (v8.17+)
+
+The VOD screen renders a `vod-header` bar containing the title, an inline search input
+(`.vod-search`), and genre/favourites filter chips (`.filter-chip`, `.fav-chip`).
+
+Search and filter state is kept in module-level variables (`_vodSearchQ`,
+`_vodActiveGenre`, `_vodShowFavs`). Typing in the search box calls `renderVoD()` which
+applies all three filters in combination client-side against `allMovies`.
+
+Favourites are toggled via the heart button (`.mt-fav-btn`) on each movie tile. The Set
+is serialised to `localStorage` on every toggle so it survives page reloads.
+
+#### `api()` error handling
+
+The shared `api(path, opts)` helper returns `null` (not a thrown error) for any non-2xx
+HTTP response. Callers should guard with `|| []` / `|| {}` as appropriate.
 
 ### Admin Panel (web/admin/)
 
@@ -1357,6 +1378,11 @@ echo "d /run/nexvision 0755 nexvision www-data -" | sudo tee /etc/tmpfiles.d/nex
 sudo systemctl enable --now nexvision redis-server mysql nginx
 ```
 
+> **Multi-worker init safety (v8.17+):** `app/wsgi.py` uses `fcntl.LOCK_EX` on
+> `/tmp/nexvision_init.lock` so that when Gunicorn spawns multiple gevent workers at
+> startup, only one worker runs `init_db()` at a time. The lock is released immediately
+> after init so it has no effect on steady-state throughput.
+
 ### Useful Commands
 
 ```bash
@@ -1390,7 +1416,7 @@ sqlite3 /opt/nexvision/nexvision.db \
 |---|---|---|
 | `500` on any `/api/` route | Python error | `sudo journalctl -u nexvision -n 50` |
 | Admin panel "Invalid token" | JWT expired or `SECRET_KEY` rotated | Re-login; if rotated, all users must re-login |
-| Nav menu shows no items (admin) | Was a bug pre-v8.16 | Update to v8.16; `sudo systemctl restart nexvision` |
+| Nav menu shows no items (admin) | Was a bug pre-v8.16 | Update to v8.17; `sudo systemctl restart nexvision` |
 | TV client blank screen | Nginx or Flask not running | `systemctl status nexvision nginx` |
 | VOD won't play on phone | `stream_url` host mismatch | Restart Flask — URL is generated per-request from `request.host` |
 | HLS buffering | Disk I/O or missing X-Accel | Check `USE_X_ACCEL=1` in `.env`; verify `/internal/vod/` Nginx alias |
