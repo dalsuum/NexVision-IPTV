@@ -15,6 +15,7 @@
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Admin Panel Guide](#admin-panel-guide)
+- [Android TV Box & Cast](#android-tv-box--cast)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 
@@ -331,6 +332,80 @@ X-Room-Token: <room_token>
 1. **Admin → RSS → Add Feed** — paste any RSS feed URL
 2. **Ticker Appearance** — set text color, background color, opacity
 3. **Settings → Show News Ticker** — enable/disable globally
+
+---
+
+## Android TV Box & Cast
+
+### Registering an Android TV Box
+
+Before a TV box can show the guest interface, the room must exist in the admin panel.
+
+**Step 1 — Admin: create the room**
+1. Go to **Admin Panel → Rooms**
+2. Click **Add Room**, enter the room number (e.g. `101`) and optionally a TV name
+3. Save — the room is now ready to accept a device
+
+**Step 2 — TV box: open the NexVision TV app**
+
+| Client | How to open |
+|---|---|
+| **Browser (any device)** | Navigate to `http://<server-ip>/` on the TV browser |
+| **Android APK** | Install the NexVision APK and launch it |
+| **Android TV / Google TV** | Install the APK via sideload or open in TV browser |
+
+**Step 3 — Enter room number on the registration screen**
+
+The app shows a full-screen registration prompt with an on-screen numpad the first time it runs (or after the token is cleared).
+
+1. Use the numpad (or remote/keyboard) to type the room number
+2. Press **Confirm**
+3. The app registers with the server and immediately loads the guest interface
+
+> The token is saved in the device's local storage. The TV will not need to re-register unless you clear the browser data or reinstall the APK.
+
+**Step 4 — Verify in admin**
+
+Go to **Admin Panel → Rooms** — the room will show as **Online** within a few seconds.
+
+---
+
+### Android APK
+
+The NexVision Android APK provides a native experience with these differences from the browser:
+
+| Feature | APK behaviour |
+|---|---|
+| **VOD playback** | Handed off to the built-in VLC player for smooth hardware-decoded video |
+| **Live TV** | Played in-browser via hls.js (same as web) |
+| **Registration** | Same numpad flow as browser |
+| **Stream URLs** | Auto-corrected to the server IP at request time — no manual config needed |
+
+---
+
+### Using Cast (Chromecast)
+
+NexVision supports casting Live TV channels to any Chromecast device on the same network.
+
+**Requirements**
+- A **Chromecast** or **Chromecast-enabled TV** on the same WiFi as the server
+- The guest must be using **Chrome browser** or the **Android app** (Cast SDK only loads in these)
+
+**How to cast a channel**
+1. Open the TV app at `http://<server-ip>/` in Chrome or the Android app
+2. Start playing any Live TV channel
+3. A **cast button** (📡) appears in the player controls when a Chromecast is detected on the network
+4. Tap the cast button → a device picker appears
+5. Select your Chromecast — the stream starts playing on the TV within a few seconds
+6. To stop casting, tap the cast button again and select **Stop casting**
+
+**Cast receiver app ID:** `CC1AD845`
+> This is the registered Google Cast receiver ID for NexVision. It is already built into the app — no configuration needed.
+
+**Limitations**
+- UDP/multicast IPTV streams cannot be cast (HLS streams only)
+- Cast requires the Chrome browser or Android app — it does not work in Safari, Firefox, or the TV's built-in browser
+- The Chromecast and server must be on the same network segment
 
 ---
 
