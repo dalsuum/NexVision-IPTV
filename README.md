@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.18
+# NexVision IPTV Platform v8.20
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -67,6 +67,8 @@ Hotel WiFi/LAN
 | 📰 RSS Feeds | Add/remove feeds, set global ticker appearance |
 | 🖼 Promo Slides | Upload images, set display order and duration |
 | 📢 **Ads Manager** | Pre-roll ads (image/video) before Live TV and VOD; skip-after timer, placement targeting |
+| 🌍 **World Clock** | Multi-timezone clock screen; IANA timezone chips configured by admin |
+| ⏰ **Alarms** | Hotel-wide alarm scheduler — fires on all active TV screens at scheduled time with sound |
 | 🎨 Navigation | Customise menu items, icons, order |
 | ⚙ Settings | Hotel name, logo, feature toggles per room type |
 | 🏠 Rooms | Create rooms, assign packages, generate access tokens |
@@ -75,6 +77,21 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.20 (2026-05-01)
+- **New:** World Clock TV screen — multi-timezone card display; admin configures IANA timezone chips via Clock & Alarm panel; city names and day/night indicator per card
+- **New:** Alarm Manager — admin creates alarms (label, time HH:MM, days: daily or weekday selection, sound type); alarms fire on all active TV screens simultaneously via a full-screen overlay with dismiss button; Web Audio engine, no extra hardware required
+- **New:** `app/blueprints/clock_alarm.py` + `app/services/clock_alarm_service.py` — `/api/alarms/*`
+- **New:** `alarms` table added to DB; `worldclock_zones` and `alarm_enabled` settings keys
+- **New:** `clock` / "World Clock" added as a system nav item (disabled by default, orderable in Navigation Menu)
+- **Improved:** EPG API — `?hours=N` param controls look-ahead window (default 48h); response now includes `channel_name` via JOIN; upcoming-entries filter applied by default when no `date` is given
+- **Improved:** Packages API — `select_all_channels` flag assigns every channel in one query; response now includes `channel_ids`, `vod_ids`, `radio_ids` arrays and `radio_count`
+- **Fix:** Bulk-delete responses across channel, vod, radio, room services now return consistent `{"ok": true, "deleted": N}` shape
+- **Fix:** `weather_city` setting added to `init_db()` defaults
+- **New:** Admin Settings page — dedicated Weather section with city input
+
+### v8.19 (2026-05-01)
+- **New:** Cast QR — admin toggle, configurable corner/display mode (home, screensaver, both); QR badge on TV home screen and screensaver
 
 ### v8.18 (2026-05-01)
 - **New:** Ads Manager — admin panel section for managing pre-roll advertisement overlays
@@ -175,6 +192,7 @@ app/
 │   ├── stats.py         # /api/stats/*
 │   ├── reports.py       # /api/reports/*
 │   ├── ads.py           # /api/ads/*
+│   ├── clock_alarm.py   # /api/alarms/*
 │   └── …               # radio, rss, slides, nav, settings, epg, prayer, …
 └── services/            # Business logic + SQL — no Flask imports except jsonify
     ├── auth_service.py
@@ -189,6 +207,7 @@ app/
     ├── stat_service.py
     ├── report_service.py
     ├── ad_service.py
+    ├── clock_alarm_service.py
     └── …
 ```
 
@@ -364,6 +383,8 @@ X-Room-Token: <room_token>
 | `GET` | `/api/rss/public` | RSS feed items (cached 300s) |
 | `GET` | `/api/slides/public` | Promo slides list |
 | `GET` | `/api/ads` | Active ads for a placement (`?placement=vod\|live\|both`) |
+| `GET` | `/api/alarms/active` | Active alarms for TV client alarm checker |
+| `GET` | `/api/epg/<channel_id>` | EPG entries (`?hours=48` window, includes `channel_name`) |
 | `POST` | `/api/rooms/register` | Register device by room/screen number, returns room token |
 | `GET` | `/api/auth/login` | Admin login (username + password), returns JWT — **admin panel only** |
 
@@ -384,6 +405,7 @@ X-Room-Token: <room_token>
 | `GET/POST` | `/api/rss` | Manage RSS feeds |
 | `GET/POST` | `/api/slides` | Manage promo slides |
 | `GET/POST/PUT/DELETE` | `/api/ads` | Manage ads (Ads Manager) |
+| `GET/POST/PUT/DELETE` | `/api/alarms` | Manage alarms (Clock & Alarm) |
 | `GET/POST` | `/api/settings` | Update hotel settings |
 | `GET/POST` | `/api/rooms` | Manage hotel rooms |
 
@@ -723,5 +745,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.18 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.20 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-01*

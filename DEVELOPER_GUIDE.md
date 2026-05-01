@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.18 — Last updated: 2026-05-01  
+> Version: v8.20 — Last updated: 2026-05-01  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -48,9 +48,9 @@
 │  Entry: app/wsgi.py → create_app()                               │
 │                                                                   │
 │  Flask app                                                        │
-│  ├── 25 Blueprints (/api/*, /vod/*, /admin/, /, ...)             │
+│  ├── 26 Blueprints (/api/*, /vod/*, /admin/, /, ...)             │
 │  │   └── Thin HTTP handlers → call service functions             │
-│  └── 25 Services (business logic + SQL queries)                   │
+│  └── 26 Services (business logic + SQL queries)                   │
 └─────────────────┬───────────────────────────┬────────────────────┘
                   │                           │
 ┌─────────────────▼──────┐  ┌────────────────▼───────────────────┐
@@ -129,7 +129,8 @@
 │   │   ├── media_groups.py       # /api/groups/*
 │   │   ├── services_bp.py        # /api/services/* (guest services)
 │   │   ├── weather.py            # /api/weather/*
-│   │   └── ads.py                # /api/ads/*
+│   │   ├── ads.py                # /api/ads/*
+│   │   └── clock_alarm.py        # /api/alarms/*
 │   │
 │   └── services/                 # Business logic — no Flask routing
 │       ├── __init__.py           # Exports all service modules
@@ -160,7 +161,8 @@
 │       ├── vod_server_service.py
 │       ├── vod_service.py
 │       ├── weather_service.py
-│       └── ad_service.py
+│       ├── ad_service.py
+│       └── clock_alarm_service.py
 │
 ├── db/                           # Database layer
 │   ├── db_mysql.py               # MySQL compat wrapper (sqlite3 interface)
@@ -773,6 +775,9 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 | `deployment_mode` | `hotel`/`commercial` | Affects sidebar labels |
 | `prayer_enabled` | `0`/`1` | Enable prayer times feature |
 | `prayer_lat` / `prayer_lon` | float | Prayer location |
+| `weather_city` | string | Default city for weather widget |
+| `worldclock_zones` | JSON string | Array of IANA timezone IDs shown on World Clock screen |
+| `alarm_enabled` | `0`/`1` | Enable alarm system on TV client |
 
 ---
 
@@ -816,10 +821,12 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/packages` | Admin | List packages with content counts |
+| `GET` | `/api/packages` | Admin | List packages with content counts and ID arrays |
 | `POST` | `/api/packages` | Admin | Create package |
 | `PUT` | `/api/packages/<id>` | Admin | Update package |
 | `DELETE` | `/api/packages/<id>` | Admin | Delete package |
+
+**Package list response (v8.20+)** includes `channel_ids`, `vod_ids`, `radio_ids` arrays and a `select_all_channels` boolean. When `select_all_channels` is `true` the package contains every channel and `channel_ids` is empty (saves bandwidth). Pass `"select_all_channels": true` on create/update to assign all channels in one query.
 | `GET` | `/api/my-packages` | Room Token | Room's subscribed packages |
 | `GET` | `/api/vip/channels` | Admin | VIP channel grants |
 | `POST` | `/api/vip/access` | Admin | Grant VIP channel access |
@@ -893,10 +900,18 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/epg/<channel_id>` | Room Token | Programme entries for channel |
+| `GET` | `/api/epg` | Room Token | All upcoming EPG entries (default 48h window) |
+| `GET` | `/api/epg/<channel_id>` | Room Token | Programme entries for a channel |
 | `POST` | `/api/epg/sync-now` | Admin | Sync EPG from XMLTV URL |
 | `GET` | `/api/epg/status` | Admin | Sync status and last run |
 | `POST` | `/api/epg/generate-guide` | Admin | Generate guide.xml for EPG service |
+
+**Query params (v8.20+):**
+- `?hours=N` — look-ahead window in hours (default `48`); controls how far forward entries are fetched
+- `?channel_id=<int>` — filter to a single channel
+- `?date=YYYY-MM-DD` — filter to a specific date (overrides the hours window)
+
+Response entries include `channel_name` (joined from the `channels` table).
 
 ---
 
@@ -961,6 +976,34 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 | `POST` | `/vod/api/jobs/<id>/cancel` | API Key | Cancel transcode |
 | `GET` | `/vod/api/health` | None | Health check |
 | `GET` | `/vod/api/analytics` | API Key | Usage analytics |
+
+---
+
+### Clock & Alarm
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/alarms` | Admin | List all alarms |
+| `GET` | `/api/alarms/active` | None | Active alarms (TV client alarm checker) |
+| `POST` | `/api/alarms` | Admin | Create alarm |
+| `PUT` | `/api/alarms/<id>` | Admin | Update alarm |
+| `DELETE` | `/api/alarms/<id>` | Admin | Delete alarm |
+
+**Create/Update body:**
+```json
+{
+  "label": "Morning Wake-Up",
+  "time": "07:00",
+  "days": "daily",
+  "sound": "bell",
+  "active": 1
+}
+```
+
+- `days`: `"daily"` or a JSON array of weekday indices `[0,1,2,3,4]` (0=Mon … 6=Sun)
+- `sound`: `"bell"` | `"chime"` | `"beep"` (played via browser Web Audio on all TV screens)
+
+World Clock display is configured via **Settings** keys `worldclock_zones` (JSON array of IANA timezone strings, e.g. `["America/New_York","Europe/London","Asia/Dubai"]`) and `alarm_enabled` (`"0"`|`"1"`).
 
 ---
 
@@ -1137,6 +1180,20 @@ CREATE TABLE vip_channel_access (
 CREATE TABLE vip_vod_access (video_id INTEGER, room_id INTEGER, PRIMARY KEY (video_id, room_id));
 ```
 
+### Alarms Table
+
+```sql
+CREATE TABLE alarms (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    label      TEXT    NOT NULL DEFAULT 'Alarm',
+    time       TEXT    NOT NULL DEFAULT '07:00',   -- HH:MM (24-hour)
+    days       TEXT    NOT NULL DEFAULT 'daily',   -- 'daily' or JSON array [0..6]
+    sound      TEXT             DEFAULT 'bell',    -- 'bell' | 'chime' | 'beep'
+    active     INTEGER          DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ### Ads Table
 
 ```sql
@@ -1249,6 +1306,20 @@ applies all three filters in combination client-side against `allMovies`.
 
 Favourites are toggled via the heart button (`.mt-fav-btn`) on each movie tile. The Set
 is serialised to `localStorage` on every toggle so it survives page reloads.
+
+#### World Clock Screen (v8.20+)
+
+The `clock` nav item loads `screen-clock` which renders timezone cards via `loadWorldClock()`. Admin configures IANA timezone strings in the Clock & Alarm panel; these are stored as `worldclock_zones` in settings. Cards update every second via `_tickWorldClockCards()`, and display the city name, current time, day/night indicator, and timezone abbreviation. Navigation away clears `_wcTickTimer` to prevent ghost ticks.
+
+#### Alarm System (v8.20+)
+
+`initAlarmChecker()` is called on boot. It:
+1. Fetches `GET /api/alarms/active` immediately and every 5 minutes into `_cachedAlarms`
+2. Checks `_checkAlarms()` every 60 seconds against the current local time (HH:MM)
+3. When a match is found and the alarm hasn't already fired today (keyed in localStorage as `nv_alarm_fired`), calls `_fireAlarm()` → `_showAlarmOverlay()` + `_playAlarmSound()`
+4. Guest dismisses via the `dismissAlarm()` button
+
+The system only activates when `settings.alarm_enabled === '1'`.
 
 #### Pre-roll Ad Overlay (v8.18+)
 
@@ -1491,5 +1562,5 @@ sqlite3 /opt/nexvision/nexvision.db \
 
 ---
 
-*NexVision IPTV Developer Guide — v8.18*  
+*NexVision IPTV Developer Guide — v8.20*  
 *Architecture: Flask Blueprints + Service Layer + Redis + SQLite/MySQL + Nginx/Gunicorn*

@@ -654,6 +654,7 @@ def init_db():
         ('support_phone',    '0'),
         ('wifi_name',        ''),
         ('wifi_password',    ''),
+        ('weather_city',     ''),
         ('prayer_enabled',   '0'),
         ('prayer_city',      'Dubai'),
         ('prayer_country',   'AE'),
@@ -742,8 +743,9 @@ def init_db():
         ('info',     'Hotel Info', '📋', 1, 5,  1),
         ('services', 'Services',   '🛎', 1, 6,  1),
         ('prayers',  'Prayer',     '🕌', 0, 7,  1),
-        ('messages', 'Messages',   '💬', 1, 8,  1),  # enabled by default
-        ('cast',     'Cast',       '📡', 1, 9,  1),
+        ('messages',  'Messages',    '💬', 1, 8,  1),  # enabled by default
+        ('cast',      'Cast',        '📡', 1, 9,  1),
+        ('clock',     'World Clock', '🌍', 0, 10, 1),
     ]
     for key, label, icon, enabled, sort_order, is_sys in nav_defaults:
         conn.execute(

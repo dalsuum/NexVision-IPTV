@@ -32,6 +32,7 @@ def register_blueprints(app):
     from .cast         import cast_bp
     from .admin_ui     import admin_ui_bp
     from .vod_server   import vod_server_bp
+    from .clock_alarm  import clock_alarm_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(channels_bp)
@@ -61,3 +62,4 @@ def register_blueprints(app):
     app.register_blueprint(cast_bp)
     app.register_blueprint(admin_ui_bp)
     app.register_blueprint(vod_server_bp)
+    app.register_blueprint(clock_alarm_bp)

@@ -191,6 +191,7 @@ async function doRegister() {
     // Load the app
     await loadApp();
     initCastQR();
+    initAlarmChecker();
 
   } catch(e) {
     if (err) err.textContent = 'Cannot reach server. Check network connection.';
@@ -519,7 +520,8 @@ const CastMgr = (() => {
 // ── Screen ────────────────────────────────────────────────────────────────────
 const screenLoaders = {
   home: loadHome, tv: loadTV, vod: loadVoD,
-  radio: loadRadio, weather: loadWeather, info: loadInfo, cast: loadCast
+  radio: loadRadio, weather: loadWeather, info: loadInfo, cast: loadCast,
+  clock: loadWorldClock,
 };
 let loadedScreens = new Set();
 
@@ -560,6 +562,8 @@ async function showScreen(name) {
   const el = document.getElementById('screen-'+name);
   if (el) {
     el.classList.add('active');
+    // stop world clock tick when navigating away
+    if (name !== 'clock') clearInterval(_wcTickTimer);
     // stop video when navigating away from TV screen
     if (name !== 'tv') { stopVideoPlayback(); closeEpg(); }
     // stop radio when navigating away from radio screen
@@ -577,6 +581,7 @@ async function showScreen(name) {
     if (name === 'messages') { loadInbox().then(() => renderInbox()).catch(()=>{}); }
     if (name === 'prayers')  { renderPrayerScreen(); }
     if (name === 'cast')     { loadedScreens.delete('cast'); } // always re-render (settings may change)
+    if (name === 'clock')    { loadedScreens.delete('clock'); clearInterval(_wcTickTimer); } // restart tick
     requestAnimationFrame(()=>el.classList.add('show'));
   }
   activeScreen = name;
@@ -2448,6 +2453,7 @@ async function loadSettings() {
   const delay = parseInt(s.screensaver_delay ?? 600) * 1000;
   resetScreensaverTimer(delay);
   initCastQR();
+  initAlarmChecker();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2927,7 +2933,7 @@ function mergeVipIntoChannelList(channels) {
 async function loadApp() {
   // Load weather for header
   const w = await api('/weather');
-  if (w) {
+  if (w && w.enabled) {
     document.getElementById('hdr-w-icon').textContent = w.icon;
     document.getElementById('hdr-w-temp').textContent = w.temperature + '°';
     document.getElementById('hdr-w-city').textContent = w.city;
@@ -3007,6 +3013,8 @@ async function pollConfigChanges() {
 
     applyClientBranding(s);
     initCastQR();
+    initAlarmChecker();
+    loadedScreens.delete('clock');
 
     // Reload skin (admin may have changed background image)
     await loadSkin();
@@ -3536,6 +3544,307 @@ function initCastQR() {
     ssBadge.style.display = showSS ? 'flex' : 'none';
     _renderQR('ss-cast-qr-canvas', castUrl, 140);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WORLD CLOCK SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let _wcTickTimer = null;
+
+async function loadWorldClock() {
+  const el = document.getElementById('screen-clock');
+  if (!el) return;
+
+  let zones = [];
+  try { zones = JSON.parse(_settings.worldclock_zones || '[]'); } catch(e) {}
+
+  if (!zones.length) {
+    el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted);text-align:center;padding:40px">
+      <div style="font-size:56px">🌍</div>
+      <div style="font-size:18px">No timezones configured</div>
+      <div style="font-size:14px">Ask your admin to add timezones in the Clock &amp; Alarm settings.</div>
+    </div>`;
+    return;
+  }
+
+  _renderWorldClockScreen(zones);
+  clearInterval(_wcTickTimer);
+  _wcTickTimer = setInterval(() => {
+    if (activeScreen !== 'clock') { clearInterval(_wcTickTimer); return; }
+    _tickWorldClockCards();
+  }, 1000);
+}
+
+function _wcFmt(tz, opts) {
+  try { return new Intl.DateTimeFormat('en-US', {timeZone: tz, ...opts}).format(new Date()); }
+  catch(e) { return '—'; }
+}
+
+function _wcCityName(tz) {
+  return tz.split('/').pop().replace(/_/g, ' ');
+}
+
+function _wcTzAbbr(tz) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {timeZone:tz, timeZoneName:'short'}).formatToParts(new Date());
+    return (parts.find(p=>p.type==='timeZoneName')||{}).value || '';
+  } catch(e) { return ''; }
+}
+
+function _wcIsNight(tz) {
+  try {
+    const h = parseInt(new Intl.DateTimeFormat('en-US', {timeZone:tz, hour:'numeric', hour12:false}).format(new Date()));
+    return h < 6 || h >= 20;
+  } catch(e) { return false; }
+}
+
+function _renderWorldClockScreen(zones) {
+  const el = document.getElementById('screen-clock');
+  if (!el) return;
+
+  const now = new Date();
+  const serverTime = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+  const serverDate = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  const cards = zones.map((tz, i) => {
+    const time    = _wcFmt(tz, {hour:'2-digit', minute:'2-digit', hour12:false});
+    const secs    = _wcFmt(tz, {second:'2-digit'});
+    const date    = _wcFmt(tz, {month:'short', day:'numeric'});
+    const day     = _wcFmt(tz, {weekday:'long'});
+    const abbr    = _wcTzAbbr(tz);
+    const city    = _wcCityName(tz);
+    const night   = _wcIsNight(tz);
+
+    return `<div class="wc-card ${night?'wc-night':'wc-day'}" id="wc-card-${i}" data-tz="${escHtml(tz)}">
+      <div class="wc-city">${escHtml(city)}</div>
+      <div class="wc-time-wrap">
+        <span class="wc-time" id="wc-time-${i}">${escHtml(time)}</span><span class="wc-secs" id="wc-secs-${i}">${escHtml(secs)}</span>
+      </div>
+      <div class="wc-day-name" id="wc-day-${i}">${escHtml(day)}</div>
+      <div class="wc-date" id="wc-date-${i}">${escHtml(date)}</div>
+      <div class="wc-abbr">${escHtml(abbr)}</div>
+      <div class="wc-icon">${night?'🌙':'☀️'}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+  <div class="wc-screen">
+    <div class="wc-header">
+      <div class="wc-header-title">🌍 World Clock</div>
+      <div class="wc-header-sub">${escHtml(serverDate)}</div>
+    </div>
+    <div class="wc-grid">${cards}</div>
+  </div>`;
+}
+
+function _tickWorldClockCards() {
+  const el = document.getElementById('screen-clock');
+  if (!el) return;
+  const cards = el.querySelectorAll('.wc-card');
+  cards.forEach((card, i) => {
+    const tz = card.dataset.tz;
+    if (!tz) return;
+    const timeEl = document.getElementById('wc-time-'+i);
+    const secsEl = document.getElementById('wc-secs-'+i);
+    const dayEl  = document.getElementById('wc-day-'+i);
+    const dateEl = document.getElementById('wc-date-'+i);
+    if (timeEl) timeEl.textContent = _wcFmt(tz, {hour:'2-digit', minute:'2-digit', hour12:false});
+    if (secsEl) secsEl.textContent = _wcFmt(tz, {second:'2-digit'});
+    if (dayEl)  dayEl.textContent  = _wcFmt(tz, {weekday:'long'});
+    if (dateEl) dateEl.textContent = _wcFmt(tz, {month:'short', day:'numeric'});
+    const night = _wcIsNight(tz);
+    card.classList.toggle('wc-night', night);
+    card.classList.toggle('wc-day', !night);
+    const icon = card.querySelector('.wc-icon');
+    if (icon) icon.textContent = night ? '🌙' : '☀️';
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ALARM SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let _alarmCtx        = null;
+let _alarmRinging    = false;
+let _alarmCheckTimer = null;
+
+// Fired alarm keys persist in localStorage so a page reload within the same
+// minute doesn't re-fire the same alarm. Key format: "alarmId:HH:MM:YYYY-MM-DD"
+const _ALARM_FIRED_KEY = 'nv_alarm_fired';
+
+function _alarmFiredMark(key) {
+  try {
+    const map = JSON.parse(localStorage.getItem(_ALARM_FIRED_KEY) || '{}');
+    map[key] = Date.now();
+    localStorage.setItem(_ALARM_FIRED_KEY, JSON.stringify(map));
+  } catch(e) {}
+}
+
+function _alarmAlreadyFired(key) {
+  try {
+    const map = JSON.parse(localStorage.getItem(_ALARM_FIRED_KEY) || '{}');
+    const t = map[key];
+    return t && (Date.now() - t) < 120000; // 2-minute window
+  } catch(e) { return false; }
+}
+
+function _alarmPruneFired() {
+  try {
+    const map = JSON.parse(localStorage.getItem(_ALARM_FIRED_KEY) || '{}');
+    const now = Date.now();
+    let pruned = false;
+    for (const k in map) { if (now - map[k] > 120000) { delete map[k]; pruned = true; } }
+    if (pruned) localStorage.setItem(_ALARM_FIRED_KEY, JSON.stringify(map));
+  } catch(e) {}
+}
+
+function initAlarmChecker() {
+  clearInterval(_alarmCheckTimer);
+  clearInterval(_alarmCacheTimer);
+  _cachedAlarms = [];
+
+  if (_settings.alarm_enabled !== '1') return;
+
+  // Fetch alarm list now and refresh every 5 min (picks up newly added alarms)
+  _refreshAlarmCache();
+  _alarmCacheTimer = setInterval(_refreshAlarmCache, 300000);
+
+  // Check local time every minute — aligned to the top of the next minute
+  const msToNextMinute = (60 - new Date().getSeconds()) * 1000 - new Date().getMilliseconds();
+  setTimeout(() => {
+    _checkAlarms();
+    _alarmCheckTimer = setInterval(_checkAlarms, 60000);
+  }, msToNextMinute);
+}
+
+let _cachedAlarms = [];
+let _alarmCacheTimer = null;
+
+async function _refreshAlarmCache() {
+  try {
+    const r = await fetch(API + '/alarms/active');
+    if (r.ok) _cachedAlarms = await r.json();
+  } catch(e) {}
+}
+
+async function _checkAlarms() {
+  if (_settings.alarm_enabled !== '1') return;
+  _alarmPruneFired();
+
+  // Use client local time — server time is irrelevant (could be different timezone)
+  const now      = new Date();
+  const localHH  = now.getHours().toString().padStart(2, '0');
+  const localMM  = now.getMinutes().toString().padStart(2, '0');
+  const localTime = localHH + ':' + localMM;
+  const localDay  = now.getDay(); // 0=Sun … 6=Sat, matches JS convention
+
+  if (!Array.isArray(_cachedAlarms)) return;
+  for (const alarm of _cachedAlarms) {
+    if (alarm.time !== localTime) continue;
+
+    const days = alarm.days;
+    let dayMatch = false;
+    if (days === 'daily') {
+      dayMatch = true;
+    } else if (Array.isArray(days)) {
+      dayMatch = days.includes(localDay);
+    } else {
+      dayMatch = true; // fallback: fire anyway
+    }
+    if (!dayMatch) continue;
+
+    const fireKey = alarm.id + ':' + localTime + ':' + now.toDateString();
+    if (_alarmAlreadyFired(fireKey)) continue;
+    _alarmFiredMark(fireKey);
+    _fireAlarm(alarm);
+  }
+}
+
+function _fireAlarm(alarm) {
+  _showAlarmOverlay(alarm);
+  _playAlarmSound(alarm.sound || 'bell');
+}
+
+function _showAlarmOverlay(alarm) {
+  const overlay = document.getElementById('alarm-overlay');
+  if (!overlay) return;
+  const labelEl = document.getElementById('alarm-label');
+  const clockEl = document.getElementById('alarm-clock');
+  if (labelEl) labelEl.textContent = alarm.label || 'Alarm';
+  if (clockEl) clockEl.textContent = alarm.time  || '--:--';
+  overlay.classList.add('on');
+  _alarmRinging = true;
+  if (_ssActive) wakeFromScreensaver();
+}
+
+function dismissAlarm() {
+  const overlay = document.getElementById('alarm-overlay');
+  if (overlay) overlay.classList.remove('on');
+  _alarmRinging = false;
+  if (_alarmCtx) {
+    try { _alarmCtx.close(); } catch(e) {}
+    _alarmCtx = null;
+  }
+}
+
+function _playAlarmSound(type) {
+  try {
+    if (_alarmCtx) { try { _alarmCtx.close(); } catch(e) {} }
+    _alarmCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx  = _alarmCtx;
+
+    const patterns = {
+      bell: [
+        { freq: 880, start: 0,    dur: 0.8, type: 'sine',     gain: 0.6 },
+        { freq: 659, start: 0.9,  dur: 0.8, type: 'sine',     gain: 0.5 },
+        { freq: 880, start: 1.8,  dur: 0.8, type: 'sine',     gain: 0.6 },
+        { freq: 659, start: 2.7,  dur: 0.8, type: 'sine',     gain: 0.5 },
+      ],
+      digital: [
+        { freq: 1200, start: 0,    dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 1200, start: 0.18, dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 1200, start: 0.36, dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 900,  start: 0.6,  dur: 0.25, type: 'square', gain: 0.3 },
+        { freq: 1200, start: 1.0,  dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 1200, start: 1.18, dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 1200, start: 1.36, dur: 0.12, type: 'square', gain: 0.3 },
+        { freq: 900,  start: 1.6,  dur: 0.25, type: 'square', gain: 0.3 },
+      ],
+      gentle: [
+        { freq: 528, start: 0,   dur: 1.5, type: 'sine', gain: 0.35 },
+        { freq: 594, start: 1.6, dur: 1.5, type: 'sine', gain: 0.35 },
+        { freq: 660, start: 3.2, dur: 1.5, type: 'sine', gain: 0.35 },
+        { freq: 528, start: 4.8, dur: 1.5, type: 'sine', gain: 0.35 },
+      ],
+      loud: [
+        { freq: 1500, start: 0,    dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 800,  start: 0.15, dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 1500, start: 0.3,  dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 800,  start: 0.45, dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 1500, start: 0.6,  dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 800,  start: 0.75, dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 1500, start: 0.9,  dur: 0.1, type: 'sawtooth', gain: 0.7 },
+        { freq: 800,  start: 1.05, dur: 0.1, type: 'sawtooth', gain: 0.7 },
+      ],
+    };
+
+    const notes = patterns[type] || patterns.bell;
+    for (const note of notes) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = note.type;
+      osc.frequency.setValueAtTime(note.freq, ctx.currentTime + note.start);
+      gain.gain.setValueAtTime(0, ctx.currentTime + note.start);
+      gain.gain.linearRampToValueAtTime(note.gain, ctx.currentTime + note.start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note.start + note.dur);
+      osc.start(ctx.currentTime + note.start);
+      osc.stop(ctx.currentTime + note.start + note.dur + 0.05);
+    }
+  } catch(e) {}
 }
 
 init();

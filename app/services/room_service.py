@@ -48,8 +48,8 @@ def create_room(d: dict):
 def update_room(rid: int, d: dict):
     conn = get_db()
     conn.execute(
-        "UPDATE rooms SET room_number=?, tv_name=?, active=? WHERE id=?",
-        (d['room_number'], d.get('tv_name', ''), d.get('active', 1), rid),
+        "UPDATE rooms SET room_number=?, tv_name=? WHERE id=?",
+        (d['room_number'], d.get('tv_name', ''), rid),
     )
     conn.commit()
     room = dict(conn.execute(
@@ -171,13 +171,13 @@ def get_rooms_packages_map():
 
 def bulk_delete(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     ph = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM rooms WHERE id IN ({ph})", ids)
     conn.commit()
     conn.close()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 def bulk_add(d: dict):

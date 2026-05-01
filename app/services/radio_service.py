@@ -77,13 +77,13 @@ def delete_station(sid: int):
 
 def bulk_delete(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     ph = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM radio_stations WHERE id IN ({ph})", ids)
     conn.commit()
     conn.close()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 def bulk_add(d: dict):

@@ -186,7 +186,7 @@ def delete_channel(cid: int):
 
 def bulk_delete(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     placeholders = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM channels WHERE id IN ({placeholders})", ids)
@@ -194,7 +194,7 @@ def bulk_delete(ids: list):
     conn.close()
     invalidate_channels()
     bump_config_stamp()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 # ── M3U import / export ───────────────────────────────────────────────────────

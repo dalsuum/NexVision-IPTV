@@ -192,7 +192,7 @@ def delete_package(pid: int):
 
 def bulk_delete(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     ph = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM vod_movies WHERE id IN ({ph})", ids)
@@ -200,7 +200,7 @@ def bulk_delete(ids: list):
     conn.close()
     invalidate_vod()
     bump_config_stamp()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 def bulk_add(d: dict):
@@ -229,13 +229,13 @@ def bulk_add(d: dict):
 
 def bulk_delete_packages(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     ph = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM vod_packages WHERE id IN ({ph})", ids)
     conn.commit()
     conn.close()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 def bulk_add_packages(d: dict):

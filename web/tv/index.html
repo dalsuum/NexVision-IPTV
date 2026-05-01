@@ -267,6 +267,8 @@
     <div class="screen" id="screen-info"></div>
     <!-- CAST -->
     <div class="screen" id="screen-cast"></div>
+    <!-- WORLD CLOCK -->
+    <div class="screen" id="screen-clock"></div>
   </main>
 </div>
 
@@ -383,6 +385,16 @@
 <div id="cast-qr-badge" class="cast-qr-badge cqr-pos-bottom-right" style="display:none">
   <canvas id="cast-qr-canvas"></canvas>
   <div class="cqr-label">Cast to this TV</div>
+</div>
+
+<!-- ALARM OVERLAY -->
+<div id="alarm-overlay" class="alarm-overlay">
+  <div class="alarm-overlay-inner">
+    <div class="alarm-bell" id="alarm-bell">⏰</div>
+    <div class="alarm-label" id="alarm-label">Alarm</div>
+    <div class="alarm-clock" id="alarm-clock">00:00</div>
+    <button class="alarm-dismiss" onclick="dismissAlarm()">Dismiss</button>
+  </div>
 </div>
 
 <!-- AD OVERLAY -->

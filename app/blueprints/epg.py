@@ -10,6 +10,7 @@ def get_epg():
     return epg_service.get_epg(
         channel_id = request.args.get('channel_id'),
         date       = request.args.get('date'),
+        hours      = request.args.get('hours'),
     )
 
 

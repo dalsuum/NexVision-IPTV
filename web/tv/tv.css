@@ -1605,3 +1605,228 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 .cpe-sub{
   font-size:14px;color:var(--muted);text-align:center;line-height:1.6;max-width:360px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   WORLD CLOCK SCREEN
+   ═══════════════════════════════════════════════════════════════════ */
+.wc-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0 0 32px;
+}
+.wc-header {
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+}
+.wc-header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--white);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.wc-header-sub {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+.wc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 32px 40px;
+  align-content: start;
+}
+@media (max-width: 600px) {
+  .wc-grid { padding: 20px 16px; gap: 14px; }
+  .wc-header { padding: 20px 16px 16px; }
+  .wc-header-title { font-size: 22px; }
+}
+
+/* Clock card */
+.wc-card {
+  border-radius: 18px;
+  padding: 28px 24px 20px;
+  border: 1px solid var(--border2);
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.wc-card:hover, .wc-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+}
+/* Day theme */
+.wc-card.wc-day {
+  background: linear-gradient(140deg, var(--bg2) 0%, var(--bg3) 100%);
+}
+/* Night theme */
+.wc-card.wc-night {
+  background: linear-gradient(140deg, #0d0d1f 0%, #13132a 100%);
+  border-color: rgba(120, 120, 200, 0.15);
+}
+
+.wc-city {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+}
+.wc-time-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.wc-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 54px;
+  font-weight: 300;
+  color: var(--white);
+  letter-spacing: -1px;
+}
+.wc-secs {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gold);
+  padding-bottom: 8px;
+  opacity: 0.7;
+}
+.wc-day-name {
+  font-size: 14px;
+  color: var(--white);
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+.wc-date {
+  font-size: 13px;
+  color: var(--muted);
+}
+.wc-abbr {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--gold);
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  letter-spacing: 0.5px;
+}
+.wc-icon {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  font-size: 22px;
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ALARM OVERLAY
+   ═══════════════════════════════════════════════════════════════════ */
+.alarm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(5, 5, 14, 0.97);
+  align-items: center;
+  justify-content: center;
+}
+.alarm-overlay.on {
+  display: flex;
+}
+.alarm-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+}
+.alarm-bell {
+  font-size: 88px;
+  margin-bottom: 24px;
+  animation: alarm-swing 0.5s ease-in-out infinite alternate;
+  transform-origin: top center;
+  filter: drop-shadow(0 0 24px rgba(201,168,76,0.4));
+}
+@keyframes alarm-swing {
+  from { transform: rotate(-18deg); }
+  to   { transform: rotate(18deg);  }
+}
+.alarm-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.alarm-clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 80px;
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: -2px;
+  line-height: 1;
+  margin-bottom: 48px;
+}
+.alarm-dismiss {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  border-radius: 16px;
+  padding: 18px 64px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.5px;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 4px 24px rgba(201,168,76,0.35);
+}
+.alarm-dismiss:hover { opacity: 0.9; }
+.alarm-dismiss:active { transform: scale(0.97); }
+
+/* Admin: timezone chips */
+.tz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gold4);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 20px;
+  padding: 5px 10px 5px 8px;
+  font-size: 13px;
+  color: var(--text);
+  user-select: none;
+}
+.tz-chip-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+.tz-chip button {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color .15s;
+}
+.tz-chip button:hover { color: var(--red, #e05); }

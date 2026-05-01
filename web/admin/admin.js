@@ -182,7 +182,7 @@ async function updateCounts(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides',ads:'Ads Manager'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',clock:'Clock & Alarm',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides',ads:'Ads Manager'};
 async function go(page){
   document.body.classList.remove('vod-embed-mode');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -1790,9 +1790,9 @@ pages.packages = async function() {
   window._pkg_rooms  = allRooms||[];
 
   const rows = (pkgs||[]).map(p => {
-    const chCount    = (p.channel_ids||[]).length;
-    const vodCount   = (p.vod_ids||[]).length;
-    const radioCount = (p.radio_ids||[]).length;
+    const chCount    = p.select_all_channels ? p.channel_count : (p.channel_ids||[]).length;
+    const vodCount   = p.vod_count   !== undefined ? p.vod_count   : (p.vod_ids||[]).length;
+    const radioCount = p.radio_count !== undefined ? p.radio_count : (p.radio_ids||[]).length;
     return `<tr>
       <td><b>${esc(p.name)}</b>${p.description?`<br><span style="color:var(--text3);font-size:12px">${esc(p.description)}</span>`:''}
       </td>
@@ -1831,9 +1831,9 @@ async function ePkg(id) {
   const allRadio = await req('/radio') || [];
   const totalChs = allChs.length;
 
-  // Auto-detect "all channels" mode: package has more channels than what we loaded
+  // Auto-detect "all channels" mode: backend flag or all IDs assigned
   const pkgChIds = new Set((p && p.channel_ids) ? p.channel_ids : []);
-  window._pkgAllChs = pkgChIds.size >= totalChs && totalChs > 0;
+  window._pkgAllChs = !!(p && p.select_all_channels) || (pkgChIds.size >= totalChs && totalChs > 0);
 
   window._pkgEditor = {
     items: {
@@ -2862,6 +2862,41 @@ pages.settings = async function() {
         </div>
       </div>
 
+      <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">🌤 Weather</div>
+      <div class="tbl-wrap" style="padding:18px">
+        <div class="fgrid" style="gap:12px">
+          <div class="fg fcol"><label>Weather City</label>
+            <select id="s-weather-city" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+              <option value="">— Select City —</option>
+              <optgroup label="🇦🇪 UAE">
+                ${[['Abu Dhabi','Abu Dhabi'],['Al Ain','Al Ain'],['Dubai','Dubai'],['Sharjah','Sharjah'],['Ajman','Ajman'],['Ras Al Khaimah','Ras Al Khaimah'],['Fujairah','Fujairah'],['Umm Al Quwain','Umm Al Quwain']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🇸🇦 Saudi Arabia">
+                ${[['Riyadh','Riyadh'],['Jeddah','Jeddah'],['Mecca','Mecca'],['Medina','Medina'],['Dammam','Dammam'],['Khobar','Khobar'],['Tabuk','Tabuk'],['Abha','Abha']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌍 Middle East">
+                ${[['Kuwait City','Kuwait City'],['Doha','Doha'],['Manama','Manama'],['Muscat','Muscat'],['Amman','Amman'],['Beirut','Beirut'],['Baghdad','Baghdad'],['Tehran','Tehran'],['Sanaa','Sanaa'],['Aden','Aden'],['Asmara','Asmara']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌍 Africa">
+                ${[['Cairo','Cairo'],['Alexandria','Alexandria'],['Casablanca','Casablanca'],['Rabat','Rabat'],['Tunis','Tunis'],['Algiers','Algiers'],['Tripoli','Tripoli'],['Khartoum','Khartoum'],['Addis Ababa','Addis Ababa'],['Nairobi','Nairobi'],['Lagos','Lagos'],['Accra','Accra'],['Dakar','Dakar'],['Johannesburg','Johannesburg'],['Cape Town','Cape Town']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌍 Europe">
+                ${[['London','London'],['Paris','Paris'],['Berlin','Berlin'],['Madrid','Madrid'],['Rome','Rome'],['Amsterdam','Amsterdam'],['Brussels','Brussels'],['Vienna','Vienna'],['Zurich','Zurich'],['Stockholm','Stockholm'],['Oslo','Oslo'],['Copenhagen','Copenhagen'],['Helsinki','Helsinki'],['Warsaw','Warsaw'],['Prague','Prague'],['Budapest','Budapest'],['Lisbon','Lisbon'],['Athens','Athens'],['Istanbul','Istanbul'],['Ankara','Ankara'],['Moscow','Moscow'],['Kyiv','Kyiv']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌏 Asia">
+                ${[['Mumbai','Mumbai'],['Delhi','Delhi'],['Bangalore','Bangalore'],['Chennai','Chennai'],['Kolkata','Kolkata'],['Hyderabad','Hyderabad'],['Karachi','Karachi'],['Lahore','Lahore'],['Islamabad','Islamabad'],['Dhaka','Dhaka'],['Colombo','Colombo'],['Kathmandu','Kathmandu'],['Beijing','Beijing'],['Shanghai','Shanghai'],['Hong Kong','Hong Kong'],['Tokyo','Tokyo'],['Seoul','Seoul'],['Singapore','Singapore'],['Bangkok','Bangkok'],['Kuala Lumpur','Kuala Lumpur'],['Jakarta','Jakarta'],['Manila','Manila'],['Taipei','Taipei'],['Osaka','Osaka'],['Ho Chi Minh City','Ho Chi Minh City'],['Hanoi','Hanoi']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌎 Americas">
+                ${[['New York','New York'],['Los Angeles','Los Angeles'],['Chicago','Chicago'],['Houston','Houston'],['Miami','Miami'],['Toronto','Toronto'],['Montreal','Montreal'],['Vancouver','Vancouver'],['Mexico City','Mexico City'],['Sao Paulo','Sao Paulo'],['Rio de Janeiro','Rio de Janeiro'],['Buenos Aires','Buenos Aires'],['Bogota','Bogota'],['Lima','Lima'],['Santiago','Santiago']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+              <optgroup label="🌏 Oceania">
+                ${[['Sydney','Sydney'],['Melbourne','Melbourne'],['Brisbane','Brisbane'],['Perth','Perth'],['Auckland','Auckland']].map(([l,v])=>`<option value="${v}" ${(s.weather_city||'')=== v?'selected':''}>${l}</option>`).join('')}
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">📡 Cast QR</div>
       <div class="tbl-wrap" style="padding:18px">
         <div class="fgrid" style="gap:12px">
@@ -2956,6 +2991,7 @@ async function saveSettings() {
     admin_mode_label: document.getElementById('s-admin-mode-label')?.value||'',
     admin_title:      document.getElementById('s-admin-title')?.value||'NexVision CMS v5',
     admin_logo_url:   document.getElementById('s-admin-logo')?.value||'',
+    weather_city:     document.getElementById('s-weather-city')?.value||'',
     cast_qr_enabled:  document.getElementById('s-cast-qr-enabled')?.checked  ? '1' : '0',
     cast_server_url:  document.getElementById('s-cast-server-url')?.value||'',
     cast_qr_display:  document.getElementById('s-cast-qr-display')?.value||'both',
@@ -4109,6 +4145,353 @@ async function dAd(id) {
   await req('/ads/'+id, {method:'DELETE'});
   toast('🗑 Ad deleted');
   await pages.ads();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// V8.20 — WORLD CLOCK & ALARM PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const _TZ_LIST = [
+  {tz:'UTC',                 label:'UTC (Universal)'},
+  {tz:'America/New_York',    label:'New York (EST/EDT)'},
+  {tz:'America/Chicago',     label:'Chicago (CST/CDT)'},
+  {tz:'America/Denver',      label:'Denver (MST/MDT)'},
+  {tz:'America/Los_Angeles', label:'Los Angeles (PST/PDT)'},
+  {tz:'America/Anchorage',   label:'Anchorage (AKST)'},
+  {tz:'Pacific/Honolulu',    label:'Honolulu (HST)'},
+  {tz:'America/Toronto',     label:'Toronto (EST/EDT)'},
+  {tz:'America/Vancouver',   label:'Vancouver (PST/PDT)'},
+  {tz:'America/Sao_Paulo',   label:'São Paulo (BRT)'},
+  {tz:'America/Argentina/Buenos_Aires', label:'Buenos Aires (ART)'},
+  {tz:'America/Mexico_City', label:'Mexico City (CST/CDT)'},
+  {tz:'America/Bogota',      label:'Bogotá (COT)'},
+  {tz:'America/Lima',        label:'Lima (PET)'},
+  {tz:'America/Santiago',    label:'Santiago (CLT)'},
+  {tz:'Europe/London',       label:'London (GMT/BST)'},
+  {tz:'Europe/Paris',        label:'Paris (CET/CEST)'},
+  {tz:'Europe/Berlin',       label:'Berlin (CET/CEST)'},
+  {tz:'Europe/Rome',         label:'Rome (CET/CEST)'},
+  {tz:'Europe/Madrid',       label:'Madrid (CET/CEST)'},
+  {tz:'Europe/Amsterdam',    label:'Amsterdam (CET/CEST)'},
+  {tz:'Europe/Moscow',       label:'Moscow (MSK)'},
+  {tz:'Europe/Istanbul',     label:'Istanbul (TRT)'},
+  {tz:'Europe/Athens',       label:'Athens (EET/EEST)'},
+  {tz:'Africa/Cairo',        label:'Cairo (EET)'},
+  {tz:'Africa/Lagos',        label:'Lagos (WAT)'},
+  {tz:'Africa/Johannesburg', label:'Johannesburg (SAST)'},
+  {tz:'Africa/Nairobi',      label:'Nairobi (EAT)'},
+  {tz:'Africa/Casablanca',   label:'Casablanca (WET)'},
+  {tz:'Asia/Dubai',          label:'Dubai (GST)'},
+  {tz:'Asia/Riyadh',         label:'Riyadh (AST)'},
+  {tz:'Asia/Tehran',         label:'Tehran (IRST)'},
+  {tz:'Asia/Karachi',        label:'Karachi (PKT)'},
+  {tz:'Asia/Kolkata',        label:'Mumbai/Delhi (IST)'},
+  {tz:'Asia/Dhaka',          label:'Dhaka (BST)'},
+  {tz:'Asia/Bangkok',        label:'Bangkok (ICT)'},
+  {tz:'Asia/Singapore',      label:'Singapore (SGT)'},
+  {tz:'Asia/Hong_Kong',      label:'Hong Kong (HKT)'},
+  {tz:'Asia/Shanghai',       label:'Beijing/Shanghai (CST)'},
+  {tz:'Asia/Tokyo',          label:'Tokyo (JST)'},
+  {tz:'Asia/Seoul',          label:'Seoul (KST)'},
+  {tz:'Asia/Taipei',         label:'Taipei (CST)'},
+  {tz:'Asia/Kuala_Lumpur',   label:'Kuala Lumpur (MYT)'},
+  {tz:'Asia/Jakarta',        label:'Jakarta (WIB)'},
+  {tz:'Australia/Perth',     label:'Perth (AWST)'},
+  {tz:'Australia/Adelaide',  label:'Adelaide (ACST/ACDT)'},
+  {tz:'Australia/Sydney',    label:'Sydney/Melbourne (AEST/AEDT)'},
+  {tz:'Pacific/Auckland',    label:'Auckland (NZST/NZDT)'},
+  {tz:'Pacific/Fiji',        label:'Fiji (FJT)'},
+];
+
+pages.clock = async function() {
+  const [s, alarms] = await Promise.all([req('/settings'), req('/alarms')]);
+  if (!s) return;
+  window._settings = s;
+  window._alarmList = Array.isArray(alarms) ? alarms : [];
+
+  const alarmOn = s.alarm_enabled === '1';
+
+  let zonesArr = [];
+  try { zonesArr = JSON.parse(s.worldclock_zones || '[]'); } catch(e) {}
+
+  const tzOptions = _TZ_LIST.map(t =>
+    `<option value="${esc(t.tz)}">${esc(t.label)}</option>`
+  ).join('');
+
+  const zoneChips = zonesArr.map(tz => {
+    const found = _TZ_LIST.find(t => t.tz === tz);
+    const label = found ? found.label : tz;
+    return `<div class="tz-chip" data-tz="${esc(tz)}">
+      <span class="tz-chip-dot"></span>
+      <span>${esc(label)}</span>
+      <button onclick="removeTzChip(this)" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+
+  const alarmRows = window._alarmList.length
+    ? window._alarmList.map(a => {
+        const days = a.days === 'daily' ? '<span style="color:var(--gold)">Every day</span>' : (
+          Array.isArray(a.days)
+            ? a.days.map(d => ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(' · ')
+            : a.days
+        );
+        const sounds = {bell:'🔔 Bell', digital:'📟 Digital', gentle:'🎵 Gentle', loud:'🚨 Loud'};
+        return `<tr>
+          <td><b style="color:var(--text)">${esc(a.label)}</b></td>
+          <td><span style="font-family:'DM Mono',monospace;font-size:18px;color:var(--gold);letter-spacing:1px">${esc(a.time)}</span></td>
+          <td style="font-size:12px;color:var(--text2)">${days}</td>
+          <td style="font-size:13px;color:var(--text2)">${sounds[a.sound]||a.sound}</td>
+          <td>
+            <label class="big-toggle" style="transform:scale(0.8);transform-origin:left">
+              <input type="checkbox" ${a.active?'checked':''} onchange="toggleAlarm(${a.id},this.checked)">
+              <span class="big-toggle-track"></span>
+            </label>
+          </td>
+          <td>
+            <button class="btn btn-g btn-sm" onclick="editAlarm(${a.id})">Edit</button>
+            <button class="btn btn-d btn-sm" onclick="dAlarm(${a.id})">✕</button>
+          </td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px;font-size:14px">
+        No alarms configured — click <b>+ New Alarm</b> to create one
+       </td></tr>`;
+
+  document.getElementById('content').innerHTML = `
+  <!-- WORLD CLOCK -->
+  <div class="section-card">
+    <div class="sc-hdr">
+      <span>🌍 World Clock Screen</span>
+      <span style="font-size:12px;color:var(--text3);font-weight:400">Configure which timezones display on the World Clock TV screen</span>
+    </div>
+    <div class="sc-body">
+
+      <div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:20px">
+        <span style="font-size:20px">☰</span>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">Enable &amp; reorder in Navigation Menu</div>
+          <div style="font-size:12px;color:var(--text3)">Go to <b onclick="go('navigation')" style="color:var(--gold);cursor:pointer">Navigation Menu</b> to enable the World Clock page, toggle it on/off, and drag to reorder it among other nav items.</div>
+        </div>
+        <button class="btn btn-g btn-sm" style="margin-left:auto;white-space:nowrap" onclick="go('navigation')">Open Nav Manager →</button>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:0 0 20px"></div>
+
+      <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:12px;letter-spacing:.3px">TIMEZONES &nbsp;<span style="font-weight:400;color:var(--text3)">(up to 6 — displayed as clock cards on TV)</span></div>
+
+      <div id="tz-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;min-height:40px">${zoneChips||'<span style="color:var(--text3);font-size:13px;align-self:center">No timezones added yet</span>'}</div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="tz-picker" style="flex:1;max-width:360px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px">
+          <option value="">— Select a timezone to add —</option>
+          ${tzOptions}
+        </select>
+        <button class="btn btn-g" onclick="addTzChip()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Remove and re-add to change the order. Supports all IANA timezones.</div>
+
+      <div style="margin-top:20px">
+        <button class="btn btn-p" onclick="saveClockSettings()">💾 Save World Clock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALARM MANAGER -->
+  <div class="section-card" style="margin-top:20px">
+    <div class="sc-hdr">
+      <span>⏰ Alarm Manager</span>
+      <span style="font-size:12px;color:var(--text3);font-weight:400">Alarms fire on all active TV screens at the scheduled time</span>
+    </div>
+    <div class="sc-body">
+
+      <div class="form-row" style="margin-bottom:20px">
+        <div>
+          <div style="font-weight:500;margin-bottom:2px">Enable Alarms</div>
+          <div style="font-size:12px;color:var(--text3)">When enabled, alarms trigger a full-screen notification with audio on every TV displaying this system</div>
+        </div>
+        <label class="big-toggle">
+          <input type="checkbox" id="alarm-enabled" ${alarmOn?'checked':''}>
+          <span class="big-toggle-track"></span>
+        </label>
+      </div>
+
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 16px;margin-bottom:20px;border-left:3px solid var(--gold);font-size:13px;color:var(--text2);line-height:1.6">
+        ℹ️ Alarms play through the speaker of whatever device is running the TV app — hotel TVs (LG, Samsung), Android boxes, and guest phones browsing the TV interface. Audio uses the browser's Web Audio engine; no external speakers or infrastructure required.
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button class="btn btn-p" onclick="saveAlarmSettings()">💾 Save</button>
+        <button class="btn btn-g" onclick="editAlarm(null)">+ New Alarm</button>
+      </div>
+
+      <div class="tbl-wrap" style="padding:0">
+        <table>
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Time</th>
+              <th>Days</th>
+              <th>Sound</th>
+              <th>Active</th>
+              <th style="width:100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="alarm-tbody">${alarmRows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+};
+
+function addTzChip() {
+  const sel = document.getElementById('tz-picker');
+  const tz  = sel.value;
+  if (!tz) return;
+  const chips = document.getElementById('tz-chips');
+  const existing = chips.querySelectorAll('.tz-chip');
+  if (existing.length >= 6) { toast('⚠ Maximum 6 timezones allowed'); return; }
+  for (const c of existing) { if (c.dataset.tz === tz) { toast('Already added'); return; } }
+  const found = _TZ_LIST.find(t => t.tz === tz);
+  const label = found ? found.label : tz;
+  // Remove placeholder text if present
+  const placeholder = chips.querySelector('span[style]');
+  if (placeholder) placeholder.remove();
+  const chip = document.createElement('div');
+  chip.className = 'tz-chip';
+  chip.dataset.tz = tz;
+  chip.innerHTML = `<span class="tz-chip-dot"></span><span>${esc(label)}</span><button onclick="removeTzChip(this)" title="Remove">✕</button>`;
+  chips.appendChild(chip);
+  sel.value = '';
+}
+
+function removeTzChip(btn) {
+  const chip  = btn.closest('.tz-chip');
+  const chips = document.getElementById('tz-chips');
+  chip.remove();
+  if (!chips.querySelectorAll('.tz-chip').length) {
+    chips.innerHTML = '<span style="color:var(--text3);font-size:13px;align-self:center">No timezones added yet</span>';
+  }
+}
+
+async function saveClockSettings() {
+  const chips = document.querySelectorAll('#tz-chips .tz-chip');
+  const zones = Array.from(chips).map(c => c.dataset.tz).filter(Boolean);
+  const d = { worldclock_zones: JSON.stringify(zones) };
+  const r = await req('/settings', {method:'POST', body:JSON.stringify(d)});
+  if (r?.ok) {
+    window._settings = {...(window._settings||{}), ...d};
+    toast('✅ World Clock saved');
+  }
+}
+
+async function saveAlarmSettings() {
+  const d = {
+    alarm_enabled: document.getElementById('alarm-enabled')?.checked ? '1' : '0',
+  };
+  const r = await req('/settings', {method:'POST', body:JSON.stringify(d)});
+  if (r?.ok) {
+    window._settings = {...(window._settings||{}), ...d};
+    toast('✅ Alarm settings saved');
+  }
+}
+
+async function toggleAlarm(id, active) {
+  const alarm = (window._alarmList||[]).find(a=>a.id===id);
+  if (!alarm) return;
+  const d = {...alarm, active: active ? 1 : 0};
+  await req('/alarms/'+id, {method:'PUT', body:JSON.stringify(d)});
+  if (alarm) alarm.active = active ? 1 : 0;
+}
+
+function editAlarm(id) {
+  const alarm   = id ? (window._alarmList||[]).find(a => a.id === id) : null;
+  const daysArr = alarm ? (alarm.days === 'daily' ? [0,1,2,3,4,5,6] : (alarm.days||[])) : [0,1,2,3,4,5,6];
+  const INP = 'width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px';
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  const dayCbx = dayNames.map((name,i) =>
+    `<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:${daysArr.includes(i)?'var(--gold3)':'var(--bg3)'};border:1px solid ${daysArr.includes(i)?'var(--gold)':'var(--border2)'};border-radius:6px;cursor:pointer;font-size:13px;transition:.15s" id="day-lbl-${i}">
+      <input type="checkbox" class="alarm-day-chk" value="${i}" ${daysArr.includes(i)?'checked':''} style="accent-color:var(--gold);display:none" onchange="_styleDayLabel(${i},this.checked)">
+      ${name}
+    </label>`
+  ).join('');
+
+  openModal(id ? 'Edit Alarm' : 'New Alarm', `
+    <div style="display:grid;gap:16px">
+      <div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Label</div>
+        <input id="al-label" value="${esc(alarm?.label||'Wake Up')}" placeholder="e.g. Morning Wake-up" style="${INP}">
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Time</div>
+        <input id="al-time" type="time" value="${esc(alarm?.time||'07:00')}" style="${INP}">
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Repeat</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${dayCbx}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" onclick="alarmSelectDays([0,1,2,3,4,5,6])">Every Day</button>
+          <button class="btn btn-g btn-sm" onclick="alarmSelectDays([1,2,3,4,5])">Weekdays</button>
+          <button class="btn btn-g btn-sm" onclick="alarmSelectDays([0,6])">Weekend</button>
+          <button class="btn btn-g btn-sm" onclick="alarmSelectDays([])">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Sound</div>
+        <select id="al-sound" style="${INP}">
+          <option value="bell"    ${(alarm?.sound||'bell')==='bell'   ?'selected':''}>🔔 Bell — classic chime</option>
+          <option value="gentle"  ${alarm?.sound==='gentle' ?'selected':''}>🎵 Gentle — soft rising tone</option>
+          <option value="digital" ${alarm?.sound==='digital'?'selected':''}>📟 Digital — electronic beep</option>
+          <option value="loud"    ${alarm?.sound==='loud'   ?'selected':''}>🚨 Loud — urgent alert</option>
+        </select>
+      </div>
+    </div>
+  `, `<button class="btn btn-p" onclick="saveAlarm(${id||'null'})">💾 Save Alarm</button>
+      <button class="btn btn-g" onclick="closeModal()">Cancel</button>`);
+}
+
+function _styleDayLabel(i, checked) {
+  const lbl = document.getElementById('day-lbl-'+i);
+  if (!lbl) return;
+  lbl.style.background = checked ? 'var(--gold3)' : 'var(--bg3)';
+  lbl.style.borderColor = checked ? 'var(--gold)' : 'var(--border2)';
+}
+
+function alarmSelectDays(days) {
+  document.querySelectorAll('.alarm-day-chk').forEach(c => {
+    const v = parseInt(c.value);
+    c.checked = days.includes(v);
+    _styleDayLabel(v, c.checked);
+  });
+}
+
+async function saveAlarm(id) {
+  const label = document.getElementById('al-label')?.value.trim();
+  const time  = document.getElementById('al-time')?.value;
+  if (!label || !time) { alert('Label and time are required'); return; }
+  const days = Array.from(document.querySelectorAll('.alarm-day-chk:checked')).map(c=>parseInt(c.value));
+  const finalDays = days.length === 7 ? 'daily' : (days.length === 0 ? 'daily' : days);
+  const d = {
+    label,
+    time,
+    days:   finalDays,
+    sound:  document.getElementById('al-sound')?.value || 'bell',
+    active: parseInt(document.getElementById('al-active')?.value) || 0,
+  };
+  const r = id
+    ? await req('/alarms/'+id, {method:'PUT',  body:JSON.stringify(d)})
+    : await req('/alarms',     {method:'POST', body:JSON.stringify(d)});
+  if (r?.error) { alert(r.error); return; }
+  closeModal();
+  toast(id ? '✅ Alarm updated' : '✅ Alarm created');
+  await pages.clock();
+}
+
+async function dAlarm(id) {
+  if (!confirm('Delete this alarm?')) return;
+  await req('/alarms/'+id, {method:'DELETE'});
+  toast('🗑 Alarm deleted');
+  await pages.clock();
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────

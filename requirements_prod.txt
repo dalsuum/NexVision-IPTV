@@ -1,6 +1,6 @@
 # NexVision IPTV — Production Dependencies
 # Install: pip install -r requirements_prod.txt
-# Updated: 2026-05-01 - v8.18 - Ads Manager (pre-roll overlays), per-user weather city
+# Updated: 2026-05-01 - v8.20 - Clock & Alarm, World Clock, EPG/packages improvements
 # Entry points: app/wsgi.py (gunicorn) or run.py (dev)
 
 # ── Core Flask ────────────────────────────────────────────────────────────────

@@ -58,13 +58,13 @@ def delete_group(gid: int):
 
 def bulk_delete(ids: list):
     if not ids:
-        return jsonify({'deleted': 0})
+        return jsonify({'ok': True, 'deleted': 0})
     conn = get_db()
     ph = ','.join('?' * len(ids))
     conn.execute(f"DELETE FROM media_groups WHERE id IN ({ph})", ids)
     conn.commit()
     conn.close()
-    return jsonify({'deleted': len(ids)})
+    return jsonify({'ok': True, 'deleted': len(ids)})
 
 
 def bulk_add(names: list):
