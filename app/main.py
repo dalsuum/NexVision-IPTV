@@ -202,6 +202,22 @@ def migrate_db(conn):
             FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
         )
     """)
+    # Ads table (player ads)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ads (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            title            TEXT NOT NULL,
+            media_type       TEXT DEFAULT 'image',
+            media_url        TEXT NOT NULL,
+            placement        TEXT DEFAULT 'both',
+            skip_after       INTEGER DEFAULT 5,
+            duration_seconds INTEGER DEFAULT 10,
+            active           INTEGER DEFAULT 1,
+            sort_order       INTEGER DEFAULT 0,
+            link_url         TEXT DEFAULT '',
+            created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     # Android TV box device registry (heartbeat tracking)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS devices (
@@ -751,6 +767,23 @@ def init_db():
     for row in svc_defaults:
         conn.execute("INSERT OR IGNORE INTO guest_services (name,category,icon,phone,description,sort_order) SELECT ?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM guest_services WHERE name=?)",
             (*row, row[0]))
+
+    # ── Ads ────────────────────────────────────────────────────────────────────────
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS ads (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            title            TEXT NOT NULL,
+            media_type       TEXT DEFAULT 'image',
+            media_url        TEXT NOT NULL,
+            placement        TEXT DEFAULT 'both',
+            skip_after       INTEGER DEFAULT 5,
+            duration_seconds INTEGER DEFAULT 10,
+            active           INTEGER DEFAULT 1,
+            sort_order       INTEGER DEFAULT 0,
+            link_url         TEXT DEFAULT '',
+            created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
 
     # ── VIP Channel Access ──────────────────────────────────────────────────────────
     conn.execute('''

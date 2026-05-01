@@ -233,7 +233,7 @@ For security issues:
 
 ---
 
-## Application Security Architecture (v8.16+)
+## Application Security Architecture (v8.18+)
 
 ### Authentication & Authorisation
 - JWT tokens validated on every admin/protected endpoint via `@admin_required` / `@token_required` decorators
@@ -260,12 +260,13 @@ ls -la /opt/nexvision/nexvision.db    # should be 660 (or 640)
 ```
 
 ### Hardened Routes
-- All admin CRUD endpoints (`/api/channels`, `/api/rooms`, `/api/packages`, etc.) require `admin`/`operator` JWT
+- All admin CRUD endpoints (`/api/channels`, `/api/rooms`, `/api/packages`, `/api/ads/all`, etc.) require `admin`/`operator` JWT
+- `GET /api/ads` (public ad fetch) is intentionally open — returns only active ads, no write capability
 - Public endpoints (TV client, settings read, channel list with room token) require `X-Room-Token` for content filtering
 - `message_dismissals` and `message_reads` tables use room-scoped tokens — no cross-room leakage
 
 ---
 
-**Last Updated:** 2026-05-01 (v8.17)
+**Last Updated:** 2026-05-01 (v8.18)
 **Repository:** NexVision  
 **Maintainer:** [dalsuum/nexvision]

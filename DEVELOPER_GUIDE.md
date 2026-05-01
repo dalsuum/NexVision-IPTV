@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.17 — Last updated: 2026-05-01  
+> Version: v8.18 — Last updated: 2026-05-01  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -48,9 +48,9 @@
 │  Entry: app/wsgi.py → create_app()                               │
 │                                                                   │
 │  Flask app                                                        │
-│  ├── 24 Blueprints (/api/*, /vod/*, /admin/, /, ...)             │
+│  ├── 25 Blueprints (/api/*, /vod/*, /admin/, /, ...)             │
 │  │   └── Thin HTTP handlers → call service functions             │
-│  └── 24 Services (business logic + SQL queries)                   │
+│  └── 25 Services (business logic + SQL queries)                   │
 └─────────────────┬───────────────────────────┬────────────────────┘
                   │                           │
 ┌─────────────────▼──────┐  ┌────────────────▼───────────────────┐
@@ -128,7 +128,8 @@
 │   │   ├── reports.py            # /api/reports/*
 │   │   ├── media_groups.py       # /api/groups/*
 │   │   ├── services_bp.py        # /api/services/* (guest services)
-│   │   └── weather.py            # /api/weather/*
+│   │   ├── weather.py            # /api/weather/*
+│   │   └── ads.py                # /api/ads/*
 │   │
 │   └── services/                 # Business logic — no Flask routing
 │       ├── __init__.py           # Exports all service modules
@@ -158,7 +159,8 @@
 │       ├── user_service.py
 │       ├── vod_server_service.py
 │       ├── vod_service.py
-│       └── weather_service.py
+│       ├── weather_service.py
+│       └── ad_service.py
 │
 ├── db/                           # Database layer
 │   ├── db_mysql.py               # MySQL compat wrapper (sqlite3 interface)
@@ -962,6 +964,38 @@ Built-in nav keys: `home`, `tv`, `vod`, `radio`, `weather`, `info`, `services`, 
 
 ---
 
+### Ads
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/ads` | None | Active ads for a placement (`?placement=vod\|live\|both`) |
+| `GET` | `/api/ads/all` | Admin | All ads (including hidden) |
+| `POST` | `/api/ads` | Admin | Create ad |
+| `PUT` | `/api/ads/<id>` | Admin | Update ad |
+| `DELETE` | `/api/ads/<id>` | Admin | Delete ad |
+| `POST` | `/api/ads/reorder` | Admin | Reorder ads |
+
+**Create/Update body:**
+```json
+{
+  "title": "Summer Promo",
+  "media_type": "image",
+  "media_url": "/uploads/promo.jpg",
+  "placement": "both",
+  "skip_after": 5,
+  "duration_seconds": 10,
+  "active": 1,
+  "link_url": "https://hotel.com/deals"
+}
+```
+
+- `media_type`: `"image"` | `"video"`
+- `placement`: `"vod"` | `"live"` | `"both"`
+- `skip_after`: seconds before skip button activates; `0` = unskippable
+- `duration_seconds`: auto-dismiss time for image ads (ignored for video)
+
+---
+
 ### Static UI Routes
 
 | Method | Endpoint | Description |
@@ -1103,6 +1137,24 @@ CREATE TABLE vip_channel_access (
 CREATE TABLE vip_vod_access (video_id INTEGER, room_id INTEGER, PRIMARY KEY (video_id, room_id));
 ```
 
+### Ads Table
+
+```sql
+CREATE TABLE ads (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    title            TEXT NOT NULL,
+    media_type       TEXT DEFAULT 'image',   -- 'image' | 'video'
+    media_url        TEXT NOT NULL,
+    placement        TEXT DEFAULT 'both',    -- 'vod' | 'live' | 'both'
+    skip_after       INTEGER DEFAULT 5,      -- seconds; 0 = unskippable
+    duration_seconds INTEGER DEFAULT 10,     -- image auto-dismiss time
+    active           INTEGER DEFAULT 1,
+    sort_order       INTEGER DEFAULT 0,
+    link_url         TEXT DEFAULT '',
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ---
 
 ## 11. Configuration Reference
@@ -1197,6 +1249,16 @@ applies all three filters in combination client-side against `allMovies`.
 
 Favourites are toggled via the heart button (`.mt-fav-btn`) on each movie tile. The Set
 is serialised to `localStorage` on every toggle so it survives page reloads.
+
+#### Pre-roll Ad Overlay (v8.18+)
+
+Ads are shown as full-screen overlays before playback starts. The TV client:
+
+1. Calls `loadAdsCache()` on startup and after each navigation to keep `_adsCache` fresh
+2. Before opening a Live TV stream (HTTP only, not UDP), calls `await showAdOverlay('live')`
+3. Before opening the VOD player, calls `await showAdOverlay('vod')`
+
+`showAdOverlay(placement)` picks a random eligible ad, injects it into the `#ad-overlay` element (image or `<video>`), starts the skip countdown, and resolves the returned Promise when the ad finishes or is skipped. Callers `await` the promise so playback only begins after the ad.
 
 #### `api()` error handling
 
@@ -1429,5 +1491,5 @@ sqlite3 /opt/nexvision/nexvision.db \
 
 ---
 
-*NexVision IPTV Developer Guide — v8.16*  
+*NexVision IPTV Developer Guide — v8.18*  
 *Architecture: Flask Blueprints + Service Layer + Redis + SQLite/MySQL + Nginx/Gunicorn*

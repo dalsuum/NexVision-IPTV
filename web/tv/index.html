@@ -372,6 +372,14 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- AD OVERLAY -->
+<div id="ad-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;align-items:center;justify-content:center;flex-direction:column">
+  <img id="ad-img-el" alt="Ad" style="max-width:100%;max-height:100%;object-fit:contain;display:none">
+  <video id="ad-video-el" playsinline autoplay style="max-width:100%;max-height:100%;display:none"></video>
+  <div id="ad-timer" style="position:absolute;top:16px;right:20px;color:#fff;font-size:13px;background:rgba(0,0,0,.65);padding:5px 14px;border-radius:20px;pointer-events:none"></div>
+  <button id="ad-skip-btn" onclick="skipAd()" style="display:none;position:absolute;bottom:34px;right:34px;background:rgba(20,20,20,.75);border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .2s">Skip Ad ›</button>
+</div>
+
 <script src="tv.js"></script>
 </body>
 </html>

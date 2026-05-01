@@ -23,6 +23,7 @@ def register_blueprints(app):
     from .prayer       import prayer_bp
     from .uploads      import uploads_bp
     from .slides       import slides_bp
+    from .ads          import ads_bp
     from .nav          import nav_bp
     from .settings_bp  import settings_bp
     from .epg          import epg_bp
@@ -51,6 +52,7 @@ def register_blueprints(app):
     app.register_blueprint(prayer_bp)
     app.register_blueprint(uploads_bp)
     app.register_blueprint(slides_bp)
+    app.register_blueprint(ads_bp)
     app.register_blueprint(nav_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(epg_bp)

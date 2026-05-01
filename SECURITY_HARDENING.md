@@ -1,6 +1,6 @@
 # NexVision IPTV — Security Hardening Guide
 
-> Version: v8.17 — Last updated: 2026-05-01  
+> Version: v8.18 — Last updated: 2026-05-01  
 > Applies to: production deployments running Nginx + Gunicorn + Flask
 
 ---
@@ -896,5 +896,5 @@ Run before every production deployment:
 
 ---
 
-*NexVision IPTV Security Hardening Guide — v8.16*  
+*NexVision IPTV Security Hardening Guide — v8.18*  
 *Maintainer: dalsuum — Report vulnerabilities privately to dalsuum08@gmail.com*

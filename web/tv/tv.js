@@ -1043,7 +1043,7 @@ function updateTvPagination() {
   if (nextBtn) nextBtn.disabled = shown >= _tvTotal;
 }
 
-function playChannel(channelId) {
+async function playChannel(channelId) {
   const ch = allChannels.find(c=>c.id===channelId);
   if (!ch) return;
   const playSeq = ++_tvPlaySeq;
@@ -1079,6 +1079,9 @@ function playChannel(channelId) {
   video.load();
 
   const url = (ch.stream_url || '').trim();
+  const isHTTPCheck = url && (url.startsWith('http://') || url.startsWith('https://'));
+  // Show pre-roll ad only for playable HTTP streams, not UDP
+  if (isHTTPCheck) await showAdOverlay('live');
   const ctype = ch.channel_type || 'stream_udp';
   // Broad HLS detection: m3u8, common path patterns, or channel_type=m3u
   const isHLS = url && (
@@ -1458,6 +1461,9 @@ async function startVoD(url, title) {
     return;
   }
   // ────────────────────────────────────────────────────────────────────────
+
+  // Show pre-roll ad before opening VOD player
+  await showAdOverlay('vod');
 
   const modal  = document.getElementById('vod-player-modal');
   const video  = document.getElementById('vod-video');
@@ -2934,7 +2940,8 @@ async function loadApp() {
     pollMessages(),
     checkBirthdays(),
     loadServices(),
-    loadInbox()
+    loadInbox(),
+    loadAdsCache()
   ]);
   // v6: Poll messages every 30s, RSS every feed's own interval
   setInterval(pollMessages, 30000);
@@ -2970,6 +2977,9 @@ async function pollConfigChanges() {
     // Reload slides
     const slides = await api('/slides');
     if (slides) { _promoSlides = slides; }
+
+    // Reload ads cache
+    await loadAdsCache();
 
     // Reload nav
     await loadNavConfig();
@@ -3319,6 +3329,97 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft'  && activeScreen==='tv') prevChannel();
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADS — pre-roll overlay for Live TV and VOD players
+// ═══════════════════════════════════════════════════════════════════════════════
+let _adsCache = null;
+
+async function loadAdsCache() {
+  try {
+    const data = await fetch(API + '/ads').then(r => r.json()).catch(() => []);
+    _adsCache = Array.isArray(data) ? data : [];
+  } catch(e) { _adsCache = []; }
+}
+
+let _adResolve = null;
+
+function showAdOverlay(placement) {
+  if (!_adsCache || !_adsCache.length) return Promise.resolve();
+  const eligible = _adsCache.filter(a => a.active && (a.placement === placement || a.placement === 'both'));
+  if (!eligible.length) return Promise.resolve();
+  const ad = eligible[Math.floor(Math.random() * eligible.length)];
+
+  return new Promise(resolve => {
+    _adResolve = resolve;
+    const overlay = document.getElementById('ad-overlay');
+    const imgEl   = document.getElementById('ad-img-el');
+    const vidEl   = document.getElementById('ad-video-el');
+    const timerEl = document.getElementById('ad-timer');
+    const skipBtn = document.getElementById('ad-skip-btn');
+
+    imgEl.style.display = 'none';
+    vidEl.style.display = 'none';
+    skipBtn.style.display = 'none';
+    overlay.style.display = 'flex';
+
+    let adAutoTimer, skipCountTimer;
+
+    function finishAd() {
+      clearTimeout(adAutoTimer);
+      clearInterval(skipCountTimer);
+      overlay.style.display = 'none';
+      vidEl.pause();
+      vidEl.src = '';
+      if (_adResolve) { _adResolve(); _adResolve = null; }
+    }
+    window._finishAd = finishAd;
+
+    if (ad.skip_after > 0) {
+      let remaining = ad.skip_after;
+      skipBtn.textContent = `Skip in ${remaining}s`;
+      skipBtn.style.display = 'block';
+      skipBtn.style.opacity = '0.5';
+      skipBtn.disabled = true;
+      skipCountTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(skipCountTimer);
+          skipBtn.textContent = 'Skip Ad ›';
+          skipBtn.style.opacity = '1';
+          skipBtn.disabled = false;
+        } else {
+          skipBtn.textContent = `Skip in ${remaining}s`;
+        }
+      }, 1000);
+    }
+
+    if (ad.media_type === 'video') {
+      vidEl.style.display = 'block';
+      vidEl.src = ad.media_url;
+      vidEl.muted = false;
+      vidEl.play().catch(() => { vidEl.muted = true; vidEl.play().catch(() => {}); });
+      vidEl.onended = finishAd;
+      timerEl.textContent = '📢 Advertisement';
+    } else {
+      imgEl.style.display = 'block';
+      imgEl.src = ad.media_url;
+      const dur = Math.max((ad.duration_seconds || 10), 3) * 1000;
+      let secsLeft = Math.round(dur / 1000);
+      timerEl.textContent = `Advertisement · ${secsLeft}s`;
+      skipCountTimer = skipCountTimer || setInterval(() => {
+        secsLeft--;
+        timerEl.textContent = secsLeft > 0 ? `Advertisement · ${secsLeft}s` : 'Advertisement';
+        if (secsLeft <= 0) clearInterval(skipCountTimer);
+      }, 1000);
+      adAutoTimer = setTimeout(finishAd, dur);
+    }
+  });
+}
+
+function skipAd() {
+  if (window._finishAd) window._finishAd();
+}
 
 init();
 

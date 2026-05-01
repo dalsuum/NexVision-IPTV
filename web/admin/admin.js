@@ -182,7 +182,7 @@ async function updateCounts(){
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides',ads:'Ads Manager'};
 async function go(page){
   document.body.classList.remove('vod-embed-mode');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -3871,6 +3871,210 @@ async function uploadAdminLogoFile(event) {
   await saveSettings();
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ADS MANAGER
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+pages.ads = async function() {
+  const ads = await req('/ads/all');
+  if (!ads) return;
+  window._ads = ads;
+
+  const placementLabel = p => ({vod:'VOD Player',live:'Live TV',both:'Both Players'}[p]||p);
+  const placementBadge = p => ({vod:'<span class="bdg bb">VOD</span>',live:'<span class="bdg bp">Live TV</span>',both:'<span class="bdg bg">Both</span>'}[p]||p);
+
+  document.getElementById('content').innerHTML = `
+  <div class="sec-hdr">
+    <div class="sec-title">Ads Manager</div>
+    <button class="btn btn-p" onclick="eAd(null)">+ Add Ad</button>
+  </div>
+
+  <div class="tbl-wrap" style="padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--text2)">
+    <b style="color:var(--text)">How it works:</b> Ads are shown as pre-roll overlays before the viewer starts watching Live TV or a VOD movie.
+    Image ads auto-dismiss after their duration. Video ads play until complete. You can allow viewers to skip after N seconds.
+  </div>
+
+  ${ads.length === 0
+    ? '<div class="ibox">No ads yet. Add an image or video ad to display before playback starts.</div>'
+    : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+      ${ads.map(a => `
+      <div class="card" style="${!a.active?'opacity:.5':''}">
+        ${a.media_type==='image'
+          ? `<div style="width:100%;height:140px;background:var(--bg3);border-radius:8px;background-image:url('${esc(a.media_url)}');background-size:cover;background-position:center;border:1px solid var(--border2)"></div>`
+          : `<div style="width:100%;height:140px;background:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);position:relative">
+               <span style="font-size:36px">🎥</span>
+               <span style="position:absolute;bottom:8px;left:10px;font-size:11px;color:#aaa">${esc(a.media_url.split('/').pop())}</span>
+             </div>`
+        }
+        <div style="margin-top:10px">
+          <div style="font-weight:600;font-size:14px;margin-bottom:6px">${esc(a.title)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+            <span class="bdg ${a.active?'bg':'br'}">${a.active?'Active':'Hidden'}</span>
+            ${placementBadge(a.placement)}
+            <span class="bdg bb">${a.media_type==='video'?'Video':'Image'}</span>
+            ${a.skip_after>0?`<span class="bdg" style="background:rgba(255,200,0,.12);color:#f5c518">Skip +${a.skip_after}s</span>`:'<span class="bdg" style="background:rgba(255,80,80,.12);color:#f55">No Skip</span>'}
+            ${a.media_type==='image'?`<span class="bdg" style="background:rgba(100,100,200,.12);color:#aaf">${a.duration_seconds}s</span>`:''}
+          </div>
+          <div class="tda">
+            <button class="btn btn-g btn-xs" onclick="eAd(${a.id})">Edit</button>
+            <button class="btn btn-d btn-xs" onclick="dAd(${a.id})">Delete</button>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>`
+  }`;
+
+  const cnt = document.getElementById('cnt-ads');
+  if (cnt) cnt.textContent = ads.filter(a=>a.active).length || '—';
+};
+
+function eAd(id) {
+  const a = id ? (window._ads||[]).find(x=>x.id===id) : null;
+  openModal(a ? 'Edit Ad' : 'Add Ad', `
+  <div class="fgrid">
+    <div class="fg"><label>Ad Title (internal name)</label>
+      <input id="ad-title" value="${esc(a?.title||'')}" placeholder="Summer Promo — Hotel Pool"></div>
+
+    <div class="fg fcol">
+      <label>Media Type</label>
+      <div style="display:flex;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;cursor:pointer;flex:1" id="ad-type-img-lbl">
+          <input type="radio" name="ad-type" id="ad-type-img" value="image" ${!a||a.media_type!=='video'?'checked':''} onchange="toggleAdType()" style="accent-color:var(--gold)">
+          🖼 Image / Photo
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;cursor:pointer;flex:1" id="ad-type-vid-lbl">
+          <input type="radio" name="ad-type" id="ad-type-vid" value="video" ${a?.media_type==='video'?'checked':''} onchange="toggleAdType()" style="accent-color:var(--gold)">
+          🎥 Video
+        </label>
+      </div>
+    </div>
+
+    <div class="fg fcol" id="ad-img-section" style="${a?.media_type==='video'?'display:none':''}">
+      <label>Image URL or upload</label>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input id="ad-img" value="${esc(a?.media_url&&a.media_type!=='video'?a.media_url:'')}" placeholder="https://... or upload" oninput="prevAdImg(this.value)" style="flex:1">
+        <label style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bd);color:var(--blue);border:1px solid rgba(74,158,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap">
+          📁 Upload<input type="file" accept="image/*" style="display:none" onchange="uploadAdMedia(event,'img')">
+        </label>
+      </div>
+      <div id="ad-img-prev" style="${a?.media_type!=='video'&&a?.media_url?'':'display:none'};margin-top:8px;width:100%;height:120px;background-size:cover;background-position:center;border-radius:8px;border:1px solid var(--border2);background-image:url('${esc(a?.media_type!=='video'?a?.media_url||'':'')}')"></div>
+    </div>
+
+    <div class="fg fcol" id="ad-vid-section" style="${a?.media_type==='video'?'':'display:none'}">
+      <label>Video URL or upload (mp4, webm)</label>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input id="ad-vid" value="${esc(a?.media_type==='video'?a?.media_url||'':'')}" placeholder="https://... or upload" style="flex:1">
+        <label style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bd);color:var(--blue);border:1px solid rgba(74,158,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap">
+          📁 Upload<input type="file" accept="video/*" style="display:none" onchange="uploadAdMedia(event,'vid')">
+        </label>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Placement</label>
+      <select id="ad-placement" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+        <option value="both"  ${!a||a.placement==='both'?'selected':''}>Both — VOD &amp; Live TV</option>
+        <option value="vod"   ${a?.placement==='vod'?'selected':''}>VOD Player only</option>
+        <option value="live"  ${a?.placement==='live'?'selected':''}>Live TV Player only</option>
+      </select>
+    </div>
+
+    <div class="fg" id="ad-dur-row" style="${a?.media_type==='video'?'display:none':''}">
+      <label>Duration (seconds, for images)</label>
+      <input id="ad-dur" type="number" min="3" max="60" value="${a?.duration_seconds||10}">
+    </div>
+
+    <div class="fg">
+      <label>Skip Button — show after how many seconds (0 = no skip)</label>
+      <input id="ad-skip" type="number" min="0" max="30" value="${a?.skip_after??5}">
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Set 0 to make the ad unskippable</div>
+    </div>
+
+    <div class="fg">
+      <label>Click Action URL (optional)</label>
+      <input id="ad-link" value="${esc(a?.link_url||'')}" placeholder="https://hotel.com/deals  or  services">
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Screen key or full URL opened when viewer taps the ad</div>
+    </div>
+
+    <div class="fg">
+      <label>Status</label>
+      <select id="ad-active" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+        <option value="1" ${!a||a.active?'selected':''}>Active — show on TV</option>
+        <option value="0" ${a&&!a.active?'selected':''}>Hidden</option>
+      </select>
+    </div>
+  </div>`,
+  `<button class="btn btn-g" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-p" onclick="svAd(${id||'null'})">Save Ad</button>`);
+}
+
+function toggleAdType() {
+  const isVid = document.getElementById('ad-type-vid').checked;
+  document.getElementById('ad-img-section').style.display = isVid ? 'none' : '';
+  document.getElementById('ad-vid-section').style.display = isVid ? '' : 'none';
+  document.getElementById('ad-dur-row').style.display     = isVid ? 'none' : '';
+}
+
+function prevAdImg(url) {
+  const el = document.getElementById('ad-img-prev');
+  if (!el) return;
+  el.style.backgroundImage = `url('${url}')`;
+  el.style.display = url ? 'block' : 'none';
+}
+
+async function uploadAdMedia(event, type) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const base = type === 'img'
+    ? current_app_config?.ALLOWED_IMAGE_EXTS
+    : null;
+  try {
+    const resp = await fetch('/api/upload', {method:'POST', headers:{'Authorization':'Bearer '+jwt}, body:fd});
+    const json = await resp.json();
+    if (json.url) {
+      const inputId = type === 'img' ? 'ad-img' : 'ad-vid';
+      document.getElementById(inputId).value = json.url;
+      if (type === 'img') prevAdImg(json.url);
+    }
+  } catch(e) { toast('Upload failed'); }
+}
+
+async function svAd(id) {
+  const mediaType = document.querySelector('input[name="ad-type"]:checked')?.value || 'image';
+  const mediaUrl  = mediaType === 'video'
+    ? (document.getElementById('ad-vid')?.value.trim()||'')
+    : (document.getElementById('ad-img')?.value.trim()||'');
+  if (!mediaUrl) { alert('Media URL or upload required'); return; }
+  const title = document.getElementById('ad-title').value.trim();
+  if (!title) { alert('Ad title is required'); return; }
+  const d = {
+    title,
+    media_type:       mediaType,
+    media_url:        mediaUrl,
+    placement:        document.getElementById('ad-placement').value,
+    duration_seconds: parseInt(document.getElementById('ad-dur')?.value)||10,
+    skip_after:       parseInt(document.getElementById('ad-skip').value)||0,
+    link_url:         document.getElementById('ad-link').value.trim(),
+    active:           parseInt(document.getElementById('ad-active').value),
+  };
+  const r = id
+    ? await req('/ads/'+id,  {method:'PUT',  body:JSON.stringify(d)})
+    : await req('/ads',      {method:'POST', body:JSON.stringify(d)});
+  if (r?.error) { alert(r.error); return; }
+  closeModal();
+  toast(id ? '✅ Ad updated' : '✅ Ad created');
+  await pages.ads();
+}
+
+async function dAd(id) {
+  if (!confirm('Delete this ad?')) return;
+  await req('/ads/'+id, {method:'DELETE'});
+  toast('🗑 Ad deleted');
+  await pages.ads();
+}
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});

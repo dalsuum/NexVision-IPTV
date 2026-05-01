@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.17
+# NexVision IPTV Platform v8.18
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -66,6 +66,7 @@ Hotel WiFi/LAN
 | 🎂 Birthdays | Auto birthday messages injected into guest inbox |
 | 📰 RSS Feeds | Add/remove feeds, set global ticker appearance |
 | 🖼 Promo Slides | Upload images, set display order and duration |
+| 📢 **Ads Manager** | Pre-roll ads (image/video) before Live TV and VOD; skip-after timer, placement targeting |
 | 🎨 Navigation | Customise menu items, icons, order |
 | ⚙ Settings | Hotel name, logo, feature toggles per room type |
 | 🏠 Rooms | Create rooms, assign packages, generate access tokens |
@@ -74,6 +75,19 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.18 (2026-05-01)
+- **New:** Ads Manager — admin panel section for managing pre-roll advertisement overlays
+  - Image ads auto-dismiss after a configurable duration; video ads play to completion
+  - Configurable skip-after timer (0 = unskippable)
+  - Placement targeting: VOD player only, Live TV only, or Both
+  - Click-action URL per ad (opens hotel page or external link)
+  - Card-based admin UI with image preview, status/placement badges
+- **New:** TV client pre-roll ad overlay — `showAdOverlay(placement)` shown before Live TV (HTTP streams only) and VOD playback; ads fetched and cached in `_adsCache` on startup
+- **New:** Per-user city/region weather — guests can pick their city from a world-city dropdown; preference stored per room token
+- **New:** `ads` table added to `nexvision.db` schema via `init_db()` / `migrate_db()` in `app/main.py`
+- **New:** `app/blueprints/ads.py` — REST handlers for `/api/ads/*`
+- **New:** `app/services/ad_service.py` — CRUD + reorder logic for ads
 
 ### v8.17 (2026-05-01)
 - **New:** VOD Search — inline live-search box in the VOD header; results filter in real time as the guest types
@@ -160,6 +174,7 @@ app/
 │   ├── rooms.py         # /api/rooms/*
 │   ├── stats.py         # /api/stats/*
 │   ├── reports.py       # /api/reports/*
+│   ├── ads.py           # /api/ads/*
 │   └── …               # radio, rss, slides, nav, settings, epg, prayer, …
 └── services/            # Business logic + SQL — no Flask imports except jsonify
     ├── auth_service.py
@@ -173,6 +188,7 @@ app/
     ├── room_service.py
     ├── stat_service.py
     ├── report_service.py
+    ├── ad_service.py
     └── …
 ```
 
@@ -347,6 +363,7 @@ X-Room-Token: <room_token>
 | `GET` | `/api/messages/inbox` | Full message inbox |
 | `GET` | `/api/rss/public` | RSS feed items (cached 300s) |
 | `GET` | `/api/slides/public` | Promo slides list |
+| `GET` | `/api/ads` | Active ads for a placement (`?placement=vod\|live\|both`) |
 | `POST` | `/api/rooms/register` | Register device by room/screen number, returns room token |
 | `GET` | `/api/auth/login` | Admin login (username + password), returns JWT — **admin panel only** |
 
@@ -366,6 +383,7 @@ X-Room-Token: <room_token>
 | `GET/POST` | `/api/messages` | Send/manage messages |
 | `GET/POST` | `/api/rss` | Manage RSS feeds |
 | `GET/POST` | `/api/slides` | Manage promo slides |
+| `GET/POST/PUT/DELETE` | `/api/ads` | Manage ads (Ads Manager) |
 | `GET/POST` | `/api/settings` | Update hotel settings |
 | `GET/POST` | `/api/rooms` | Manage hotel rooms |
 
@@ -705,5 +723,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.16 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.18 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-01*
