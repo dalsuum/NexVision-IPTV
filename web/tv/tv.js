@@ -41,6 +41,7 @@ const THEME_KEY = 'nv_theme_mode';
 let allChannels = [], allMovies = [], allRadio = [], allGroups = [];
 let allSeries = [];
 let _vodSearchQ = '', _vodActiveGenre = null, _vodShowFavs = false;
+let _vodTab = 'all', _vodGenreActive = null;
 let _vodFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_movies') || '[]'));
 let currentChId  = -1;
 let currentStation = null;
@@ -1348,8 +1349,8 @@ async function loadVoD() {
   if (!allSeries.length) allSeries = await api('/vod/series') || [];
   _vodPlaylist = allMovies;
   _vodSearchQ = ''; _vodActiveGenre = null; _vodShowFavs = false;
-  const genres = _vodAllGenres();
-  renderVoD(allMovies, allSeries, genres, null);
+  _vodTab = 'all'; _vodGenreActive = null;
+  renderVoD();
 }
 
 function _vodAllGenres() {
@@ -1390,72 +1391,126 @@ function _seriesTile(s) {
     </div>`;
 }
 
-function renderVoD(movies, series, genres, activeGenre) {
+function setVodTab(tab) {
+  _vodTab = tab;
+  _vodGenreActive = null;
+  _vodSearchQ = '';
+  renderVoD();
+}
+
+function renderVoD() {
   const el = document.getElementById('screen-vod');
-  const favCount = _vodFavs.size;
-  const hasContent = movies.length || series.length;
-  el.innerHTML = `
-    <div class="vod-header">
-      <h2>Video on Demand</h2>
-      <div class="vod-search-wrap">
-        <svg class="vod-search-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <input class="vod-search" id="vod-search-input" placeholder="Search movies & series…"
+  if (!el) return;
+
+  const tabs = [
+    {id:'all',     label:'All'},
+    {id:'movies',  label:'Movies'},
+    {id:'tvshows', label:'TV Shows'},
+    {id:'genres',  label:'Genres'},
+    {id:'search',  label:'Search'},
+  ];
+
+  const navHtml = `<div class="vod-top-nav">${tabs.map(t =>
+    `<button class="vod-top-tab${_vodTab===t.id?' active':''}" onclick="setVodTab('${t.id}')">${t.label}</button>`
+  ).join('')}</div>`;
+
+  let bodyHtml = '';
+
+  if (_vodTab === 'search') {
+    const results = _vodSearchResults();
+    bodyHtml = `
+      <div class="vod-search-bar">
+        <svg class="vod-search-icon" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input class="vod-search-input" id="vod-search-input" placeholder="Search movies &amp; series…"
           value="${_vodSearchQ.replace(/"/g,'&quot;')}"
-          oninput="searchVoD(this.value)" autocomplete="off">
-        ${_vodSearchQ ? `<button class="vod-search-clear" onclick="searchVoD('');document.getElementById('vod-search-input').value=''">✕</button>` : ''}
+          oninput="vodSearchType(this.value)" autocomplete="off" autofocus>
+        ${_vodSearchQ ? `<button class="vod-search-clear" onclick="vodSearchType('');document.getElementById('vod-search-input').value=''">✕</button>` : ''}
       </div>
-    </div>
-    <div class="vod-filters">
-      <button class="filter-chip ${!activeGenre&&!_vodShowFavs?'active':''}" onclick="filterVoD(null)">All</button>
-      <button class="filter-chip fav-chip ${_vodShowFavs?'active':''}" onclick="showFavourites()">♥ Favourites${favCount>0?` <span class="fav-count">${favCount}</span>`:''}</button>
-      ${genres.map(g=>`<button class="filter-chip ${activeGenre===g?'active':''}" onclick="filterVoD('${g}')">${g}</button>`).join('')}
-    </div>
-    <div class="movie-grid">
-      ${series.map(s => _seriesTile(s)).join('')}
-      ${movies.map(m => _movieTile(m)).join('')}
-      ${!hasContent ? `<div class="vod-empty">${_vodShowFavs?'No favourites yet — tap ♥ on any movie':'No content found'}</div>` : ''}
-    </div>`;
+      <div class="movie-grid">
+        ${results.series.map(s => _seriesTile(s)).join('')}
+        ${results.movies.map(m => _movieTile(m)).join('')}
+        ${!results.movies.length && !results.series.length && _vodSearchQ
+          ? `<div class="vod-empty">No results for "${_vodSearchQ}"</div>` : ''}
+        ${!_vodSearchQ ? `<div class="vod-empty vod-search-hint">Start typing to search…</div>` : ''}
+      </div>`;
+
+  } else if (_vodTab === 'genres') {
+    if (_vodGenreActive) {
+      const movies = allMovies.filter(m => m.genre.includes(_vodGenreActive));
+      const series = allSeries.filter(s => s.genre.includes(_vodGenreActive));
+      bodyHtml = `
+        <div class="vod-genre-back">
+          <button class="vod-genre-back-btn" onclick="_vodGenreActive=null;renderVoD()">← Genres</button>
+          <span class="vod-genre-back-title">${_vodGenreActive}</span>
+        </div>
+        <div class="movie-grid">
+          ${series.map(s => _seriesTile(s)).join('')}
+          ${movies.map(m => _movieTile(m)).join('')}
+          ${!movies.length && !series.length ? `<div class="vod-empty">No content in this genre</div>` : ''}
+        </div>`;
+      _vodPlaylist = movies;
+    } else {
+      const genres = _vodAllGenres();
+      bodyHtml = `<div class="vod-genre-grid">${genres.map(g => {
+        const count = allMovies.filter(m => m.genre.includes(g)).length
+                    + allSeries.filter(s => s.genre.includes(g)).length;
+        return `<div class="vod-genre-card" onclick="_vodGenreActive='${g.replace(/'/g,"\\'")}';renderVoD()">
+          <div class="vgc-name">${g}</div>
+          <div class="vgc-count">${count}</div>
+        </div>`;
+      }).join('')}${!genres.length ? `<div class="vod-empty">No genres available</div>` : ''}</div>`;
+    }
+
+  } else {
+    let movies = allMovies;
+    let series = allSeries;
+    if (_vodTab === 'movies')  { series = []; }
+    if (_vodTab === 'tvshows') { movies = []; }
+    _vodPlaylist = movies;
+    const hasContent = movies.length || series.length;
+    bodyHtml = `
+      <div class="movie-grid">
+        ${series.map(s => _seriesTile(s)).join('')}
+        ${movies.map(m => _movieTile(m)).join('')}
+        ${!hasContent ? `<div class="vod-empty">No content found</div>` : ''}
+      </div>`;
+  }
+
+  el.innerHTML = navHtml + bodyHtml;
 }
 
-function filterVoD(genre) {
-  _vodActiveGenre = genre;
-  _vodShowFavs = false;
-  _vodApplyFilters();
+function vodSearchType(q) {
+  _vodSearchQ = q.trim().toLowerCase();
+  renderVoD();
 }
 
-function showFavourites() {
-  _vodShowFavs = true;
-  _vodActiveGenre = null;
-  _vodApplyFilters();
+function _vodSearchResults() {
+  if (!_vodSearchQ) return {movies: [], series: []};
+  const q = _vodSearchQ;
+  return {
+    movies: allMovies.filter(m =>
+      m.title.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)),
+    series: allSeries.filter(s =>
+      s.title.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q)),
+  };
 }
 
 function searchVoD(q) {
   _vodSearchQ = q.trim().toLowerCase();
-  _vodApplyFilters();
+  _vodTab = 'search';
+  renderVoD();
 }
 
-function _vodApplyFilters() {
-  let movies = allMovies;
-  let series = allSeries;
-  if (_vodShowFavs) {
-    movies = movies.filter(m => _vodFavs.has(m.id));
-    series = [];
-  } else if (_vodActiveGenre) {
-    movies = movies.filter(m => m.genre.includes(_vodActiveGenre));
-    series = series.filter(s => s.genre.includes(_vodActiveGenre));
-  }
-  if (_vodSearchQ) {
-    movies = movies.filter(m =>
-      m.title.toLowerCase().includes(_vodSearchQ) ||
-      (m.description || '').toLowerCase().includes(_vodSearchQ)
-    );
-    series = series.filter(s =>
-      s.title.toLowerCase().includes(_vodSearchQ) ||
-      (s.description || '').toLowerCase().includes(_vodSearchQ)
-    );
-  }
-  _vodPlaylist = movies;
-  renderVoD(movies, series, _vodAllGenres(), _vodActiveGenre);
+function showFavourites() {
+  _vodTab = 'all';
+  _vodShowFavs = true;
+  renderVoD();
+}
+
+function filterVoD(genre) {
+  _vodGenreActive = genre;
+  _vodTab = 'genres';
+  renderVoD();
 }
 
 function toggleFav(id, e) {
@@ -1463,7 +1518,7 @@ function toggleFav(id, e) {
   if (_vodFavs.has(id)) { _vodFavs.delete(id); toast('Removed from favourites'); }
   else                   { _vodFavs.add(id);    toast('Added to favourites ♥');   }
   localStorage.setItem('nv_fav_movies', JSON.stringify([..._vodFavs]));
-  _vodApplyFilters();
+  renderVoD();
 }
 
 function toggleFavDetail(id) {
@@ -1473,7 +1528,7 @@ function toggleFavDetail(id) {
   const btn = document.getElementById('md-fav-btn');
   const isFav = _vodFavs.has(id);
   if (btn) { btn.textContent = isFav ? '♥ Favourited' : '♡ Favourite'; btn.className = `btn-hero ${isFav?'btn-hero-fav':'btn-hero-ghost'}`; }
-  _vodApplyFilters();
+  renderVoD();
 }
 
 async function openMovieDetail(id) {

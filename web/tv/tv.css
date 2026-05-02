@@ -54,7 +54,6 @@ html[data-theme='light'] #bottom-nav{
 }
 html[data-theme='light'] .screen .sec-title,
 html[data-theme='light'] .screen .hero-title,
-html[data-theme='light'] .screen .vod-header h2,
 html[data-theme='light'] .screen .ch-sidebar-hdr h2,
 html[data-theme='light'] .screen .radio-now,
 html[data-theme='light'] .screen .w-temp,
@@ -92,7 +91,7 @@ html[data-theme='light'] .screen .info-overlay-panel,
 html[data-theme='light'] .screen .md-card{
   box-shadow:0 2px 12px rgba(4,10,24,0.08);
 }
-html[data-theme='light'] .screen .vod-search{border-color:var(--border2)}
+html[data-theme='light'] .screen .vod-search-input{border-color:var(--border2)}
 html[data-theme='light'] .screen .ig-btn,
 html[data-theme='light'] .screen .filter-chip,
 html[data-theme='light'] .screen .country-tab,
@@ -300,16 +299,27 @@ main{flex:1;overflow:hidden;position:relative}
 .epg-empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 0}
 
 /* ─── VOD ────────────────────────────────────────────────────────────────── */
-#screen-vod{padding:24px 40px}
-.vod-header{display:flex;align-items:center;gap:20px;margin-bottom:18px;flex-wrap:wrap}
-.vod-header h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin:0;flex-shrink:0}
-.vod-search-wrap{position:relative;display:flex;align-items:center;flex:1;min-width:220px;max-width:420px}
-.vod-search-icon{position:absolute;left:12px;color:var(--muted);pointer-events:none;flex-shrink:0}
-.vod-search{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:24px;padding:9px 36px 9px 36px;color:var(--white);font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:.2s}
-.vod-search:focus{border-color:var(--gold);background:var(--bg2)}
-.vod-search-clear{position:absolute;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;line-height:1;transition:.15s}
+#screen-vod{padding:0 40px 24px}
+.vod-top-nav{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);margin-bottom:28px;position:sticky;top:0;background:var(--bg1);z-index:10;padding:0}
+.vod-top-tab{flex:1;padding:16px 8px;background:none;border:none;color:var(--dimmed);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.2s;position:relative;border-bottom:3px solid transparent;margin-bottom:-1px}
+.vod-top-tab:hover{color:var(--white)}
+.vod-top-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.vod-search-bar{position:relative;display:flex;align-items:center;margin-bottom:24px}
+.vod-search-bar .vod-search-icon{position:absolute;left:16px;color:var(--muted);pointer-events:none}
+.vod-search-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:28px;padding:12px 44px 12px 48px;color:var(--white);font-size:15px;outline:none;transition:.2s}
+.vod-search-input:focus{border-color:var(--gold);background:var(--bg2)}
+.vod-search-clear{position:absolute;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px;line-height:1;transition:.15s}
 .vod-search-clear:hover{color:var(--white)}
-.vod-filters{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.vod-search-hint{opacity:.5}
+.vod-genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.vod-genre-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:20px 16px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.vod-genre-card:hover{border-color:var(--gold);background:var(--gold3);transform:translateY(-3px)}
+.vgc-name{font-size:14px;font-weight:600;color:var(--white)}
+.vgc-count{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.vod-genre-back{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.vod-genre-back-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:6px 16px;color:var(--dimmed);font-size:13px;cursor:pointer;transition:.15s}
+.vod-genre-back-btn:hover{color:var(--white);border-color:var(--border2)}
+.vod-genre-back-title{font-size:16px;font-weight:600;color:var(--white)}
 .filter-chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dimmed);font-size:12px;cursor:pointer;transition:.15s;white-space:nowrap}
 .filter-chip:hover{border-color:var(--border2);color:var(--white)}
 .filter-chip.active{background:var(--gold3);border-color:var(--gold);color:var(--gold)}
@@ -1436,6 +1446,9 @@ body.tv-mode .ch-row:focus           { background:var(--bg3) }
 body.tv-mode .ctrl-btn:focus         { background:var(--border2) }
 body.tv-mode .ctrl-btn.play:focus    { background:var(--gold2) }
 body.tv-mode .filter-chip:focus      { border-color:var(--border2);color:var(--white) }
+body.tv-mode .vod-top-tab            { font-size:22px;padding:20px 12px }
+body.tv-mode .vod-top-tab:focus      { color:var(--gold);border-bottom-color:var(--gold) }
+body.tv-mode .vod-genre-card:focus   { border-color:var(--gold);background:var(--gold3) }
 body.tv-mode .movie-tile:focus       { transform:translateY(-6px) }
 body.tv-mode .movie-tile:focus .mt-overlay { opacity:1 }
 body.tv-mode .vlc-btn:focus          { color:#fff;background:rgba(255,255,255,.1) }
@@ -1954,7 +1967,10 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .w-forecast{grid-template-columns:repeat(2,1fr)}
 
   /* VOD */
-  .vod-search{max-width:none;width:100%}
+  .vod-search-input{width:100%}
+  #screen-vod{padding:0 20px 24px}
+  .vod-top-tab{font-size:12px;padding:14px 4px}
+  .vod-genre-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
 }
 
 /* ── 640px: Mobile phones ──────────────────────────────────────────── */
@@ -2086,6 +2102,11 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 
   /* ── Movie / VOD grid ── */
   .movie-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:14px}
+  #screen-vod{padding:0 12px 24px}
+  .vod-top-nav{padding:0;margin:0 -12px;position:sticky;top:0}
+  .vod-top-tab{font-size:11px;padding:12px 2px;letter-spacing:.03em}
+  .vod-genre-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+  .vod-genre-card{padding:14px 12px}
 
   /* ── TV channel list (mobile: horizontal strip above player) ── */
   #screen-tv{flex-direction:column}
