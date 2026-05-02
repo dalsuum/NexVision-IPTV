@@ -234,6 +234,12 @@
             </div>
             <button class="ctrl-btn" onclick="toggleMute()">🔊</button>
             <button class="ctrl-btn" onclick="toggleFullscreen()">⛶</button>
+            <button class="cast-btn" id="cast-btn-player" style="display:none"
+                onclick="CastMgr.requestSession()" title="Cast to TV" aria-label="Cast to TV">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+                <path d="M1 18v3h3c0-1.66-1.34-3-3-3m0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7m18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11M21 3H3C1.9 3 1 3.9 1 5v3c6.08 0 11 4.93 11 11h9c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+              </svg>
+            </button>
             <button class="epg-btn" onclick="openEpgOverlay()" style="margin-left:8px">📅 EPG</button>
           </div>
           <!-- Fullscreen OSD: channel info + EPG bar, auto-hides after 4 s -->

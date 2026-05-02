@@ -1502,6 +1502,10 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 .cast-btn:hover,
 .cast-btn:focus { color: var(--white); background: var(--overlay-light); outline: none; }
 .cast-btn--connected { color: var(--gold) !important; }
+/* Visible against dark player-controls gradient */
+.player-controls .cast-btn { color: rgba(255,255,255,0.75); }
+.player-controls .cast-btn:hover,
+.player-controls .cast-btn:focus { color: #fff; background: var(--overlay-light); }
 /* Larger, lighter in the OSD overlay */
 #fs-osd .cast-btn { color: rgba(255,255,255,0.55); padding: 8px; }
 #fs-osd .cast-btn:hover,
