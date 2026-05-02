@@ -8,7 +8,7 @@ set -euo pipefail
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
-DEVICE_IP="192.168.1.XXX"          # ← replace with your Mi TV Stick IP
+DEVICE_IP=192.168.1.100         # ← replace with your Mi TV Stick IP
 ADB_PORT=5555                       # Android ADB-over-Wi-Fi default port
 PACKAGE="com.nexvision.tv"
 ACTIVITY=".MainActivity"            # resolved against PACKAGE by am start
@@ -43,8 +43,6 @@ die()   { echo -e "${RED}✗  $*${RST}" >&2; exit 1; }
 command -v adb  >/dev/null 2>&1 || die "adb not found — install Android platform-tools and add to PATH."
 command -v grep >/dev/null 2>&1 || die "grep not found."
 
-[[ "$DEVICE_IP" == "192.168.1.XXX" ]] && \
-    die "Set DEVICE_IP at the top of this script before running."
 
 # ── Optional Gradle build ──────────────────────────────────────────────────────
 

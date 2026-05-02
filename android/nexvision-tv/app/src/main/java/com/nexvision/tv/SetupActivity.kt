@@ -44,7 +44,7 @@ class SetupActivity : AppCompatActivity() {
         val configPath = ConfigManager.configFile(this).absolutePath
         tvHint.text = "Skip this screen by deploying a config file via ADB:\n" +
                       "adb push config.json \"$configPath\"\n\n" +
-                      "Format: { \"server_ip\": \"192.168.1.x\", \"server_port\": 5000 }"
+                      "Format: { \"server_ip\": \"192.168.1.50\", \"server_port\": 5000 }"
 
         // Pre-fill fields if the user is re-opening setup to change the server
         ConfigManager.read(this)?.let { cfg ->
