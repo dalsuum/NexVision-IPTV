@@ -647,6 +647,7 @@ async function loadHome() {
   if (chData && Array.isArray(chData)) { allChannels = chData; _tvTotal = chData.length; }
   else if (chData && chData.channels)  { allChannels = chData.channels; _tvTotal = chData.total; }
   allMovies  = movies  || [];
+  _vodPlaylist = allMovies;
   allGroups  = groups  || [];
   _promoSlides = slides || [];
 
@@ -1413,6 +1414,7 @@ function _vodApplyFilters() {
       (m.description || '').toLowerCase().includes(_vodSearchQ)
     );
   }
+  _vodPlaylist = movies;
   const genres = [...new Set(allMovies.flatMap(m=>m.genre.split('/')))].sort();
   renderVoD(movies, genres, _vodActiveGenre);
 }
@@ -1468,6 +1470,7 @@ function closeMovieDetail() { document.getElementById('movie-detail').classList.
 // ── VOD Player Modal ──────────────────────────────────────────────────────────
 let _vodHls = null;
 let _vodCtrlTimer = null;
+let _vodPlaylist = [], _vodPlaylistIdx = -1;
 
 async function resolveVodHlsUrl(url) {
   const raw = (url || '').trim();
@@ -1519,6 +1522,10 @@ async function startVoD(url, title) {
   video.pause();
   video.src = '';
   video.load();
+
+  // Track position in current playlist for prev/next nav
+  _vodPlaylistIdx = _vodPlaylist.findIndex(m => m.stream_url === url);
+  _vodUpdateNavBtns();
 
   // Reset UI
   document.getElementById('vod-modal-title').textContent = title || '';
@@ -1608,14 +1615,13 @@ async function startVoD(url, title) {
 
 function _vodResetCtrlTimer() {
   const bar  = document.getElementById('vod-ctrl-bar');
-  const back = document.getElementById('vod-back-btn');
-  if (bar)  { bar.style.opacity  = '1'; bar.style.pointerEvents  = ''; }
-  if (back) { back.style.opacity = '1'; back.style.pointerEvents = ''; }
+  const prev = document.getElementById('vod-prev-btn');
+  const next = document.getElementById('vod-next-btn');
+  const show = el => { if (el) { el.style.opacity = '1'; el.style.pointerEvents = ''; } };
+  const hide = el => { if (el) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; } };
+  show(bar); show(prev); show(next);
   clearTimeout(_vodCtrlTimer);
-  _vodCtrlTimer = setTimeout(() => {
-    if (bar)  { bar.style.opacity  = '0'; bar.style.pointerEvents  = 'none'; }
-    if (back) { back.style.opacity = '0'; back.style.pointerEvents = 'none'; }
-  }, 3500);
+  _vodCtrlTimer = setTimeout(() => { hide(bar); hide(prev); hide(next); }, 3500);
 }
 
 function closeVodPlayer() {
@@ -1670,6 +1676,27 @@ function vodFullscreen() {
   const modal = document.getElementById('vod-player-modal');
   if (!document.fullscreenElement) modal.requestFullscreen?.();
   else document.exitFullscreen?.();
+}
+
+function _vodUpdateNavBtns() {
+  const prev = document.getElementById('vod-prev-btn');
+  const next = document.getElementById('vod-next-btn');
+  if (prev) prev.style.visibility = _vodPlaylistIdx > 0 ? '' : 'hidden';
+  if (next) next.style.visibility = _vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1 ? '' : 'hidden';
+}
+
+function vodPlayPrev() {
+  if (_vodPlaylistIdx > 0) {
+    const m = _vodPlaylist[_vodPlaylistIdx - 1];
+    startVoD(m.stream_url, m.title);
+  }
+}
+
+function vodPlayNext() {
+  if (_vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1) {
+    const m = _vodPlaylist[_vodPlaylistIdx + 1];
+    startVoD(m.stream_url, m.title);
+  }
 }
 
 function _vodUpdateVolIcon(video) {
