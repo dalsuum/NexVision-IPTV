@@ -105,6 +105,7 @@ def migrate_db(conn):
         ("rss_feeds",      "text_color",    "TEXT DEFAULT '#ffffff'"),
         ("rss_feeds",      "bg_color",      "TEXT DEFAULT '#09090f'"),
         ("rss_feeds",      "bg_opacity",    "INTEGER DEFAULT 92"),
+        ("rss_feeds",      "text_content",  "TEXT DEFAULT ''"),
         ("watch_history",  "device_type",   "TEXT DEFAULT 'browser'"),
         ("users",          "city",          "TEXT DEFAULT ''"),
     ]
@@ -2521,7 +2522,7 @@ def get_rss_feeds_public():
     return jsonify(_fetch_rss_feeds())
 
 def _fetch_rss_feeds():
-    """Fetch active RSS feeds from DB and pull items from each URL."""
+    """Fetch active RSS feeds from DB and pull items from each URL or text_content."""
     conn = get_db()
     feeds = [dict(r) for r in conn.execute(
         "SELECT * FROM rss_feeds WHERE active=1 ORDER BY type, id").fetchall()]
@@ -2530,31 +2531,35 @@ def _fetch_rss_feeds():
     result = []
     for feed in feeds:
         items = []
-        try:
-            req2 = urllib.request.Request(feed['url'], headers={'User-Agent': 'NexVision/6.0'})
-            with urllib.request.urlopen(req2, timeout=6) as resp:
-                raw = resp.read()
-            root = ET.fromstring(raw)
-            ns = {'atom': 'http://www.w3.org/2005/Atom'}
-            # Try RSS 2.0 first
-            for item in root.findall('.//item')[:20]:
-                title = item.findtext('title', '').strip()
-                desc  = item.findtext('description', '').strip()
-                link  = item.findtext('link', '').strip()
-                pub   = item.findtext('pubDate', '').strip()
-                if title:
-                    items.append({'title': title, 'description': desc[:200], 'link': link, 'pub': pub})
-            # Try Atom if no items
-            if not items:
-                for entry in root.findall('atom:entry', ns)[:20]:
-                    title = (entry.findtext('atom:title', '', ns) or '').strip()
-                    summary = (entry.findtext('atom:summary', '', ns) or '').strip()
-                    link_el = entry.find('atom:link', ns)
-                    link = link_el.get('href', '') if link_el is not None else ''
+        text_content = (feed.get('text_content') or '').strip()
+        url = (feed.get('url') or '').strip()
+        if text_content:
+            lines = [l.strip() for l in text_content.splitlines() if l.strip()]
+            items = [{'title': l, 'description': '', 'link': '', 'pub': ''} for l in lines]
+        elif url:
+            try:
+                req2 = urllib.request.Request(url, headers={'User-Agent': 'NexVision/6.0'})
+                with urllib.request.urlopen(req2, timeout=6) as resp:
+                    raw = resp.read()
+                root = ET.fromstring(raw)
+                ns = {'atom': 'http://www.w3.org/2005/Atom'}
+                for item in root.findall('.//item')[:20]:
+                    title = item.findtext('title', '').strip()
+                    desc  = item.findtext('description', '').strip()
+                    link  = item.findtext('link', '').strip()
+                    pub   = item.findtext('pubDate', '').strip()
                     if title:
-                        items.append({'title': title, 'description': summary[:200], 'link': link, 'pub': ''})
-        except Exception as e:
-            items = [{'title': f'Feed unavailable: {e}', 'description': '', 'link': '', 'pub': ''}]
+                        items.append({'title': title, 'description': desc[:200], 'link': link, 'pub': pub})
+                if not items:
+                    for entry in root.findall('atom:entry', ns)[:20]:
+                        title = (entry.findtext('atom:title', '', ns) or '').strip()
+                        summary = (entry.findtext('atom:summary', '', ns) or '').strip()
+                        link_el = entry.find('atom:link', ns)
+                        link = link_el.get('href', '') if link_el is not None else ''
+                        if title:
+                            items.append({'title': title, 'description': summary[:200], 'link': link, 'pub': ''})
+            except Exception as e:
+                items = [{'title': f'Feed unavailable: {e}', 'description': '', 'link': '', 'pub': ''}]
         result.append({**feed, 'items': items})
     return result
 
@@ -2564,8 +2569,8 @@ def create_rss_feed():
     d = request.json
     conn = get_db()
     cur = conn.execute(
-        "INSERT INTO rss_feeds (title, url, type, active, refresh_minutes, text_color, bg_color, bg_opacity) VALUES (?,?,?,?,?,?,?,?)",
-        (d['title'], d['url'], d.get('type','normal'), d.get('active',1), d.get('refresh_minutes',15),
+        "INSERT INTO rss_feeds (title, url, text_content, type, active, refresh_minutes, text_color, bg_color, bg_opacity) VALUES (?,?,?,?,?,?,?,?,?)",
+        (d['title'], d.get('url',''), d.get('text_content',''), d.get('type','normal'), d.get('active',1), d.get('refresh_minutes',15),
          d.get('text_color','#ffffff'), d.get('bg_color','#09090f'), d.get('bg_opacity',92)))
     conn.commit()
     row = dict(conn.execute("SELECT * FROM rss_feeds WHERE id=?", (cur.lastrowid,)).fetchone())
@@ -2578,8 +2583,8 @@ def create_rss_feed():
 def update_rss_feed(fid):
     d = request.json
     conn = get_db()
-    conn.execute("UPDATE rss_feeds SET title=?,url=?,type=?,active=?,refresh_minutes=?,text_color=?,bg_color=?,bg_opacity=? WHERE id=?",
-        (d['title'], d['url'], d.get('type','normal'), d.get('active',1), d.get('refresh_minutes',15),
+    conn.execute("UPDATE rss_feeds SET title=?,url=?,text_content=?,type=?,active=?,refresh_minutes=?,text_color=?,bg_color=?,bg_opacity=? WHERE id=?",
+        (d['title'], d.get('url',''), d.get('text_content',''), d.get('type','normal'), d.get('active',1), d.get('refresh_minutes',15),
          d.get('text_color','#ffffff'), d.get('bg_color','#09090f'), d.get('bg_opacity',92), fid))
     conn.commit()
     row = dict(conn.execute("SELECT * FROM rss_feeds WHERE id=?", (fid,)).fetchone())

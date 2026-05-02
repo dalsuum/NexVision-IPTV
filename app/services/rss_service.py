@@ -25,7 +25,15 @@ def get_public_feeds():
 
     result = []
     for feed in feeds:
-        items = _fetch_feed(feed['url'], limit=feed['refresh_minutes'] or 10)
+        text_content = (feed['text_content'] or '') if 'text_content' in feed.keys() else ''
+        url = feed['url'] or ''
+        if text_content.strip():
+            lines = [l.strip() for l in text_content.splitlines() if l.strip()]
+            items = [{'title': l, 'description': '', 'link': '', 'pubDate': ''} for l in lines]
+        elif url.strip():
+            items = _fetch_feed(url, limit=feed['refresh_minutes'] or 10)
+        else:
+            items = []
         result.append({**dict(feed), 'items': items})
 
     cache.set('nv:rss_public', json.dumps(result), timeout=TTL_RSS)
@@ -57,9 +65,10 @@ def _fetch_feed(url: str, limit: int = 10) -> list:
 def create_feed(d: dict):
     conn = get_db()
     cur = conn.execute(
-        "INSERT INTO rss_feeds (title, url, type, active, refresh_minutes, "
-        "text_color, bg_color, bg_opacity) VALUES (?,?,?,?,?,?,?,?)",
-        (d['title'], d['url'], d.get('type', 'normal'), d.get('active', 1),
+        "INSERT INTO rss_feeds (title, url, text_content, type, active, refresh_minutes, "
+        "text_color, bg_color, bg_opacity) VALUES (?,?,?,?,?,?,?,?,?)",
+        (d['title'], d.get('url', ''), d.get('text_content', ''),
+         d.get('type', 'normal'), d.get('active', 1),
          d.get('refresh_minutes', 15), d.get('text_color', '#ffffff'),
          d.get('bg_color', '#09090f'), d.get('bg_opacity', 92)),
     )
@@ -76,9 +85,10 @@ def create_feed(d: dict):
 def update_feed(fid: int, d: dict):
     conn = get_db()
     conn.execute(
-        "UPDATE rss_feeds SET title=?, url=?, type=?, active=?, "
+        "UPDATE rss_feeds SET title=?, url=?, text_content=?, type=?, active=?, "
         "refresh_minutes=?, text_color=?, bg_color=?, bg_opacity=? WHERE id=?",
-        (d['title'], d['url'], d.get('type', 'normal'), d.get('active', 1),
+        (d['title'], d.get('url', ''), d.get('text_content', ''),
+         d.get('type', 'normal'), d.get('active', 1),
          d.get('refresh_minutes', 15), d.get('text_color', '#ffffff'),
          d.get('bg_color', '#09090f'), d.get('bg_opacity', 92), fid),
     )

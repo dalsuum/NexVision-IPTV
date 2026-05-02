@@ -1713,11 +1713,15 @@ pages.rss = async function() {
     Feeds refresh automatically based on the configured interval.
   </div>
   <div class="tbl-wrap"><table>
-    <thead><tr><th>Title</th><th>URL</th><th>Type</th><th>Refresh</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>${feeds.map(f=>`
-      <tr>
+    <thead><tr><th>Title</th><th>Source</th><th>Type</th><th>Refresh</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${feeds.map(f=>{
+      const isText = !!(f.text_content && f.text_content.trim());
+      const srcLabel = isText
+        ? `<span style="font-size:10px;color:var(--text2)">✏️ ${esc(f.text_content.split('\n')[0].slice(0,60))}${f.text_content.length>60?'…':''}</span>`
+        : `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)" title="${esc(f.url)}">${esc((f.url||'').slice(0,60))}${(f.url||'').length>60?'…':''}</span>`;
+      return `<tr>
         <td><b>${esc(f.title)}</b></td>
-        <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.url)}">${esc(f.url)}</td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${srcLabel}</td>
         <td><span class="bdg ${f.type==='emergency'?'br':'bb'}">${f.type==='emergency'?'🚨 Emergency':'📰 Normal'}</span></td>
         <td style="color:var(--text2)">${f.refresh_minutes}min</td>
         <td><span class="bdg ${f.active?'bg':'br'}">${f.active?'Active':'Inactive'}</span></td>
@@ -1725,7 +1729,7 @@ pages.rss = async function() {
           <button class="btn btn-g btn-sm" onclick="eRss(${f.id})">Edit</button>
           <button class="btn btn-d btn-sm" onclick="dRss(${f.id})">Del</button>
         </div></td>
-      </tr>`).join('')}
+      </tr>`;}).join('')}
     </tbody>
   </table></div>`;
   _rssPreview();
@@ -1755,10 +1759,18 @@ async function saveTickerStyle(){
 
 function eRss(id){
   const f=id?(window._feeds||[]).find(x=>x.id===id):null;
+  const isText = !!(f?.text_content && f.text_content.trim());
   openModal(f?'Edit RSS Feed':'Add RSS Feed',`
   <div class="fgrid">
     <div class="fg fcol"><label>Feed Title *</label><input id="f-title" value="${esc(f?.title||'')}"></div>
-    <div class="fg fcol"><label>RSS URL *</label><input id="f-url" value="${esc(f?.url||'')}" placeholder="https://feeds.example.com/rss.xml"></div>
+    <div class="fg fcol"><label>Source</label>
+      <select id="f-src-type" onchange="_rssToggleSrc()" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
+        <option value="url" ${!isText?'selected':''}>🔗 RSS URL</option>
+        <option value="text" ${isText?'selected':''}>✏️ Custom Text</option>
+      </select>
+    </div>
+    <div class="fg fcol" id="f-url-wrap" style="${isText?'display:none':''}"><label>RSS URL</label><input id="f-url" value="${esc(f?.url||'')}" placeholder="https://feeds.example.com/rss.xml"></div>
+    <div class="fg fcol" id="f-text-wrap" style="${isText?'':'display:none'}"><label>Ticker Text</label><textarea id="f-text" rows="4" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;resize:vertical" placeholder="One line per ticker item&#10;Line 1&#10;Line 2&#10;Line 3">${esc(f?.text_content||'')}</textarea><small style="color:var(--text3);font-size:11px">Each line becomes a separate ticker item.</small></div>
     <div class="fg"><label>Type</label>
       <select id="f-type" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
         <option value="normal" ${!f||f.type==='normal'?'selected':''}>📰 Normal — bottom ticker</option>
@@ -1776,15 +1788,26 @@ function eRss(id){
   `<button class="btn btn-g" onclick="closeModal()">Cancel</button>
    <button class="btn btn-p" onclick="svRss(${id||'null'})">Save Feed</button>`);
 }
+function _rssToggleSrc(){
+  const isText = document.getElementById('f-src-type')?.value === 'text';
+  const urlWrap  = document.getElementById('f-url-wrap');
+  const textWrap = document.getElementById('f-text-wrap');
+  if (urlWrap)  urlWrap.style.display  = isText ? 'none' : '';
+  if (textWrap) textWrap.style.display = isText ? ''     : 'none';
+}
 async function svRss(id){
+  const srcType = document.getElementById('f-src-type')?.value || 'url';
   const d={
     title:document.getElementById('f-title').value.trim(),
-    url:document.getElementById('f-url').value.trim(),
+    url: srcType==='url' ? (document.getElementById('f-url')?.value.trim()||'') : '',
+    text_content: srcType==='text' ? (document.getElementById('f-text')?.value.trim()||'') : '',
     type:document.getElementById('f-type').value,
     refresh_minutes:parseInt(document.getElementById('f-refresh').value)||15,
     active:parseInt(document.getElementById('f-active').value)
   };
-  if(!d.title||!d.url){alert('Title and URL required');return;}
+  if(!d.title){alert('Title is required');return;}
+  if(srcType==='url' && !d.url){alert('RSS URL is required');return;}
+  if(srcType==='text' && !d.text_content){alert('Ticker text is required');return;}
   const r=id?await req('/rss/'+id,{method:'PUT',body:JSON.stringify(d)}):await req('/rss',{method:'POST',body:JSON.stringify(d)});
   if(!r){toast('❌ Save failed');return;}
   if(r?.error){alert(r.error);return;}
