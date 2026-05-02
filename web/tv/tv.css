@@ -2217,6 +2217,92 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .vlc-title{max-width:none;flex:1;font-size:11px}
 }
 
+/* ── Landscape phones (rotated, height ≤ 480px) ───────────────────── */
+@media (orientation:landscape) and (max-height:480px){
+  /* Switch to compact bottom nav — frees vertical space */
+  #top-nav{display:none !important}
+  #bottom-nav{display:flex !important}
+  body #root{padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
+
+  /* Slim header */
+  header{height:40px;padding:0 12px;gap:8px}
+  .hdr-logo{font-size:13px;letter-spacing:2px}
+  .hdr-weather,.hdr-time{display:none}
+  .theme-toggle,#hdr-room,.hdr-msg-btn{padding:2px 6px;height:22px;font-size:9px}
+  .theme-toggle{min-width:24px;padding:2px 4px}
+
+  /* Compact bottom nav strip */
+  #bottom-nav{
+    height:calc(48px + env(safe-area-inset-bottom,0px));
+    padding:0 4px env(safe-area-inset-bottom,0px);
+    min-height:0;
+    background:rgba(11,11,20,0.95);
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-top:1px solid rgba(255,255,255,0.08);
+    gap:0;
+  }
+  .bn-item{
+    flex:1;min-width:0;
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:4px 2px;min-height:44px;
+    border:none;background:transparent;cursor:pointer;
+    color:var(--muted);transition:color .18s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bn-item.active{color:var(--gold)}
+  .bn-item.active::before{
+    content:'';position:absolute;top:2px;
+    left:50%;transform:translateX(-50%);
+    width:22px;height:2px;
+    background:var(--gold);border-radius:0 0 2px 2px;
+  }
+  .bn-icon{font-size:17px;line-height:1}
+  .bn-label{font-size:8px;letter-spacing:0;text-transform:uppercase;line-height:1}
+  .bn-item:not(.active) .bn-label{opacity:0.5}
+  .bn-top-bar{display:none}
+
+  /* News ticker: sits above bottom nav */
+  #news-ticker{
+    bottom:calc(48px + env(safe-area-inset-bottom,0px));
+    border-radius:0;
+    border-top:1px solid rgba(255,255,255,0.1);
+    border-bottom:none;
+  }
+  body.news-ticker-active #root{
+    padding-bottom:calc(48px + 34px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  /* Hide hero — takes 36vh (~130px) which is too much at 360px height */
+  .hero-banner{display:none}
+
+  /* Home sections: tighter spacing */
+  .home-section{padding:8px 14px 0}
+  .sec-header{margin-bottom:10px}
+  .sec-title{font-size:15px}
+  .h-scroll{padding:4px 14px 10px;gap:8px}
+
+  /* Compact channel cards */
+  .ch-card{width:118px}
+  .ch-img{height:58px;font-size:20px}
+  .ch-info{padding:6px 8px 8px}
+
+  /* TV screen: keep side-by-side layout */
+  #screen-tv{flex-direction:row}
+  .ch-sidebar{
+    width:200px;height:100%;
+    max-height:none;min-height:0;
+    border-right:1px solid var(--border);
+    border-bottom:none;
+  }
+  .ch-sidebar-hdr{padding:8px 10px 6px}
+  .ch-sidebar-hdr h2{font-size:13px;margin-bottom:4px}
+  .ch-search{padding:5px 8px;font-size:11px}
+  .ch-groups{padding:4px 4px 2px}
+  .ch-group-btn{padding:3px 8px;font-size:9px}
+  .tv-player-area{flex:1}
+  .player-wrap{aspect-ratio:16/9;max-height:none}
+}
+
 /* ── 400px: Very small phones ──────────────────────────────────────── */
 @media(max-width:400px){
   .hero-title{font-size:22px}
