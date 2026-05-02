@@ -69,7 +69,7 @@ Hotel WiFi/LAN
 | 📢 **Ads Manager** | Pre-roll ads (image/video) before Live TV and VOD; skip-after timer, placement targeting |
 | 🌍 **World Clock** | Multi-timezone clock screen; IANA timezone chips configured by admin |
 | ⏰ **Alarms** | Hotel-wide alarm scheduler — fires on all active TV screens at scheduled time with sound |
-| 🏨 **PMS Integration** | Connect to hotel PMS (Oracle FIAS, GRMS, third-party); guest welcome overlay with name, check-in/out times and welcome music |
+| 🏨 **PMS Integration** | Connect to hotel PMS (Oracle FIAS, GRMS, third-party); guest welcome overlay with name, check-in/out times and welcome music — see [PMS_INTEGRATION.md](PMS_INTEGRATION.md) |
 | 🎨 Navigation | Customise menu items, icons, order |
 | ⚙ Settings | Hotel name, logo, feature toggles per room type |
 | 🏠 Rooms | Create rooms, assign packages, generate access tokens |

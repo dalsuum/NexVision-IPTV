@@ -1342,6 +1342,8 @@ If `welcome_music_enabled === '1'` and `welcome_music_url` is set, an `Audio` ob
 
 Guest data (`guest_name`, `checkin_time`, `checkout_time`) is stored in `localStorage` alongside the room token by the registration flow (`POST /api/rooms/register`) and retrieved via `getRoomInfo()`.
 
+> **Full PMS integration details** — data flow, log locations, settings keys, DB schema, and the planned backend FIAS/GRMS TCP connector — are documented in [PMS_INTEGRATION.md](PMS_INTEGRATION.md).
+
 #### World Clock Screen (v8.20+)
 
 The `clock` nav item loads `screen-clock` which renders timezone cards via `loadWorldClock()`. Admin configures IANA timezone strings in the Clock & Alarm panel; these are stored as `worldclock_zones` in settings. Cards update every second via `_tickWorldClockCards()`, and display the city name, current time, day/night indicator, and timezone abbreviation. Navigation away clears `_wcTickTimer` to prevent ghost ticks.
