@@ -2286,21 +2286,75 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .ch-img{height:58px;font-size:20px}
   .ch-info{padding:6px 8px 8px}
 
-  /* TV screen: keep side-by-side layout */
+  /* ── Live TV: side-by-side layout ── */
   #screen-tv{flex-direction:row}
+
+  /* Sidebar: narrow, full-height flex column */
   .ch-sidebar{
-    width:200px;height:100%;
+    width:190px;height:100%;
     max-height:none;min-height:0;
-    border-right:1px solid var(--border);
-    border-bottom:none;
+    border-right:1px solid var(--border);border-bottom:none;
+    display:flex;flex-direction:column;
+    overflow:hidden;
   }
-  .ch-sidebar-hdr{padding:8px 10px 6px}
-  .ch-sidebar-hdr h2{font-size:13px;margin-bottom:4px}
-  .ch-search{padding:5px 8px;font-size:11px}
-  .ch-groups{padding:4px 4px 2px}
-  .ch-group-btn{padding:3px 8px;font-size:9px}
-  .tv-player-area{flex:1}
-  .player-wrap{aspect-ratio:16/9;max-height:none}
+  .ch-sidebar-hdr{padding:7px 10px 5px;flex-shrink:0;border-bottom:1px solid var(--border)}
+  .ch-sidebar-hdr h2{font-size:12px;margin-bottom:4px}
+  .ch-search{padding:4px 8px;font-size:11px;border-radius:5px}
+
+  /* Genre filter chips: horizontal scroll, compact */
+  .ch-groups-wrap{flex-shrink:0;overflow:hidden}
+  .ch-groups{padding:4px 6px 4px;gap:4px}
+  .ch-grp-arrow{display:none}
+  .ch-group-btn{padding:2px 8px;font-size:9px;border-radius:10px}
+
+  /* Channel list: vertical scroll, fills remaining space */
+  .ch-list{
+    flex:1;min-height:0;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow-y:auto !important;overflow-x:hidden !important;
+    padding:4px 6px;gap:2px;
+  }
+  /* Compact channel rows for narrow sidebar */
+  .ch-row{
+    padding:5px 6px;gap:7px;
+    border-radius:6px;min-height:36px;
+    width:100% !important;flex-shrink:0;
+    flex-direction:row !important;
+    align-items:center;text-align:left;
+  }
+  .ch-row-logo{width:30px;height:30px;font-size:12px;border-radius:4px;flex-shrink:0}
+  .ch-row-info{flex:1;min-width:0}
+  .ch-row-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:block !important;-webkit-line-clamp:unset;line-clamp:unset}
+  .ch-row-num{font-size:8px}
+  .ch-row-epg{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ch-row-live{font-size:7px;padding:1px 4px}
+
+  /* Prev / Next pagination: touch-friendly buttons */
+  #tv-prev-btn,#tv-next-btn{
+    min-height:30px !important;
+    padding:4px 6px !important;
+    font-size:10px !important;
+    background:var(--bg3) !important;
+    color:var(--white) !important;
+    border:1px solid var(--border2) !important;
+    border-radius:6px !important;
+    cursor:pointer;flex:1;
+  }
+  #tv-prev-btn:active,#tv-next-btn:active{background:var(--bg4) !important}
+
+  /* ── Player: fill all available height ── */
+  .tv-player-area{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+  .player-wrap{
+    flex:1;min-height:0;
+    aspect-ratio:auto;     /* let flex:1 control height, not ratio */
+    max-height:none;
+    width:100%;
+  }
+  .player-wrap video{width:100%;height:100%;object-fit:contain}
+  /* Hide EPG program list — no room in landscape */
+  .ch-epg{display:none}
 }
 
 /* ── 400px: Very small phones ──────────────────────────────────────── */
