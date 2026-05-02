@@ -2985,9 +2985,6 @@ pages.settings = async function() {
           <div class="fg fcol"><label>Cast Server URL</label>
             <input id="s-cast-server-url" value="${esc(s.cast_server_url||'')}" placeholder="https://cast.yourdomain.com">
           </div>
-          <div class="fg fcol"><label>Chromecast App ID</label>
-            <input id="s-cast-app-id" value="${esc(s.cast_app_id||'')}" placeholder="CC1AD845 (Default Media Receiver)" style="font-family:'DM Mono',monospace;letter-spacing:.05em">
-          </div>
           <div class="fg"><label>Show On</label>
             <select id="s-cast-qr-display" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
               <option value="both"        ${(s.cast_qr_display||'both')==='both'       ?'selected':''}>Home + Screensaver</option>
@@ -3002,6 +2999,16 @@ pages.settings = async function() {
               <option value="top-right"    ${s.cast_qr_position==='top-right'   ?'selected':''}>↗ Top Right</option>
               <option value="top-left"     ${s.cast_qr_position==='top-left'    ?'selected':''}>↖ Top Left</option>
             </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">📺 Chromecast Web Sender</div>
+      <div class="tbl-wrap" style="padding:18px">
+        <div class="fgrid" style="gap:12px">
+          <div class="fg fcol"><label>Receiver App ID</label>
+            <input id="s-cast-app-id" value="${esc(s.cast_app_id||'')}" placeholder="CC1AD845 (Default Media Receiver)" style="font-family:'DM Mono',monospace;letter-spacing:.05em">
           </div>
         </div>
       </div>
