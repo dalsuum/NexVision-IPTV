@@ -1609,10 +1609,10 @@ async function startVoD(url, title) {
 function _vodResetCtrlTimer() {
   const bar = document.getElementById('vod-ctrl-bar');
   const loading = document.getElementById('vod-loading');
-  if (bar) bar.style.opacity = '1';
+  if (bar) { bar.style.opacity = '1'; bar.style.pointerEvents = ''; }
   clearTimeout(_vodCtrlTimer);
   _vodCtrlTimer = setTimeout(() => {
-    if (bar) bar.style.opacity = '0';
+    if (bar) { bar.style.opacity = '0'; bar.style.pointerEvents = 'none'; }
   }, 3500);
 }
 
