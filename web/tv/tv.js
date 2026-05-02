@@ -39,6 +39,7 @@
 const API = window.location.origin + '/api'; // auto-detect server address
 const THEME_KEY = 'nv_theme_mode';
 let allChannels = [], allMovies = [], allRadio = [], allGroups = [];
+let allSeries = [];
 let _vodSearchQ = '', _vodActiveGenre = null, _vodShowFavs = false;
 let _vodFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_movies') || '[]'));
 let currentChId  = -1;
@@ -1344,20 +1345,61 @@ function nextChannel() {
 // ── VoD ───────────────────────────────────────────────────────────────────────
 async function loadVoD() {
   if (!allMovies.length) allMovies = await api('/vod') || [];
+  if (!allSeries.length) allSeries = await api('/vod/series') || [];
+  _vodPlaylist = allMovies;
   _vodSearchQ = ''; _vodActiveGenre = null; _vodShowFavs = false;
-  const genres = [...new Set(allMovies.flatMap(m=>m.genre.split('/')))].sort();
-  renderVoD(allMovies, genres, null);
+  const genres = _vodAllGenres();
+  renderVoD(allMovies, allSeries, genres, null);
 }
 
-function renderVoD(movies, genres, activeGenre) {
+function _vodAllGenres() {
+  return [...new Set([
+    ...allMovies.flatMap(m => m.genre.split('/')),
+    ...allSeries.flatMap(s => s.genre.split('/'))
+  ].filter(Boolean))].sort();
+}
+
+function _movieTile(m) {
+  return `
+    <div class="movie-tile" onclick="openMovieDetail(${m.id})" tabindex="0">
+      <div class="mt-poster">
+        ${m.poster ? `<img src="${m.poster}" alt="" loading="lazy" onerror="this.style.display='none'">` : '🎬'}
+        <div class="mt-rating">★ ${m.rating}</div>
+        <button class="mt-fav-btn${_vodFavs.has(m.id)?' active':''}" onclick="toggleFav(${m.id},event)" title="${_vodFavs.has(m.id)?'Remove from favourites':'Add to favourites'}" aria-label="Favourite">♥</button>
+        <div class="mt-overlay"><div class="mt-play-btn">▶</div></div>
+      </div>
+      <div class="mt-title">${m.title}</div>
+      <div class="mt-sub">${m.year} · ${m.genre.split('/')[0]}</div>
+      <div class="mt-price">${m.price>0?'$'+m.price:'Free'}</div>
+    </div>`;
+}
+
+function _seriesTile(s) {
+  const seasons  = s.season_count  || 0;
+  const episodes = s.episode_count || 0;
+  return `
+    <div class="movie-tile" onclick="openSeriesDetail(${s.id})" tabindex="0">
+      <div class="mt-poster">
+        ${s.poster ? `<img src="${s.poster}" alt="" loading="lazy" onerror="this.style.display='none'">` : '📺'}
+        <div class="mt-series-badge">📺 Series</div>
+        <div class="mt-overlay"><div class="mt-play-btn">▶</div></div>
+      </div>
+      <div class="mt-title">${s.title}</div>
+      <div class="mt-sub">${s.year} · ${s.genre.split('/')[0]}</div>
+      <div class="mt-ep-count">${seasons} Season${seasons!==1?'s':''} · ${episodes} Ep</div>
+    </div>`;
+}
+
+function renderVoD(movies, series, genres, activeGenre) {
   const el = document.getElementById('screen-vod');
   const favCount = _vodFavs.size;
+  const hasContent = movies.length || series.length;
   el.innerHTML = `
     <div class="vod-header">
       <h2>Video on Demand</h2>
       <div class="vod-search-wrap">
         <svg class="vod-search-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <input class="vod-search" id="vod-search-input" placeholder="Search movies…"
+        <input class="vod-search" id="vod-search-input" placeholder="Search movies & series…"
           value="${_vodSearchQ.replace(/"/g,'&quot;')}"
           oninput="searchVoD(this.value)" autocomplete="off">
         ${_vodSearchQ ? `<button class="vod-search-clear" onclick="searchVoD('');document.getElementById('vod-search-input').value=''">✕</button>` : ''}
@@ -1369,18 +1411,9 @@ function renderVoD(movies, genres, activeGenre) {
       ${genres.map(g=>`<button class="filter-chip ${activeGenre===g?'active':''}" onclick="filterVoD('${g}')">${g}</button>`).join('')}
     </div>
     <div class="movie-grid">
-      ${movies.length ? movies.map(m=>`
-        <div class="movie-tile" onclick="openMovieDetail(${m.id})" tabindex="0">
-          <div class="mt-poster">
-            ${m.poster ? `<img src="${m.poster}" alt="" loading="lazy" onerror="this.style.display='none'">` : '🎬'}
-            <div class="mt-rating">★ ${m.rating}</div>
-            <button class="mt-fav-btn${_vodFavs.has(m.id)?' active':''}" onclick="toggleFav(${m.id},event)" title="${_vodFavs.has(m.id)?'Remove from favourites':'Add to favourites'}" aria-label="Favourite">♥</button>
-            <div class="mt-overlay"><div class="mt-play-btn">▶</div></div>
-          </div>
-          <div class="mt-title">${m.title}</div>
-          <div class="mt-sub">${m.year} · ${m.genre.split('/')[0]}</div>
-          <div class="mt-price">${m.price>0?'$'+m.price:'Free'}</div>
-        </div>`).join('') : `<div class="vod-empty">${_vodShowFavs?'No favourites yet — tap ♥ on any movie':'No movies found'}</div>`}
+      ${series.map(s => _seriesTile(s)).join('')}
+      ${movies.map(m => _movieTile(m)).join('')}
+      ${!hasContent ? `<div class="vod-empty">${_vodShowFavs?'No favourites yet — tap ♥ on any movie':'No content found'}</div>` : ''}
     </div>`;
 }
 
@@ -1403,20 +1436,26 @@ function searchVoD(q) {
 
 function _vodApplyFilters() {
   let movies = allMovies;
+  let series = allSeries;
   if (_vodShowFavs) {
     movies = movies.filter(m => _vodFavs.has(m.id));
+    series = [];
   } else if (_vodActiveGenre) {
     movies = movies.filter(m => m.genre.includes(_vodActiveGenre));
+    series = series.filter(s => s.genre.includes(_vodActiveGenre));
   }
   if (_vodSearchQ) {
     movies = movies.filter(m =>
       m.title.toLowerCase().includes(_vodSearchQ) ||
       (m.description || '').toLowerCase().includes(_vodSearchQ)
     );
+    series = series.filter(s =>
+      s.title.toLowerCase().includes(_vodSearchQ) ||
+      (s.description || '').toLowerCase().includes(_vodSearchQ)
+    );
   }
   _vodPlaylist = movies;
-  const genres = [...new Set(allMovies.flatMap(m=>m.genre.split('/')))].sort();
-  renderVoD(movies, genres, _vodActiveGenre);
+  renderVoD(movies, series, _vodAllGenres(), _vodActiveGenre);
 }
 
 function toggleFav(id, e) {
@@ -1467,10 +1506,87 @@ async function openMovieDetail(id) {
 
 function closeMovieDetail() { document.getElementById('movie-detail').classList.remove('open'); }
 
+// ── Series Detail ─────────────────────────────────────────────────────────────
+let _seriesDetailData = null;
+let _seriesActiveSeason = 0;
+
+async function openSeriesDetail(id) {
+  const data = await api(`/vod/series/${id}`);
+  if (!data) return;
+  _seriesDetailData = data;
+  _seriesActiveSeason = 0;
+  const bd = document.getElementById('sd-backdrop');
+  if (data.backdrop)     bd.innerHTML = `<img src="${data.backdrop}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+  else if (data.poster)  bd.innerHTML = `<img src="${data.poster}"   alt="" style="width:100%;height:100%;object-fit:cover">`;
+  else                   bd.textContent = '📺';
+  _renderSeriesBody();
+  document.getElementById('series-detail').classList.add('open');
+}
+
+function _renderSeriesBody() {
+  const s = _seriesDetailData;
+  if (!s) return;
+  const seasons = s.seasons || [];
+  const activeSeason = seasons[_seriesActiveSeason] || null;
+  const episodes = activeSeason ? (activeSeason.episodes || []) : [];
+
+  document.getElementById('sd-body').innerHTML = `
+    <div class="md-title">${s.title}</div>
+    <div class="md-meta">
+      <span>⭐ <b class="hl">${s.rating}</b></span>
+      <span>${s.year}</span>
+      <span>${s.genre}</span>
+      <span>${s.language}</span>
+    </div>
+    <div class="md-desc">${s.description || ''}</div>
+    ${seasons.length ? `
+    <div class="sd-seasons">
+      ${seasons.map((sn, i) => `
+        <button class="sd-season-tab${i===_seriesActiveSeason?' active':''}"
+          onclick="_switchSeason(${i})">Season ${sn.season_number}${sn.title?' — '+sn.title:''}</button>
+      `).join('')}
+    </div>
+    <div class="sd-ep-list">
+      ${episodes.length ? episodes.map((ep, epIdx) => `
+        <div class="ep-row" onclick="_playEpisode(${epIdx})">
+          <div class="ep-num">E${ep.episode_number}</div>
+          <div class="ep-thumb">
+            ${ep.thumbnail ? `<img src="${ep.thumbnail}" alt="" loading="lazy" onerror="this.style.display='none'">` : '🎬'}
+          </div>
+          <div class="ep-info">
+            <div class="ep-title">${ep.title}</div>
+            <div class="ep-runtime">${ep.runtime ? ep.runtime+' min' : ''}</div>
+          </div>
+          <button class="ep-play-btn">▶</button>
+        </div>
+      `).join('') : `<div style="padding:20px;text-align:center;color:var(--muted)">No episodes yet</div>`}
+    </div>` : `<div style="padding:20px;text-align:center;color:var(--muted)">No seasons added yet</div>`}`;
+}
+
+function _switchSeason(idx) {
+  _seriesActiveSeason = idx;
+  _renderSeriesBody();
+}
+
+function _playEpisode(epIdx) {
+  const s = _seriesDetailData;
+  if (!s) return;
+  const season   = (s.seasons || [])[_seriesActiveSeason];
+  const episodes = season ? (season.episodes || []) : [];
+  const ep = episodes[epIdx];
+  if (!ep || !ep.stream_url) { toast('No stream URL for this episode'); return; }
+  _vodEpisodeCtx = {episodes, idx: epIdx};
+  closeSeriesDetail();
+  startVoD(ep.stream_url, `${s.title} · S${season.season_number}E${ep.episode_number} · ${ep.title}`);
+}
+
+function closeSeriesDetail() { document.getElementById('series-detail').classList.remove('open'); }
+
 // ── VOD Player Modal ──────────────────────────────────────────────────────────
 let _vodHls = null;
 let _vodCtrlTimer = null;
 let _vodPlaylist = [], _vodPlaylistIdx = -1;
+let _vodEpisodeCtx = null; // {episodes:[...], idx:N} — set when playing a series episode
 
 async function resolveVodHlsUrl(url) {
   const raw = (url || '').trim();
@@ -1523,8 +1639,10 @@ async function startVoD(url, title) {
   video.src = '';
   video.load();
 
-  // Track position in current playlist for prev/next nav
-  _vodPlaylistIdx = _vodPlaylist.findIndex(m => m.stream_url === url);
+  // Track playlist position (movies) or episode context (series)
+  // _vodEpisodeCtx is set by _playEpisode() before calling startVoD;
+  // for plain movie calls it's already null (closeVodPlayer clears it).
+  _vodPlaylistIdx = _vodEpisodeCtx ? -1 : _vodPlaylist.findIndex(m => m.stream_url === url);
   _vodUpdateNavBtns();
 
   // Reset UI
@@ -1630,6 +1748,7 @@ function closeVodPlayer() {
   const video = document.getElementById('vod-video');
   modal.classList.remove('open');
   document.body.classList.remove('vod-active');
+  _vodEpisodeCtx = null;
   if (_vodHls) { _vodHls.destroy(); _vodHls = null; }
   video.onerror = null;
   video.pause(); video.src = ''; video.load();
@@ -1681,19 +1800,31 @@ function vodFullscreen() {
 function _vodUpdateNavBtns() {
   const prev = document.getElementById('vod-prev-btn');
   const next = document.getElementById('vod-next-btn');
-  if (prev) prev.style.visibility = _vodPlaylistIdx > 0 ? '' : 'hidden';
-  if (next) next.style.visibility = _vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1 ? '' : 'hidden';
+  if (_vodEpisodeCtx) {
+    const {episodes, idx} = _vodEpisodeCtx;
+    if (prev) prev.style.visibility = idx > 0 ? '' : 'hidden';
+    if (next) next.style.visibility = idx < episodes.length - 1 ? '' : 'hidden';
+  } else {
+    if (prev) prev.style.visibility = _vodPlaylistIdx > 0 ? '' : 'hidden';
+    if (next) next.style.visibility = _vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1 ? '' : 'hidden';
+  }
 }
 
 function vodPlayPrev() {
-  if (_vodPlaylistIdx > 0) {
+  if (_vodEpisodeCtx) {
+    const {episodes, idx} = _vodEpisodeCtx;
+    if (idx > 0) { _vodEpisodeCtx = {episodes, idx: idx-1}; const e = episodes[idx-1]; startVoD(e.stream_url, e.title); }
+  } else if (_vodPlaylistIdx > 0) {
     const m = _vodPlaylist[_vodPlaylistIdx - 1];
     startVoD(m.stream_url, m.title);
   }
 }
 
 function vodPlayNext() {
-  if (_vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1) {
+  if (_vodEpisodeCtx) {
+    const {episodes, idx} = _vodEpisodeCtx;
+    if (idx < episodes.length - 1) { _vodEpisodeCtx = {episodes, idx: idx+1}; const e = episodes[idx+1]; startVoD(e.stream_url, e.title); }
+  } else if (_vodPlaylistIdx >= 0 && _vodPlaylistIdx < _vodPlaylist.length - 1) {
     const m = _vodPlaylist[_vodPlaylistIdx + 1];
     startVoD(m.stream_url, m.title);
   }

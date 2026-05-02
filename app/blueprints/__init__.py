@@ -8,6 +8,7 @@ def register_blueprints(app):
     from .channels     import channels_bp
     from .media_groups import media_groups_bp
     from .vod_api      import vod_api_bp
+    from .vod_series   import vod_series_bp
     from .radio        import radio_bp
     from .content      import content_bp
     from .rooms        import rooms_bp
@@ -38,6 +39,7 @@ def register_blueprints(app):
     app.register_blueprint(channels_bp)
     app.register_blueprint(media_groups_bp)
     app.register_blueprint(vod_api_bp)
+    app.register_blueprint(vod_series_bp)
     app.register_blueprint(radio_bp)
     app.register_blueprint(content_bp)
     app.register_blueprint(rooms_bp)

@@ -174,15 +174,16 @@ function applyAdminBranding(s) {
   document.title = titleText;
 }
 async function updateCounts(){
-  const[ch,vod,radio,rooms]=await Promise.all([req('/channels?active=0&limit=99999'),req('/vod'),req('/radio'),req('/rooms')]);
+  const[ch,vod,series,radio,rooms]=await Promise.all([req('/channels?active=0&limit=99999'),req('/vod'),req('/vod/series'),req('/radio'),req('/rooms')]);
   if(Array.isArray(ch))document.getElementById('cnt-channels').textContent=ch.length;
   if(Array.isArray(vod))document.getElementById('cnt-vod').textContent=vod.length;
+  if(Array.isArray(series)){const el=document.getElementById('cnt-series');if(el)el.textContent=series.length;}
   if(Array.isArray(radio))document.getElementById('cnt-radio').textContent=radio.length;
   if(Array.isArray(rooms)){const on=rooms.filter(r=>r.online).length;document.getElementById('cnt-rooms').textContent=rooms.length;const _u=(window._deployMode||'hotel')!=='commercial'?'rooms':'screens';document.getElementById('tb-rooms').textContent=on+' / '+rooms.length+' '+_u+' online';}
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',clock:'Clock & Alarm',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides',ads:'Ads Manager'};
+const TITLES={dashboard:'Dashboard',channels:'TV Channels',groups:'Media Groups',vodManager:'VOD Manager',vod:'Video on Demand',series:'TV Series',packages:'Content Packages',radio:'Web Radio',pages:'Content Pages',rooms:'Rooms & Devices',devices:'Android TV Devices',skins:'Skins',users:'Users',reports:'Reports & Analytics',messages:'Messages & Alerts',birthdays:'Birthday Manager',rss:'RSS Feeds',vip:'VIP Access',services:'Guest Services',epg:'EPG / Programme Schedule',prayer:'Prayer Times',clock:'Clock & Alarm',settings:'System Settings',navigation:'Navigation Menu',homeLayout:'Home Layout',slides:'Promo Slides',ads:'Ads Manager'};
 async function go(page){
   document.body.classList.remove('vod-embed-mode');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
@@ -539,6 +540,29 @@ async vod(){
     <tbody id="vod-tbody">${movies.map(m=>vodRow(m)).join('')}</tbody>
   </table></div>`;
   initBulk('vod',null,async()=>{const ids=getSelected('vod');if(!ids.length)return;if(!confirm('Delete '+ids.length+' movies?'))return;const r=await req('/vod/bulk-delete',{method:'POST',body:JSON.stringify({ids})});if(r?.ok){toast('🗑 '+r.deleted+' movies deleted');await pages.vod();}});
+},
+
+// ── SERIES ────────────────────────────────────────────────────────────────────
+async series(){
+  const list = await req('/vod/series/admin'); if(!list) return; window._series = list;
+  document.getElementById('content').innerHTML = `
+  <div class="sec-hdr"><div class="sec-title">TV Series <span style="color:var(--text3);font-weight:400">(${list.length})</span></div>
+  <div class="sec-acts"><button class="btn btn-p" onclick="eSeries(null)">+ Add Series</button></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Title</th><th>Genre</th><th>Seasons</th><th>Episodes</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${list.map(s=>`<tr>
+      <td><b>${esc(s.title)}</b><div style="font-size:11px;color:var(--text3)">${esc((s.description||'').substring(0,50))}${(s.description||'').length>50?'…':''}</div></td>
+      <td><span class="bdg bb">${esc(s.genre)}</span></td>
+      <td style="text-align:center">${s.season_count||0}</td>
+      <td style="text-align:center">${s.episode_count||0}</td>
+      <td><span class="bdg ${s.active?'bg':'br'}">${s.active?'Active':'Hidden'}</span></td>
+      <td><div class="tda">
+        <button class="btn btn-p btn-xs" onclick="manageSeriesSeasons(${s.id},'${esc(s.title)}')">Manage</button>
+        <button class="btn btn-g btn-xs" onclick="eSeries(${s.id})">Edit</button>
+        <button class="btn btn-d btn-xs" onclick="dSeries(${s.id},'${esc(s.title)}')">Del</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
 },
 
 // ── PACKAGES ─────────────────────────────────────────────────────────────────
@@ -935,6 +959,121 @@ openModal(m?'Edit Movie':'Add Movie',`<div class="fgrid">
 </div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svVod(${id||'null'})">Save</button>`);}
 async function svVod(id){const d={title:document.getElementById('m-title').value.trim(),description:document.getElementById('m-desc').value,genre:document.getElementById('m-genre').value,year:parseInt(document.getElementById('m-year').value)||null,language:document.getElementById('m-lang').value||'English',runtime:parseInt(document.getElementById('m-runtime').value)||0,rating:parseFloat(document.getElementById('m-rating').value)||0,price:parseFloat(document.getElementById('m-price').value)||0,stream_url:document.getElementById('m-stream').value,active:parseInt(document.getElementById('m-active').value)};if(!d.title)return;const r=id?await req('/vod/'+id,{method:'PUT',body:JSON.stringify(d)}):await req('/vod',{method:'POST',body:JSON.stringify(d)});if(r?.error){alert(r.error);return;}closeModal();toast(id?'✅ Updated':'✅ Added');await pages.vod();}
 async function dVod(id,title){if(!confirm('Delete "'+title+'"?'))return;await req('/vod/'+id,{method:'DELETE'});toast('🗑 Deleted');await pages.vod();}
+
+// ── Series CRUD ───────────────────────────────────────────────────────────────
+function eSeries(id){
+  const s=id?(window._series||[]).find(x=>x.id===id):null;
+  openModal(id?'Edit Series':'Add Series',`
+<div class="fg-grid">
+<div class="fg fcol"><label>Title *</label><input id="sr-title" value="${esc(s?.title||'')}"></div>
+<div class="fg fcol"><label>Description</label><textarea id="sr-desc" rows="3" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px;color:var(--text);font-size:13px;resize:vertical">${esc(s?.description||'')}</textarea></div>
+<div class="fg"><label>Genre</label><input id="sr-genre" value="${esc(s?.genre||'')}"></div>
+<div class="fg"><label>Year</label><input id="sr-year" type="number" value="${s?.year||''}"></div>
+<div class="fg"><label>Language</label><input id="sr-lang" value="${esc(s?.language||'English')}"></div>
+<div class="fg"><label>Rating (0-10)</label><input id="sr-rating" type="number" step="0.1" max="10" value="${s?.rating||0}"></div>
+<div class="fg fcol"><label>Poster URL</label><input id="sr-poster" value="${esc(s?.poster||'')}"></div>
+<div class="fg fcol"><label>Backdrop URL</label><input id="sr-backdrop" value="${esc(s?.backdrop||'')}"></div>
+<div class="fg"><label>Status</label><select id="sr-active"><option value="1" ${!s||s.active?'selected':''}>Active</option><option value="0" ${s&&!s.active?'selected':''}>Hidden</option></select></div>
+</div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svSeries(${id||'null'})">Save</button>`);
+}
+async function svSeries(id){
+  const d={title:document.getElementById('sr-title').value.trim(),description:document.getElementById('sr-desc').value,genre:document.getElementById('sr-genre').value,year:parseInt(document.getElementById('sr-year').value)||0,language:document.getElementById('sr-lang').value||'English',rating:parseFloat(document.getElementById('sr-rating').value)||0,poster:document.getElementById('sr-poster').value,backdrop:document.getElementById('sr-backdrop').value,active:parseInt(document.getElementById('sr-active').value)};
+  if(!d.title)return;
+  const r=id?await req('/vod/series/'+id,{method:'PUT',body:JSON.stringify(d)}):await req('/vod/series',{method:'POST',body:JSON.stringify(d)});
+  if(r?.error){alert(r.error);return;}closeModal();toast(id?'✅ Updated':'✅ Created');await pages.series();
+}
+async function dSeries(id,title){if(!confirm('Delete series "'+title+'" and ALL its seasons/episodes?'))return;await req('/vod/series/'+id,{method:'DELETE'});toast('🗑 Deleted');await pages.series();}
+
+// ── Season & Episode management (drill-down view) ─────────────────────────────
+async function manageSeriesSeasons(seriesId, seriesTitle){
+  const s = await req('/vod/series/'+seriesId); if(!s) return;
+  window._managedSeries = s;
+  _renderSeriesAdmin(s, seriesTitle);
+}
+
+function _renderSeriesAdmin(s, seriesTitle){
+  document.getElementById('content').innerHTML=`
+  <div class="sec-hdr">
+    <div class="sec-title"><span style="cursor:pointer;color:var(--text3)" onclick="pages.series()">TV Series</span> › ${esc(seriesTitle)}</div>
+    <div class="sec-acts"><button class="btn btn-p" onclick="eSeasonModal(${s.id},null)">+ Add Season</button></div>
+  </div>
+  ${(s.seasons||[]).length===0?`<div style="padding:40px;text-align:center;color:var(--text3)">No seasons yet — add one above</div>`:
+    (s.seasons||[]).map(sn=>`
+    <div style="margin-bottom:24px">
+      <div class="sec-hdr" style="margin-bottom:10px">
+        <div style="font-weight:600">Season ${sn.season_number}${sn.title?' — '+esc(sn.title):''} <span style="color:var(--text3);font-weight:400;font-size:12px">(${(sn.episodes||[]).length} episodes)</span></div>
+        <div class="sec-acts">
+          <button class="btn btn-p btn-xs" onclick="eEpisodeModal(${sn.id},${s.id},null)">+ Episode</button>
+          <button class="btn btn-g btn-xs" onclick="eSeasonModal(${s.id},${JSON.stringify(sn).replace(/"/g,'&quot;')})">Edit Season</button>
+          <button class="btn btn-d btn-xs" onclick="dSeason(${sn.id},${s.id},'${esc(seriesTitle)}')">Del Season</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th style="width:40px">Ep#</th><th>Title</th><th>Runtime</th><th>Stream URL</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${(sn.episodes||[]).map(ep=>`<tr>
+          <td style="text-align:center;font-family:'DM Mono',monospace">${ep.episode_number}</td>
+          <td><b>${esc(ep.title)}</b></td>
+          <td style="color:var(--text2)">${ep.runtime?ep.runtime+' min':'—'}</td>
+          <td style="font-size:11px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(ep.stream_url)}">${ep.stream_url?esc(ep.stream_url.substring(0,40))+'…':'—'}</td>
+          <td><span class="bdg ${ep.active?'bg':'br'}">${ep.active?'Active':'Hidden'}</span></td>
+          <td><div class="tda">
+            <button class="btn btn-g btn-xs" onclick="eEpisodeModal(${sn.id},${s.id},${JSON.stringify(ep).replace(/"/g,'&quot;')})">Edit</button>
+            <button class="btn btn-d btn-xs" onclick="dEpisode(${ep.id},${sn.id},${s.id},'${esc(seriesTitle)}')">Del</button>
+          </div></td>
+        </tr>`).join('')}
+        ${(sn.episodes||[]).length===0?`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">No episodes — add one</td></tr>`:''}
+        </tbody></table></div>
+    </div>`).join('')}`;
+}
+
+function eSeasonModal(seriesId, sn){
+  const data = typeof sn==='string'?JSON.parse(sn):sn;
+  openModal(data?'Edit Season':'Add Season',`
+<div class="fg-grid">
+<div class="fg"><label>Season Number</label><input id="sn-num" type="number" value="${data?.season_number||((window._managedSeries?.seasons?.length||0)+1)}"></div>
+<div class="fg"><label>Title (optional)</label><input id="sn-title" value="${esc(data?.title||'')}"></div>
+<div class="fg"><label>Year</label><input id="sn-year" type="number" value="${data?.year||''}"></div>
+</div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svSeason(${seriesId},${data?.id||'null'})">Save</button>`);
+}
+async function svSeason(seriesId,ssid){
+  const d={season_number:parseInt(document.getElementById('sn-num').value)||1,title:document.getElementById('sn-title').value,year:parseInt(document.getElementById('sn-year').value)||0};
+  const r=ssid?await req('/vod/series/seasons/'+ssid,{method:'PUT',body:JSON.stringify(d)}):await req('/vod/series/'+seriesId+'/seasons',{method:'POST',body:JSON.stringify(d)});
+  if(r?.error){alert(r.error);return;}closeModal();toast(ssid?'✅ Season updated':'✅ Season added');
+  const s=await req('/vod/series/'+seriesId);if(s){window._managedSeries=s;_renderSeriesAdmin(s,s.title);}
+}
+async function dSeason(ssid,seriesId,seriesTitle){
+  if(!confirm('Delete season and ALL its episodes?'))return;
+  await req('/vod/series/seasons/'+ssid,{method:'DELETE'});toast('🗑 Deleted');
+  const s=await req('/vod/series/'+seriesId);if(s){window._managedSeries=s;_renderSeriesAdmin(s,seriesTitle);}
+}
+
+function eEpisodeModal(seasonId,seriesId,ep){
+  const data=typeof ep==='string'?JSON.parse(ep):ep;
+  const nextNum=(window._managedSeries?.seasons?.find(sn=>sn.id===seasonId)?.episodes?.length||0)+1;
+  openModal(data?'Edit Episode':'Add Episode',`
+<div class="fg-grid">
+<div class="fg"><label>Episode #</label><input id="ep-num" type="number" value="${data?.episode_number||nextNum}"></div>
+<div class="fg fcol"><label>Title *</label><input id="ep-title" value="${esc(data?.title||'')}"></div>
+<div class="fg fcol"><label>Description</label><textarea id="ep-desc" rows="2" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px;color:var(--text);font-size:13px;resize:vertical">${esc(data?.description||'')}</textarea></div>
+<div class="fg fcol"><label>Stream URL</label><input id="ep-url" value="${esc(data?.stream_url||'')}"></div>
+<div class="fg fcol"><label>Thumbnail URL</label><input id="ep-thumb" value="${esc(data?.thumbnail||'')}"></div>
+<div class="fg"><label>Runtime (min)</label><input id="ep-runtime" type="number" value="${data?.runtime||0}"></div>
+<div class="fg"><label>Status</label><select id="ep-active"><option value="1" ${!data||data.active?'selected':''}>Active</option><option value="0" ${data&&!data.active?'selected':''}>Hidden</option></select></div>
+</div>`,`<button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="svEpisode(${seasonId},${seriesId},${data?.id||'null'})">Save</button>`,'lg');
+}
+async function svEpisode(seasonId,seriesId,eid){
+  const d={episode_number:parseInt(document.getElementById('ep-num').value)||1,title:document.getElementById('ep-title').value.trim(),description:document.getElementById('ep-desc').value,stream_url:document.getElementById('ep-url').value,thumbnail:document.getElementById('ep-thumb').value,runtime:parseInt(document.getElementById('ep-runtime').value)||0,active:parseInt(document.getElementById('ep-active').value)};
+  if(!d.title)return;
+  const r=eid?await req('/vod/series/episodes/'+eid,{method:'PUT',body:JSON.stringify(d)}):await req('/vod/series/seasons/'+seasonId+'/episodes',{method:'POST',body:JSON.stringify(d)});
+  if(r?.error){alert(r.error);return;}closeModal();toast(eid?'✅ Episode updated':'✅ Episode added');
+  const s=await req('/vod/series/'+seriesId);if(s){window._managedSeries=s;_renderSeriesAdmin(s,s.title);}
+}
+async function dEpisode(eid,seasonId,seriesId,seriesTitle){
+  if(!confirm('Delete this episode?'))return;
+  await req('/vod/series/episodes/'+eid,{method:'DELETE'});toast('🗑 Deleted');
+  const s=await req('/vod/series/'+seriesId);if(s){window._managedSeries=s;_renderSeriesAdmin(s,seriesTitle);}
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PACKAGES CRUD

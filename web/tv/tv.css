@@ -352,6 +352,29 @@ main{flex:1;overflow:hidden;position:relative}
 .md-close{position:absolute;top:16px;right:16px;background:var(--overlay-dark);border:none;color:var(--white);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
 .md-card{position:relative}
 
+/* ── Series tile badge ── */
+.mt-series-badge{position:absolute;top:8px;right:8px;background:rgba(30,80,200,.75);border-radius:4px;padding:2px 7px;font-size:10px;font-family:'DM Mono',monospace;color:#a8c8ff;letter-spacing:.3px}
+.mt-ep-count{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── Series detail — seasons + episode list ── */
+.sd-seasons{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 10px}
+.sd-season-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dimmed);font-size:12px;cursor:pointer;transition:.15s;white-space:nowrap;font-family:'Outfit',sans-serif}
+.sd-season-tab:hover{border-color:var(--border2);color:var(--white)}
+.sd-season-tab.active{background:var(--gold3);border-color:var(--gold);color:var(--gold)}
+.sd-ep-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;padding-right:4px}
+.sd-ep-list::-webkit-scrollbar{width:4px}
+.sd-ep-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.ep-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:.15s;border:1px solid transparent}
+.ep-row:hover{background:var(--bg3);border-color:var(--border)}
+.ep-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:28px;text-align:right;flex-shrink:0}
+.ep-thumb{width:72px;height:42px;border-radius:6px;background:var(--bg3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border)}
+.ep-thumb img{width:100%;height:100%;object-fit:cover}
+.ep-info{flex:1;min-width:0}
+.ep-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-runtime{font-size:11px;color:var(--muted);margin-top:2px}
+.ep-play-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--gold);border:none;color:#000;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s}
+.ep-play-btn:hover{background:var(--gold2);transform:scale(1.08)}
+
 /* ─── VOD PLAYER MODAL ───────────────────────────────────────────────────── */
 /* ─── VOD PLAYER — VLC style ─────────────────────────────────────────────── */
 #vod-player-modal{position:fixed;inset:0;background:#000;z-index:5500;display:none}

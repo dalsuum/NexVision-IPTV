@@ -306,6 +306,44 @@ def init_db():
         active INTEGER DEFAULT 1
     );
 
+    CREATE TABLE IF NOT EXISTS vod_series (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        genre TEXT DEFAULT '',
+        year INTEGER DEFAULT 0,
+        language TEXT DEFAULT 'English',
+        rating REAL DEFAULT 0,
+        poster TEXT DEFAULT '',
+        backdrop TEXT DEFAULT '',
+        price REAL DEFAULT 0,
+        active INTEGER DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS vod_seasons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        series_id INTEGER NOT NULL,
+        season_number INTEGER NOT NULL DEFAULT 1,
+        title TEXT DEFAULT '',
+        year INTEGER DEFAULT 0,
+        FOREIGN KEY (series_id) REFERENCES vod_series(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS vod_episodes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        series_id INTEGER NOT NULL,
+        season_id INTEGER NOT NULL,
+        episode_number INTEGER NOT NULL DEFAULT 1,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        thumbnail TEXT DEFAULT '',
+        stream_url TEXT DEFAULT '',
+        runtime INTEGER DEFAULT 0,
+        active INTEGER DEFAULT 1,
+        FOREIGN KEY (series_id) REFERENCES vod_series(id),
+        FOREIGN KEY (season_id) REFERENCES vod_seasons(id)
+    );
+
     CREATE TABLE IF NOT EXISTS radio_stations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
