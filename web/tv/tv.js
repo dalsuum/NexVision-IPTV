@@ -1607,12 +1607,14 @@ async function startVoD(url, title) {
 }
 
 function _vodResetCtrlTimer() {
-  const bar = document.getElementById('vod-ctrl-bar');
-  const loading = document.getElementById('vod-loading');
-  if (bar) { bar.style.opacity = '1'; bar.style.pointerEvents = ''; }
+  const bar  = document.getElementById('vod-ctrl-bar');
+  const back = document.getElementById('vod-back-btn');
+  if (bar)  { bar.style.opacity  = '1'; bar.style.pointerEvents  = ''; }
+  if (back) { back.style.opacity = '1'; back.style.pointerEvents = ''; }
   clearTimeout(_vodCtrlTimer);
   _vodCtrlTimer = setTimeout(() => {
-    if (bar) { bar.style.opacity = '0'; bar.style.pointerEvents = 'none'; }
+    if (bar)  { bar.style.opacity  = '0'; bar.style.pointerEvents  = 'none'; }
+    if (back) { back.style.opacity = '0'; back.style.pointerEvents = 'none'; }
   }, 3500);
 }
 

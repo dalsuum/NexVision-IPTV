@@ -368,6 +368,7 @@ body.vod-active #root,
 body:has(#vod-player-modal.open) #root{padding-bottom:0 !important}
 /* Emergency ticker (z:8000) already above player — no override needed */
 #vod-player-modal>video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;cursor:pointer}
+#vod-back-btn{transition:opacity .35s}
 .vlc-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(10,10,10,.98) 38%);padding:0 20px 18px;transition:opacity .35s,pointer-events .35s}
 /* ── seek row ── */
 .vlc-seek-row{display:flex;align-items:center;gap:10px;padding:10px 0 6px}
