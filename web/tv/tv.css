@@ -551,10 +551,10 @@ body:has(#vod-player-modal.open) #root{padding-bottom:0 !important}
   header{padding:0 20px;gap:12px}
   .nav-btn{padding:6px 12px;font-size:12px}
   #screen-tv{flex-direction:column}
-  .ch-sidebar{width:100%;height:300px;border-right:none;border-bottom:1px solid var(--border);display:flex;flex-direction:column}
-  .ch-list{flex:1;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 12px;min-height:0}
-  .ch-row{flex-shrink:0;width:160px}
-  .tv-player-area{flex:1}
+  .ch-sidebar{width:100%;height:300px;border-right:none;border-bottom:1px solid var(--border);display:grid;grid-template-rows:auto auto 1fr auto;overflow:hidden;background:var(--bg2)}
+  .ch-list{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 12px;scrollbar-width:none;align-items:stretch}
+  .ch-row{flex-shrink:0;width:150px}
+  .tv-player-area{flex:1;min-height:0}
   .movie-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .w-details{grid-template-columns:repeat(2,1fr)}
   .w-forecast{grid-template-columns:repeat(2,1fr)}
@@ -2045,28 +2045,67 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 
   /* ── TV channel list (mobile: horizontal strip above player) ── */
   #screen-tv{flex-direction:column}
-  /* Sidebar takes 48% of available height so the player is still visible */
-  .ch-sidebar{width:100%;height:48vh;max-height:340px;min-height:260px;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column}
-  /* Compact the sidebar header on mobile */
-  .ch-sidebar-hdr{padding:10px 12px 8px}
+
+  /* Sidebar: CSS Grid so the channel strip always gets real space.
+     Rows: [header] [genre tabs] [CHANNEL LIST — fills all remaining] [pagination] */
+  .ch-sidebar{
+    width:100%;
+    height:48vh;
+    max-height:340px;
+    min-height:260px;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+    display:grid;
+    grid-template-rows:auto auto 1fr auto;
+    overflow:hidden;
+    background:var(--bg2);
+  }
+  /* Compact sidebar header */
+  .ch-sidebar-hdr{padding:10px 12px 8px;overflow:hidden}
   .ch-sidebar-hdr h2{font-size:14px;margin-bottom:6px}
   .ch-search{padding:7px 10px;font-size:12px}
-  .ch-groups-wrap{min-height:36px}
-  .ch-groups{padding:6px 4px 0}
+  .ch-groups-wrap{overflow:hidden}
+  .ch-groups{padding:6px 4px 4px}
   .ch-group-btn{padding:4px 10px;font-size:10px}
-  /* Channel list: horizontal scroll strip */
-  .ch-list{flex:1;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex-direction:row;padding:8px 10px;scrollbar-width:none;min-height:0}
+
+  /* Channel list row: 1fr guarantees it gets the leftover space */
+  .ch-list{
+    display:flex;
+    flex-direction:row;
+    gap:6px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:6px 10px;
+    scrollbar-width:none;
+    align-items:stretch;
+    /* no flex:1 needed — grid row 1fr handles this */
+  }
   .ch-list::-webkit-scrollbar{display:none}
-  /* Each channel card in the strip */
-  .ch-row{flex-shrink:0;width:130px;flex-direction:column;align-items:center;text-align:center;padding:8px 6px;gap:5px;border-radius:8px}
-  .ch-row-logo{width:48px;height:48px;border-radius:8px;font-size:18px}
-  .ch-row-name{font-size:11px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+
+  /* Each channel card: vertical stack inside horizontal scroll */
+  .ch-row{
+    flex-shrink:0;
+    width:110px;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:8px 6px;
+    gap:4px;
+    border-radius:8px;
+    height:100%;
+    box-sizing:border-box;
+  }
+  .ch-row-logo{width:44px;height:44px;border-radius:8px;font-size:16px;flex-shrink:0}
+  .ch-row-name{font-size:10px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;flex-shrink:0}
   .ch-row-num{font-size:9px}
-  .ch-row-epg{font-size:9px}
-  .ch-row-live{font-size:8px;margin-top:2px}
-  /* Pagination bar: compact */
-  .ch-sidebar > div[style*="border-top"]{padding:5px 10px}
-  .tv-player-area{flex:1;min-height:0}
+  .ch-row-epg{display:none}
+  .ch-row-live{font-size:8px}
+
+  /* Pagination bar */
+  .ch-sidebar > div[style*="border-top"]{padding:4px 10px}
+
+  .tv-player-area{flex:1;min-height:0;overflow:hidden}
 
   /* ── Radio screen ── */
   .radio-player{padding:20px 16px}
