@@ -433,11 +433,9 @@ const FsOsd = (() => {
 })();
 
 // ── Google Cast Web Sender ────────────────────────────────────────────────────
-// Replace CAST_APP_ID with your registered receiver App ID from the Cast SDK
-// Developer Console (https://cast.google.com/publish).
-// 'CC1AD845' is Google's built-in Default Media Receiver — works with no
-// registration but has limited branding. Swap once you register a custom one.
-const CAST_APP_ID = 'CC1AD845';
+// App ID is read from admin settings (cast_app_id). Falls back to Google's
+// Default Media Receiver if the field is left blank.
+const CAST_APP_ID_DEFAULT = 'CC1AD845';
 
 const CastMgr = (() => {
   let _ctx     = null;  // cast.framework.CastContext
@@ -449,9 +447,10 @@ const CastMgr = (() => {
   window['__onGCastApiAvailable'] = function (isAvailable) {
     if (!isAvailable) return;
 
+    const appId = (_settings?.cast_app_id || '').trim() || CAST_APP_ID_DEFAULT;
     _ctx = cast.framework.CastContext.getInstance();
     _ctx.setOptions({
-      receiverApplicationId: CAST_APP_ID,
+      receiverApplicationId: appId,
       autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
     });
 

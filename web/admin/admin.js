@@ -2985,6 +2985,9 @@ pages.settings = async function() {
           <div class="fg fcol"><label>Cast Server URL</label>
             <input id="s-cast-server-url" value="${esc(s.cast_server_url||'')}" placeholder="https://cast.yourdomain.com">
           </div>
+          <div class="fg fcol"><label>Chromecast App ID</label>
+            <input id="s-cast-app-id" value="${esc(s.cast_app_id||'')}" placeholder="CC1AD845 (Default Media Receiver)" style="font-family:'DM Mono',monospace;letter-spacing:.05em">
+          </div>
           <div class="fg"><label>Show On</label>
             <select id="s-cast-qr-display" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%">
               <option value="both"        ${(s.cast_qr_display||'both')==='both'       ?'selected':''}>Home + Screensaver</option>
@@ -3069,6 +3072,7 @@ async function saveSettings() {
     weather_city:     document.getElementById('s-weather-city')?.value||'',
     cast_qr_enabled:       document.getElementById('s-cast-qr-enabled')?.checked  ? '1' : '0',
     cast_server_url:       document.getElementById('s-cast-server-url')?.value||'',
+    cast_app_id:           document.getElementById('s-cast-app-id')?.value||'',
     cast_qr_display:       document.getElementById('s-cast-qr-display')?.value||'both',
     cast_qr_position:      document.getElementById('s-cast-qr-position')?.value||'bottom-right',
     pms_enabled:           document.getElementById('s-pms-enabled')?.checked       ? '1' : '0',
