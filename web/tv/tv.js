@@ -2827,7 +2827,8 @@ function renderNewsTicker(feeds) {
   const html = [...allItems, ...allItems].map(i =>
     `<span class="nt-item" style="color:${escHtml(txtCol)}"><b>${escHtml(i.feed)}:</b> ${escHtml(i.title)}</span>`
   ).join('');
-  inner.innerHTML = '<span class="nt-label">📰 NEWS</span>' + html;
+  const tickerLabel = (_settings.ticker_label || 'NEWS').trim() || 'NEWS';
+  inner.innerHTML = `<span class="nt-label">📰 ${escHtml(tickerLabel)}</span>` + html;
   ticker.classList.add('on');
   document.body.classList.add('news-ticker-active');
 }

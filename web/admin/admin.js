@@ -1653,9 +1653,10 @@ pages.rss = async function() {
   const [feeds, settings] = await Promise.all([req('/rss'), req('/settings')]);
   if (!feeds) return;
   window._feeds = feeds;
-  const txtCol = settings?.ticker_text_color || '#ffffff';
-  const bgCol  = settings?.ticker_bg_color   || '#09090f';
-  const bgOp   = settings?.ticker_bg_opacity ?? 92;
+  const txtCol   = settings?.ticker_text_color || '#ffffff';
+  const bgCol    = settings?.ticker_bg_color   || '#09090f';
+  const bgOp     = settings?.ticker_bg_opacity ?? 92;
+  const tkLabel  = settings?.ticker_label || 'NEWS';
   document.getElementById('content').innerHTML = `
   <div class="sec-hdr">
     <div class="sec-title">RSS Feeds</div>
@@ -1665,6 +1666,13 @@ pages.rss = async function() {
   <!-- Ticker Appearance (global) -->
   <div class="tbl-wrap" style="padding:18px;margin-bottom:18px">
     <div class="sec-title" style="font-size:13px;color:var(--text2);margin-bottom:14px">🎨 Ticker Appearance</div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Ticker Label</label>
+      <input id="tk-label" value="${esc(tkLabel)}" placeholder="NEWS" maxlength="20"
+        oninput="_rssPreview()"
+        style="max-width:220px;font-size:13px">
+      <small style="color:var(--text3);font-size:11px;margin-left:10px">Shown in the badge on the left of the ticker</small>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:end">
       <div>
         <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Text Color</label>
@@ -1698,7 +1706,7 @@ pages.rss = async function() {
     <div style="margin-top:14px">
       <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px">Live Preview</label>
       <div id="rss-preview-bar" style="border-radius:7px;padding:8px 16px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;transition:.2s">
-        <span style="background:var(--gold);color:#000;font-size:9px;font-weight:700;padding:2px 10px;border-radius:3px;margin-right:14px;flex-shrink:0;letter-spacing:1px">📰 NEWS</span>
+        <span id="rss-preview-label" style="background:var(--gold);color:#000;font-size:9px;font-weight:700;padding:2px 10px;border-radius:3px;margin-right:14px;flex-shrink:0;letter-spacing:1px">📰 ${esc(tkLabel)}</span>
         <span id="rss-preview-text" style="font-size:12px">Hotel News Headline • Latest updates from your city • Breaking news here</span>
       </div>
     </div>
@@ -1739,18 +1747,22 @@ function _rssPreview(){
   const txtCol = document.getElementById('tk-text-color')?.value || '#ffffff';
   const bgCol  = document.getElementById('tk-bg-color')?.value  || '#09090f';
   const op     = parseInt(document.getElementById('tk-bg-opacity')?.value || 92) / 100;
+  const label  = (document.getElementById('tk-label')?.value || 'NEWS').trim() || 'NEWS';
   const r=parseInt(bgCol.slice(1,3),16), g=parseInt(bgCol.slice(3,5),16), b=parseInt(bgCol.slice(5,7),16);
-  const bar  = document.getElementById('rss-preview-bar');
-  const text = document.getElementById('rss-preview-text');
-  if (bar)  bar.style.background = `rgba(${r},${g},${b},${op})`;
-  if (text) text.style.color = txtCol;
+  const bar   = document.getElementById('rss-preview-bar');
+  const text  = document.getElementById('rss-preview-text');
+  const badge = document.getElementById('rss-preview-label');
+  if (bar)   bar.style.background = `rgba(${r},${g},${b},${op})`;
+  if (text)  text.style.color = txtCol;
+  if (badge) badge.textContent = '📰 ' + label;
 }
 
 async function saveTickerStyle(){
   const d = {
     ticker_text_color: document.getElementById('tk-text-color').value || '#ffffff',
     ticker_bg_color:   document.getElementById('tk-bg-color').value   || '#09090f',
-    ticker_bg_opacity: document.getElementById('tk-bg-opacity').value || '92'
+    ticker_bg_opacity: document.getElementById('tk-bg-opacity').value || '92',
+    ticker_label:      (document.getElementById('tk-label').value || 'NEWS').trim() || 'NEWS'
   };
   const r = await req('/settings', {method:'POST', body:JSON.stringify(d)});
   if (r?.ok === false) { toast('❌ Failed to save'); return; }
