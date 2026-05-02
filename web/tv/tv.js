@@ -2373,8 +2373,11 @@ function buildNav() {
   const isHotel = (window._deployMode || 'hotel') !== 'commercial';
   const enabled = items.filter(it => it.enabled && (isHotel || !HOTEL_ONLY_NAV.includes(it.key)));
 
-  // On mobile phones, always use bottom nav for usability
-  const isMobile = window.innerWidth <= 640;
+  // On mobile phones, always use bottom nav for usability.
+  // Also treat landscape phones (short viewport) as mobile so the
+  // bottom nav is built even when width > 640px after rotation.
+  const isLandscapePhone = window.innerHeight <= 480 && window.innerWidth > window.innerHeight;
+  const isMobile = window.innerWidth <= 640 || isLandscapePhone;
   const effectivePosition = isMobile ? 'bottom' : position;
 
   if (effectivePosition === 'bottom') {
