@@ -81,7 +81,7 @@
             android:exported="false"
             android:configChanges="keyboard|keyboardHidden|navigation|screenLayout|screenSize"
             android:screenOrientation="landscape"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustPan" />
 
         <receiver
             android:name=".BootReceiver"

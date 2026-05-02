@@ -1,56 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Full-screen setup form for first-boot configuration.
-  Designed for D-pad navigation: explicit nextFocusDown/Up chains
-  ensure arrow keys move focus in the expected order on TV remotes.
--->
-<ScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#06060A"
-    android:fillViewport="true">
+    android:background="#06060A">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="820dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingTop="72dp"
-        android:paddingBottom="56dp"
-        android:paddingHorizontal="48dp">
+        android:gravity="center_horizontal">
 
-        <!-- ── Wordmark ───────────────────────────────────────────────── -->
-
+        <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="NEXVISION"
             android:fontFamily="serif"
-            android:textSize="32sp"
+            android:textSize="30sp"
             android:textColor="#C9A84C"
             android:letterSpacing="0.25"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="4dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="First-time Setup"
-            android:textSize="15sp"
+            android:text="Server Configuration"
+            android:textSize="14sp"
             android:textColor="#5A5A6A"
-            android:layout_marginBottom="52dp" />
+            android:layout_marginBottom="24dp" />
 
-        <!-- ── Form card ──────────────────────────────────────────────── -->
-
+        <!-- Card -->
         <LinearLayout
-            android:layout_width="600dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#11111A"
-            android:padding="44dp">
+            android:padding="30dp">
 
-            <!-- IP label + field -->
-
+            <!-- Row 1: IP address (full width) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -60,91 +49,233 @@
                 android:letterSpacing="0.15"
                 android:layout_marginBottom="10dp" />
 
-            <EditText
-                android:id="@+id/etIp"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="192.168.1.100"
-                android:textSize="22sp"
-                android:textColor="#F0F0F8"
-                android:textColorHint="#383848"
-                android:background="@drawable/field_bg"
-                android:paddingHorizontal="16dp"
-                android:inputType="textNoSuggestions"
-                android:imeOptions="actionNext"
-                android:focusable="true"
-                android:singleLine="true"
-                android:nextFocusDown="@id/etPort" />
-
-            <!-- Port label + field -->
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SERVER PORT"
-                android:textSize="11sp"
-                android:textColor="#C9A84C"
-                android:letterSpacing="0.15"
-                android:layout_marginTop="28dp"
-                android:layout_marginBottom="10dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <EditText
-                android:id="@+id/etPort"
+                <EditText
+                    android:id="@+id/etOct1"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:hint="0"
+                    android:textSize="24sp"
+                    android:textColor="#F0F0F8"
+                    android:textColorHint="#383848"
+                    android:background="@drawable/field_bg"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:singleLine="true"
+                    android:imeOptions="actionNext"
+                    android:nextFocusRight="@id/etOct2"
+                    android:nextFocusDown="@id/etPort" />
+
+                <TextView
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:text="."
+                    android:textSize="28sp"
+                    android:textColor="#C9A84C"
+                    android:gravity="center" />
+
+                <EditText
+                    android:id="@+id/etOct2"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:hint="0"
+                    android:textSize="24sp"
+                    android:textColor="#F0F0F8"
+                    android:textColorHint="#383848"
+                    android:background="@drawable/field_bg"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:singleLine="true"
+                    android:imeOptions="actionNext"
+                    android:nextFocusLeft="@id/etOct1"
+                    android:nextFocusRight="@id/etOct3"
+                    android:nextFocusDown="@id/etPort" />
+
+                <TextView
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:text="."
+                    android:textSize="28sp"
+                    android:textColor="#C9A84C"
+                    android:gravity="center" />
+
+                <EditText
+                    android:id="@+id/etOct3"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:hint="0"
+                    android:textSize="24sp"
+                    android:textColor="#F0F0F8"
+                    android:textColorHint="#383848"
+                    android:background="@drawable/field_bg"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:singleLine="true"
+                    android:imeOptions="actionNext"
+                    android:nextFocusLeft="@id/etOct2"
+                    android:nextFocusRight="@id/etOct4"
+                    android:nextFocusDown="@id/etRoom" />
+
+                <TextView
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:text="."
+                    android:textSize="28sp"
+                    android:textColor="#C9A84C"
+                    android:gravity="center" />
+
+                <EditText
+                    android:id="@+id/etOct4"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_weight="1"
+                    android:hint="0"
+                    android:textSize="24sp"
+                    android:textColor="#F0F0F8"
+                    android:textColorHint="#383848"
+                    android:background="@drawable/field_bg"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:singleLine="true"
+                    android:imeOptions="actionNext"
+                    android:nextFocusLeft="@id/etOct3"
+                    android:nextFocusDown="@id/etRoom" />
+
+            </LinearLayout>
+
+            <!-- Row 2: Port + Room side by side -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="5000"
-                android:textSize="22sp"
-                android:textColor="#F0F0F8"
-                android:textColorHint="#383848"
-                android:background="@drawable/field_bg"
-                android:paddingHorizontal="16dp"
-                android:inputType="number"
-                android:imeOptions="actionDone"
-                android:focusable="true"
-                android:singleLine="true"
-                android:nextFocusUp="@id/etIp"
-                android:nextFocusDown="@id/btnSave" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp">
+
+                <!-- Port column -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PORT"
+                        android:textSize="11sp"
+                        android:textColor="#C9A84C"
+                        android:letterSpacing="0.15"
+                        android:layout_marginBottom="10dp" />
+
+                    <EditText
+                        android:id="@+id/etPort"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:hint="80"
+                        android:textSize="24sp"
+                        android:textColor="#F0F0F8"
+                        android:textColorHint="#383848"
+                        android:background="@drawable/field_bg"
+                        android:paddingHorizontal="16dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="5"
+                        android:singleLine="true"
+                        android:imeOptions="actionNext"
+                        android:nextFocusUp="@id/etOct1"
+                        android:nextFocusRight="@id/etRoom"
+                        android:nextFocusDown="@id/btnSave" />
+
+                </LinearLayout>
+
+                <!-- Room number column -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ROOM NUMBER"
+                        android:textSize="11sp"
+                        android:textColor="#C9A84C"
+                        android:letterSpacing="0.15"
+                        android:layout_marginBottom="10dp" />
+
+                    <EditText
+                        android:id="@+id/etRoom"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:hint="101"
+                        android:textSize="24sp"
+                        android:textColor="#F0F0F8"
+                        android:textColorHint="#383848"
+                        android:background="@drawable/field_bg"
+                        android:paddingHorizontal="16dp"
+                        android:gravity="center"
+                        android:inputType="number"
+                        android:maxLength="10"
+                        android:singleLine="true"
+                        android:imeOptions="actionDone"
+                        android:nextFocusLeft="@id/etPort"
+                        android:nextFocusUp="@id/etOct4"
+                        android:nextFocusDown="@id/btnSave" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <!-- Save button -->
-
             <Button
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_marginTop="36dp"
+                android:layout_marginTop="24dp"
                 android:text="Save &amp; Connect"
-                android:textSize="18sp"
+                android:textSize="17sp"
                 android:textColor="#06060A"
                 android:background="@drawable/btn_primary_bg"
                 android:focusable="true"
-                android:nextFocusUp="@id/etPort" />
+                android:nextFocusUp="@id/etRoom" />
 
             <!-- Validation error -->
-
             <TextView
                 android:id="@+id/tvError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:text=""
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textColor="#E84855"
                 android:gravity="center"
                 android:visibility="gone" />
 
         </LinearLayout>
 
-        <!-- ── ADB hint for IT staff ──────────────────────────────────── -->
-
+        <!-- ADB hint -->
         <TextView
             android:id="@+id/tvAdbHint"
-            android:layout_width="600dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:textSize="12sp"
-            android:textColor="#383848"
+            android:layout_marginTop="18dp"
+            android:textSize="11sp"
+            android:textColor="#2A2A3A"
             android:gravity="center"
-            android:lineSpacingMultiplier="1.6" />
+            android:lineSpacingMultiplier="1.5" />
 
     </LinearLayout>
-</ScrollView>
+</FrameLayout>

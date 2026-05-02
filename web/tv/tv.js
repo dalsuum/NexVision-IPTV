@@ -1557,6 +1557,11 @@ async function openMovieDetail(id) {
       <button class="btn-hero btn-hero-ghost" onclick="closeMovieDetail()">✕ Close</button>
     </div>`;
   document.getElementById('movie-detail').classList.add('open');
+  setTimeout(() => {
+    const modal = document.getElementById('movie-detail');
+    const btn = modal?.querySelector('.md-actions button, button[onclick*="startVoD"], button[onclick*="openSeries"]');
+    if (btn && DPad) DPad.focusEl(btn);
+  }, 350);
 }
 
 function closeMovieDetail() { document.getElementById('movie-detail').classList.remove('open'); }
@@ -1576,6 +1581,11 @@ async function openSeriesDetail(id) {
   else                   bd.textContent = '📺';
   _renderSeriesBody();
   document.getElementById('series-detail').classList.add('open');
+  setTimeout(() => {
+    const modal = document.getElementById('series-detail');
+    const btn = modal?.querySelector('button:not([disabled])');
+    if (btn && DPad) DPad.focusEl(btn);
+  }, 350);
 }
 
 function _renderSeriesBody() {

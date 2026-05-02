@@ -8,7 +8,7 @@ set -euo pipefail
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
-DEVICE_IP=192.168.1.100         # ← replace with your Mi TV Stick IP
+DEVICE_IP=192.168.1.100        # ← replace with your Mi TV Stick IP
 ADB_PORT=5555                       # Android ADB-over-Wi-Fi default port
 PACKAGE="com.nexvision.tv"
 ACTIVITY=".MainActivity"            # resolved against PACKAGE by am start

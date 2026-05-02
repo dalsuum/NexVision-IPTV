@@ -1284,6 +1284,15 @@ body.tv-mode * { cursor: none !important; }
 
 body.tv-mode { font-size: 20px; }
 
+/* Nav bar: scrollable row so items never overflow off-screen on narrow viewports */
+body.tv-mode nav {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+}
+body.tv-mode nav::-webkit-scrollbar { display: none; }
+body.tv-mode .nav-btn { padding: 8px 12px; }
+
 /* ── 2. Universal focus ring ──────────────────────────────────────────────── */
 /* Force the ring on every focus event — TV navigation is always keyboard,
    so we don't want :focus-visible to suppress it. */

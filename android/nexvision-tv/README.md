@@ -75,7 +75,7 @@ The script will:
 adb connect 192.168.1.XXX:5555
 
 # Install
-adb install -r app/build/outputs/apk/release/app-release.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Launch
 adb shell am start -n com.nexvision.tv/.MainActivity \

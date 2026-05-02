@@ -98,6 +98,22 @@ epg/temp/
 *.swp
 *.log
 
+# SQLite WAL/SHM files
+*.db-shm
+*.db-wal
+
+# Uploads (runtime data)
+uploads/
+
+# Android build artifacts & local config
+android/nexvision-tv/.gradle/
+android/nexvision-tv/local.properties
+android/nexvision-tv/tmp/
+android/nexvision-tv/app/build/
+
+# Claude Code internal files
+.claude/
+
 # Virtual Environment & Dependencies (DO NOT COMMIT)
 venv/
 ENV/
