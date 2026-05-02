@@ -266,3 +266,153 @@ tr.sel td{background:rgba(212,168,67,.05)}
 .cs-opt{padding:9px 13px;cursor:pointer;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cs-opt:hover{background:var(--bg3)}
 .cs-none{padding:9px 13px;font-size:12px;color:var(--text3);font-style:italic}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Apple HIG quality
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Hamburger — hidden on desktop */
+.tb-menu-btn{display:none}
+
+/* Sidebar backdrop — hidden by default */
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:199;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:sbFadeIn .25s ease}
+.sb-backdrop.on{display:block}
+@keyframes sbFadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── 768px: Tablet / Large phone ─────────────────────────────────── */
+@media(max-width:768px){
+  /* Hamburger visible */
+  .tb-menu-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:38px;height:38px;flex-shrink:0;
+    background:var(--bg3);border:1px solid var(--border2);
+    border-radius:10px;cursor:pointer;color:var(--text2);
+    font-size:17px;transition:.15s;order:-1;
+  }
+  .tb-menu-btn:hover{color:var(--text);border-color:var(--border)}
+
+  /* Sidebar: off-canvas drawer */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    z-index:200;
+    box-shadow:8px 0 32px rgba(0,0,0,.5);
+    border-right-color:var(--border2);
+  }
+  .sidebar.open{transform:translateX(0)}
+
+  /* Main takes full width */
+  .main{margin-left:0}
+
+  /* Topbar */
+  .topbar{padding:0 14px;height:52px;gap:10px}
+  .tb-title{font-size:14px;font-weight:700}
+  .tb-rooms{display:none}
+  .ldot{display:none}
+  .tb-ref span{display:none}
+  .tb-ref{padding:5px 10px}
+
+  /* Content */
+  .content{padding:16px 14px}
+
+  /* Login card */
+  .lc{width:min(380px,calc(100vw - 32px));padding:40px 24px}
+
+  /* Stat row: 2 columns */
+  .stat-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+  .sc{padding:14px 16px}
+  .sc-val{font-size:22px}
+
+  /* Tables: horizontal scroll with sticky first column feel */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
+  table{min-width:580px}
+  th,td{white-space:nowrap;padding:8px 12px}
+
+  /* Modal: bottom sheet on mobile */
+  .overlay{align-items:flex-end;padding:0;padding-bottom:env(safe-area-inset-bottom,0)}
+  .modal{
+    width:100%;max-width:100%;
+    border-radius:20px 20px 0 0;
+    max-height:92vh;
+    animation:mobileSheet .28s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-lg{width:100%;max-width:100%}
+  @keyframes mobileSheet{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* Form grid: single column */
+  .fgrid{grid-template-columns:1fr}
+
+  /* Card grid */
+  .card-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+
+  /* Section header */
+  .sec-hdr{flex-wrap:wrap;gap:8px}
+  .sec-acts{flex-wrap:wrap}
+
+  /* Room grid */
+  .room-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+
+  /* Nav position options */
+  .nav-pos-row{flex-direction:column}
+  .pos-opt{min-width:unset}
+
+  /* VIP tab visibility */
+  .vip-tabs{overflow-x:auto;padding-bottom:4px}
+
+  /* Topnav within vod-topbar */
+  .vod-topbar{flex-wrap:wrap;padding:10px 12px;gap:10px}
+
+  /* Search input full-width on mobile */
+  .sw input{width:100%}.sw input:focus{width:100%}
+  .sw{flex:1}
+
+  /* Bulk bar */
+  .bulk-bar{flex-wrap:wrap;gap:8px}
+}
+
+/* ── 480px: Small phones ─────────────────────────────────────────── */
+@media(max-width:480px){
+  /* Stat row: single column */
+  .stat-row{grid-template-columns:1fr}
+
+  /* Content padding tighter */
+  .content{padding:12px}
+
+  /* Topbar */
+  .topbar{padding:0 12px}
+  .tb-theme{font-size:0;padding:5px 8px}
+  .tb-theme span{font-size:14px}
+
+  /* Login card */
+  .lc{padding:32px 20px;border-radius:16px}
+  .lc-brand{font-size:24px}
+
+  /* Buttons smaller */
+  .btn{padding:7px 12px;font-size:12px}
+
+  /* Modal header */
+  .mhdr{padding:16px 18px 12px}
+  .mbody{padding:16px 18px}
+  .mfooter{padding:12px 18px}
+
+  /* Table cells tighter */
+  th,td{padding:7px 10px;font-size:12px}
+
+  /* Section title */
+  .sec-title{font-size:14px}
+
+  /* Tab styling */
+  .tab{padding:6px 12px;font-size:12px}
+
+  /* Nav editor */
+  .ni-row{padding:8px 10px}
+
+  /* Slide preview */
+  .slide-preview{height:100px}
+
+  /* Exp bar */
+  .exp-bar{flex-direction:column;align-items:flex-start}
+}
+
+/* ── Prevent scroll on body when sidebar is open ────────────────── */
+body.sb-open{overflow:hidden}

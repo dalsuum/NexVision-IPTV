@@ -66,8 +66,10 @@
       <button class="sb-out" onclick="logout()">Sign Out</button>
     </div>
   </aside>
+  <div class="sb-backdrop" id="sb-backdrop" onclick="closeSidebar()"></div>
   <main class="main">
     <div class="topbar">
+      <button class="tb-menu-btn" id="tb-menu-btn" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
       <div class="tb-title" id="tb-title">Dashboard</div>
       <div class="tb-right">
         <div class="ldot"></div>

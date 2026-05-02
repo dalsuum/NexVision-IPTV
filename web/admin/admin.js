@@ -4594,3 +4594,25 @@ document.getElementById('overlay').addEventListener('click',e=>{if(e.target===do
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='Enter'&&document.getElementById('login').style.display!=='none')doLogin();});
 (async()=>{if(jwt&&await checkAuth()){startApp();return;}document.getElementById('login').style.display='flex';})();
 
+
+// ── Mobile sidebar ────────────────────────────────────────────────────────────
+function toggleSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const bd=document.getElementById('sb-backdrop');
+  const open=sb.classList.toggle('open');
+  bd.classList.toggle('on',open);
+  document.body.classList.toggle('sb-open',open);
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sb-backdrop').classList.remove('on');
+  document.body.classList.remove('sb-open');
+}
+// Auto-close sidebar on mobile when navigating
+(()=>{
+  const origGo=window.go;
+  window.go=function(page){
+    if(window.innerWidth<=768)closeSidebar();
+    return origGo(page);
+  };
+})();

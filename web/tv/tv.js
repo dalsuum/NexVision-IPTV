@@ -1532,6 +1532,7 @@ async function startVoD(url, title) {
   document.getElementById('vod-dur').textContent = '0:00';
   loading.style.display = '';
   modal.classList.add('open');
+  document.body.classList.add('vod-active');
   history.pushState({vodPlayer:true}, '');
 
   const playableUrl = await resolveVodHlsUrl(url);
@@ -1621,6 +1622,7 @@ function closeVodPlayer() {
   if (!modal.classList.contains('open')) return;
   const video = document.getElementById('vod-video');
   modal.classList.remove('open');
+  document.body.classList.remove('vod-active');
   if (_vodHls) { _vodHls.destroy(); _vodHls = null; }
   video.onerror = null;
   video.pause(); video.src = ''; video.load();
@@ -1636,6 +1638,7 @@ window.addEventListener('popstate', function(e) {
     const modal = document.getElementById('vod-player-modal');
     const video = document.getElementById('vod-video');
     modal.classList.remove('open');
+    document.body.classList.remove('vod-active');
     if (_vodHls) { _vodHls.destroy(); _vodHls = null; }
     video.pause(); video.src = ''; video.load();
     clearTimeout(_vodCtrlTimer);

@@ -354,8 +354,19 @@ main{flex:1;overflow:hidden;position:relative}
 
 /* ─── VOD PLAYER MODAL ───────────────────────────────────────────────────── */
 /* ─── VOD PLAYER — VLC style ─────────────────────────────────────────────── */
-#vod-player-modal{position:fixed;inset:0;background:#000;z-index:500;display:none;flex-direction:column}
+#vod-player-modal{position:fixed;inset:0;background:#000;z-index:5500;display:none;flex-direction:column}
 #vod-player-modal.open{display:flex}
+
+/* News ticker + bottom nav hidden while VOD is playing */
+body.vod-active #news-ticker,
+body:has(#vod-player-modal.open) #news-ticker{display:none !important}
+/* Bottom nav hidden — player has its own controls */
+body.vod-active #bottom-nav,
+body:has(#vod-player-modal.open) #bottom-nav{display:none !important}
+/* Root padding resets — nav + ticker gone while player is open */
+body.vod-active #root,
+body:has(#vod-player-modal.open) #root{padding-bottom:0 !important}
+/* Emergency ticker (z:8000) already above player — no override needed */
 #vod-player-modal>video{flex:1;width:100%;height:0;object-fit:contain;display:block;cursor:pointer}
 .vlc-bar{flex-shrink:0;background:linear-gradient(transparent,rgba(10,10,10,.98) 38%);padding:0 20px 18px;transition:opacity .35s}
 /* ── seek row ── */
@@ -2133,6 +2144,34 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   /* ── Alarm overlay ── */
   .alarm-clock{font-size:clamp(48px,14vw,80px)}
   .alarm-dismiss{padding:15px 48px;font-size:17px;border-radius:14px}
+
+  /* ── VOD player — mobile optimised controls ── */
+  .vlc-bar{
+    padding:0 14px calc(14px + env(safe-area-inset-bottom,0px));
+    /* Extend gradient higher so controls are readable over video */
+    background:linear-gradient(transparent,rgba(6,6,10,0.97) 30%);
+  }
+  .vlc-seek-row{padding:12px 0 8px;gap:8px}
+  .vlc-cur,.vlc-dur{font-size:11px;min-width:38px}
+  /* Thicker seek track — easier to tap */
+  .vlc-track{height:28px}
+  .vlc-track-bg{height:4px}
+  .vlc-track-thumb{width:16px;height:16px;opacity:1}
+  /* Controls row: wider tap targets */
+  .vlc-controls{gap:0;justify-content:space-between;padding:0 4px 4px}
+  .vlc-left{gap:0;flex:1;justify-content:flex-start}
+  .vlc-right{gap:0;flex:1;justify-content:flex-end}
+  .vlc-center{gap:0}
+  .vlc-btn{padding:10px;font-size:16px;min-width:44px;min-height:44px}
+  .vlc-skip{min-width:52px;padding:6px 4px}
+  .vlc-skip svg{width:28px;height:28px}
+  .vlc-skip-lbl{font-size:10px}
+  /* Play button: larger on mobile */
+  .vlc-play{width:58px;height:58px;font-size:24px;margin:0 8px}
+  /* Volume: hide on mobile (use device volume keys) */
+  .vlc-vol{display:none}
+  /* Title: more space */
+  .vlc-title{max-width:none;flex:1;font-size:11px}
 }
 
 /* ── 400px: Very small phones ──────────────────────────────────────── */
