@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.21
+# NexVision IPTV Platform v8.22
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -78,6 +78,10 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.22 (2026-05-03)
+- **New:** Series Favourites — heart button on every series tile and in the series detail view; favourites persisted to `localStorage` (`nv_fav_series`); state restored on page load
+- **Fix:** Cast VOD — tapping the cast button while no Chromecast session is active now correctly queues the VOD (`_pendingVod`) and casts it as soon as the session connects, instead of auto-casting the currently playing live channel; new `CastMgr.requestSessionForVod()` method added
 
 ### v8.21 (2026-05-01)
 - **New:** PMS Integration — admin can enable a hotel PMS connection (Oracle FIAS, GRMS, or third-party); settings include PMS host, port, username, password
@@ -512,13 +516,19 @@ NexVision supports casting Live TV channels to any Chromecast device on the same
 - A **Chromecast** or **Chromecast-enabled TV** on the same WiFi as the server
 - The guest must be using **Chrome browser** or the **Android app** (Cast SDK only loads in these)
 
-**How to cast a channel**
+**How to cast a Live TV channel**
 1. Open the TV app at `http://<server-ip>/` in Chrome or the Android app
 2. Start playing any Live TV channel
 3. A **cast button** (📡) appears in the player controls when a Chromecast is detected on the network
 4. Tap the cast button → a device picker appears
 5. Select your Chromecast — the stream starts playing on the TV within a few seconds
 6. To stop casting, tap the cast button again and select **Stop casting**
+
+**How to cast a VOD movie**
+1. Open any movie in the VOD player
+2. Tap the **cast button** (📡) in the player controls
+3. If no session is active, a device picker opens — the movie is queued and starts on the Chromecast as soon as you connect
+4. If a session is already active, the movie starts immediately on the Chromecast
 
 **Cast receiver app ID:** `CC1AD845`
 > This is the registered Google Cast receiver ID for NexVision. It is already built into the app — no configuration needed.
@@ -552,7 +562,7 @@ NexVision supports casting Live TV channels to any Chromecast device on the same
 |---|---|---|---|
 | `web/tv/index.html` | Web | ~380 | Guest TV client (HTML structure) |
 | `web/tv/tv.css` | Web | ~1480 | Guest TV client styles |
-| `web/tv/tv.js` | Web | ~3260 | Guest TV client application logic |
+| `web/tv/tv.js` | Web | ~4290 | Guest TV client application logic |
 | `web/tv/sw-cleanup.js` | Web | ~30 | Service worker cleanup on VOD paths |
 | `web/admin/index.html` | Web | ~92 | Admin panel (HTML structure) |
 | `web/admin/admin.css` | Web | ~261 | Admin panel styles |
@@ -753,5 +763,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.21 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
-*Last updated: 2026-05-01*
+*NexVision IPTV v8.22 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*Last updated: 2026-05-03*

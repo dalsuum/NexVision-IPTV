@@ -42,7 +42,8 @@ let allChannels = [], allMovies = [], allRadio = [], allGroups = [];
 let allSeries = [];
 let _vodSearchQ = '', _vodActiveGenre = null, _vodShowFavs = false;
 let _vodTab = 'all', _vodGenreActive = null;
-let _vodFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_movies') || '[]'));
+let _vodFavs    = new Set(JSON.parse(localStorage.getItem('nv_fav_movies')  || '[]'));
+let _seriesFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_series') || '[]'));
 let currentChId  = -1;
 let currentStation = null;
 let _epgNowMap = {};  // channel_id → current programme title
@@ -440,8 +441,9 @@ const FsOsd = (() => {
 const CAST_APP_ID_DEFAULT = 'CC1AD845';
 
 const CastMgr = (() => {
-  let _ctx     = null;  // cast.framework.CastContext
-  let _session = null;  // CastSession, non-null while a device is connected
+  let _ctx        = null;  // cast.framework.CastContext
+  let _session    = null;  // CastSession, non-null while a device is connected
+  let _pendingVod = null;  // { url, title, posterUrl } — queued VOD cast waiting for a session
 
   // The SDK fires this callback asynchronously after it finishes loading.
   // Because our main <script> block runs synchronously before the async SDK
@@ -470,11 +472,19 @@ const CastMgr = (() => {
 
     if (s === SS.SESSION_STARTED || s === SS.SESSION_RESUMED) {
       _session = _ctx.getCurrentSession();
-      // Auto-cast whatever channel is already playing when a session opens.
-      const ch = allChannels.find(c => c.id === currentChId);
-      if (ch) _doLoad(ch);
+      if (_pendingVod) {
+        // Session was requested from the VOD player — cast the queued VOD.
+        const { url, title, posterUrl } = _pendingVod;
+        _pendingVod = null;
+        loadVod(url, title, posterUrl);
+      } else {
+        // Auto-cast whatever channel is already playing when a session opens.
+        const ch = allChannels.find(c => c.id === currentChId);
+        if (ch) _doLoad(ch);
+      }
     } else if (s === SS.SESSION_ENDED || s === SS.NO_SESSION) {
-      _session = null;
+      _session    = null;
+      _pendingVod = null;
     }
     _updateButtons();
   }
@@ -514,6 +524,13 @@ const CastMgr = (() => {
     _ctx.requestSession().catch(() => {});
   }
 
+  // Public: open the device-picker with a VOD queued — sent to receiver once session connects.
+  function requestSessionForVod(url, title, posterUrl) {
+    if (!_ctx) return;
+    _pendingVod = { url, title, posterUrl };
+    _ctx.requestSession().catch(() => { _pendingVod = null; });
+  }
+
   // Public: called from playChannel() to mirror the live stream to the receiver.
   function loadMedia(ch) {
     _doLoad(ch);
@@ -537,7 +554,7 @@ const CastMgr = (() => {
   // Public: whether a Cast session is currently active.
   function isConnected() { return !!_session; }
 
-  return { requestSession, loadMedia, loadVod, isConnected };
+  return { requestSession, requestSessionForVod, loadMedia, loadVod, isConnected };
 })();
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -1401,6 +1418,7 @@ function _seriesTile(s) {
       <div class="mt-poster">
         ${s.poster ? `<img src="${s.poster}" alt="" loading="lazy" onerror="this.style.display='none'">` : '📺'}
         <div class="mt-series-badge">📺 Series</div>
+        <button class="mt-fav-btn${_seriesFavs.has(s.id)?' active':''}" onclick="toggleSeriesFav(${s.id},event)" title="${_seriesFavs.has(s.id)?'Remove from favourites':'Add to favourites'}" aria-label="Favourite">♥</button>
         <div class="mt-overlay"><div class="mt-play-btn">▶</div></div>
       </div>
       <div class="mt-title">${s.title}</div>
@@ -1549,6 +1567,24 @@ function toggleFavDetail(id) {
   renderVoD();
 }
 
+function toggleSeriesFav(id, e) {
+  e.stopPropagation();
+  if (_seriesFavs.has(id)) { _seriesFavs.delete(id); toast('Removed from favourites'); }
+  else                      { _seriesFavs.add(id);    toast('Added to favourites ♥');   }
+  localStorage.setItem('nv_fav_series', JSON.stringify([..._seriesFavs]));
+  renderVoD();
+}
+
+function toggleSeriesFavDetail(id) {
+  if (_seriesFavs.has(id)) { _seriesFavs.delete(id); toast('Removed from favourites'); }
+  else                      { _seriesFavs.add(id);    toast('Added to favourites ♥');   }
+  localStorage.setItem('nv_fav_series', JSON.stringify([..._seriesFavs]));
+  const btn = document.getElementById('sd-fav-btn');
+  const isFav = _seriesFavs.has(id);
+  if (btn) { btn.textContent = isFav ? '♥ Favourited' : '♡ Favourite'; btn.className = `btn-hero ${isFav?'btn-hero-fav':'btn-hero-ghost'}`; }
+  renderVoD();
+}
+
 async function openMovieDetail(id) {
   const m = allMovies.find(x=>x.id===id) || await api(`/vod/${id}`);
   if (!m) return;
@@ -1622,6 +1658,10 @@ function _renderSeriesBody() {
       <span>${s.language}</span>
     </div>
     <div class="md-desc">${s.description || ''}</div>
+    <div class="md-actions">
+      <button class="btn-hero ${_seriesFavs.has(s.id)?'btn-hero-fav':'btn-hero-ghost'}" id="sd-fav-btn" onclick="toggleSeriesFavDetail(${s.id})">${_seriesFavs.has(s.id)?'♥ Favourited':'♡ Favourite'}</button>
+      <button class="btn-hero btn-hero-ghost" onclick="closeSeriesDetail()">✕ Close</button>
+    </div>
     ${seasons.length ? `
     <div class="sd-seasons">
       ${seasons.map((sn, i) => `
@@ -1873,7 +1913,7 @@ function vodCast() {
     closeVodPlayer();
     toast('▶ Casting: ' + (_vodCurrentTitle || 'video'));
   } else {
-    CastMgr.requestSession();
+    CastMgr.requestSessionForVod(_vodCurrentUrl, _vodCurrentTitle, _vodCurrentPoster);
   }
 }
 

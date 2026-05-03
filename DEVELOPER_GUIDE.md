@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.21 — Last updated: 2026-05-01  
+> Version: v8.22 — Last updated: 2026-05-03  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
