@@ -32,7 +32,7 @@ class SetupActivity : AppCompatActivity() {
 
         val configPath = ConfigManager.configFile(this).absolutePath
         tvHint.text = "Or pre-configure via ADB:\nadb push config.json \"$configPath\"\n" +
-                      "Format: { \"server_ip\": \"192.168.1.50\", \"server_port\": 80, \"room_number\": \"101\" }"
+                      "Format: { \"server_ip\": \"192.168.1.100\", \"server_port\": 443, \"room_number\": \"101\" }"
 
         // Auto-advance to next octet when 3 digits are entered
         listOf(etOct1 to etOct2, etOct2 to etOct3, etOct3 to etOct4).forEach { (from, to) ->
@@ -53,7 +53,7 @@ class SetupActivity : AppCompatActivity() {
             etPort.setText(cfg.port.toString())
             if (cfg.roomNumber.isNotEmpty()) etRoom.setText(cfg.roomNumber)
         }
-        if (etPort.text.isNullOrEmpty()) etPort.setText("80")
+        if (etPort.text.isNullOrEmpty()) etPort.setText("443")
 
         btnSave.setOnClickListener { onSave(etOct1, etOct2, etOct3, etOct4, etPort, etRoom, tvError) }
     }

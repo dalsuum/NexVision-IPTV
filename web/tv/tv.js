@@ -519,7 +519,25 @@ const CastMgr = (() => {
     _doLoad(ch);
   }
 
-  return { requestSession, loadMedia };
+  // Public: send a VOD item to the Cast receiver.
+  function loadVod(url, title, posterUrl) {
+    if (!_session) return;
+    const absUrl = url.startsWith('/') ? `${location.origin}${url}` : url;
+    const ct = absUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4';
+    const mediaInfo = new chrome.cast.media.MediaInfo(absUrl, ct);
+    mediaInfo.streamType = chrome.cast.media.StreamType.BUFFERED;
+    const meta = new chrome.cast.media.MovieMediaMetadata();
+    meta.title = title || '';
+    if (posterUrl) meta.images = [new chrome.cast.Image(posterUrl)];
+    mediaInfo.metadata = meta;
+    _session.loadMedia(new chrome.cast.media.LoadRequest(mediaInfo))
+      .catch(err => console.warn('[CastMgr] VOD loadMedia failed:', err));
+  }
+
+  // Public: whether a Cast session is currently active.
+  function isConnected() { return !!_session; }
+
+  return { requestSession, loadMedia, loadVod, isConnected };
 })();
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -1551,7 +1569,7 @@ async function openMovieDetail(id) {
     <div class="md-desc">${m.description}</div>
     <div class="md-actions">
       ${m.stream_url
-        ? `<button class="btn-hero btn-hero-primary" onclick="startVoD('${m.stream_url}','${m.title.replace(/'/g,"\\'")}')">▶ Play Now</button>`
+        ? `<button class="btn-hero btn-hero-primary" onclick="startVoD('${m.stream_url}','${m.title.replace(/'/g,"\\'")}','${(m.poster||'').replace(/'/g,"\\'")}')">▶ Play Now</button>`
         : `<button class="btn-hero btn-hero-primary" onclick="toast('Stream not configured')">▶ Rent — $${m.price}</button>`}
       <button class="btn-hero ${isFav?'btn-hero-fav':'btn-hero-ghost'}" id="md-fav-btn" onclick="toggleFavDetail(${m.id})">${isFav?'♥ Favourited':'♡ Favourite'}</button>
       <button class="btn-hero btn-hero-ghost" onclick="closeMovieDetail()">✕ Close</button>
@@ -1651,6 +1669,7 @@ function closeSeriesDetail() { document.getElementById('series-detail').classLis
 let _vodHls = null;
 let _vodCtrlTimer = null;
 let _vodPlaylist = [], _vodPlaylistIdx = -1;
+let _vodCurrentUrl = '', _vodCurrentTitle = '', _vodCurrentPoster = '';
 let _vodEpisodeCtx = null; // {episodes:[...], idx:N} — set when playing a series episode
 
 async function resolveVodHlsUrl(url) {
@@ -1681,8 +1700,17 @@ async function resolveVodHlsUrl(url) {
   return raw;
 }
 
-async function startVoD(url, title) {
+async function startVoD(url, title, posterUrl) {
   closeMovieDetail();
+
+  // Normalize absolute http:// same-origin URLs to relative paths so HTTPS
+  // pages don't get blocked by mixed-content policy.
+  if (url && /^http:\/\//i.test(url)) {
+    try {
+      const u = new URL(url);
+      if (u.hostname === location.hostname) url = u.pathname + u.search;
+    } catch(_) {}
+  }
 
   // ── Native VLC player (Android APK) ─────────────────────────────────────
   if (window.NexVisionAndroid) {
@@ -1690,6 +1718,13 @@ async function startVoD(url, title) {
     return;
   }
   // ────────────────────────────────────────────────────────────────────────
+
+  // If a Cast session is active, send to Cast receiver instead of local player.
+  if (CastMgr.isConnected()) {
+    CastMgr.loadVod(url, title, posterUrl);
+    toast('▶ Casting: ' + (title || 'video'));
+    return;
+  }
 
   // Show pre-roll ad before opening VOD player
   await showAdOverlay('vod');
@@ -1703,6 +1738,11 @@ async function startVoD(url, title) {
   video.pause();
   video.src = '';
   video.load();
+
+  // Remember current VOD for Cast-while-playing support.
+  _vodCurrentUrl    = url;
+  _vodCurrentTitle  = title || '';
+  _vodCurrentPoster = posterUrl || '';
 
   // Track playlist position (movies) or episode context (series)
   // _vodEpisodeCtx is set by _playEpisode() before calling startVoD;
@@ -1821,6 +1861,20 @@ function closeVodPlayer() {
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   // If closed via button (not back gesture), remove the history entry
   if (history.state?.vodPlayer) history.back();
+}
+
+// Cast the currently-playing VOD item to the active Cast session.
+// If no session, opens the device picker.
+function vodCast() {
+  if (CastMgr.isConnected()) {
+    CastMgr.loadVod(_vodCurrentUrl, _vodCurrentTitle, _vodCurrentPoster);
+    const video = document.getElementById('vod-video');
+    video.pause();
+    closeVodPlayer();
+    toast('▶ Casting: ' + (_vodCurrentTitle || 'video'));
+  } else {
+    CastMgr.requestSession();
+  }
 }
 
 window.addEventListener('popstate', function(e) {

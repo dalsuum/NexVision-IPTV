@@ -10,6 +10,8 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -20,14 +22,20 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
-import java.net.HttpURLConnection
 import java.net.URL
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.X509TrustManager
 
 class MainActivity : AppCompatActivity() {
 
     private var webView: WebView? = null
     private var currentConfig: ServerConfig? = null
     private var backPressedAt = 0L
+    private val castHelper by lazy { CastHelper(this) }
 
     // Fullscreen video state
     private var fullscreenView: View? = null
@@ -52,6 +60,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        castHelper.init()
 
         val config = ConfigManager.read(this)
         if (config == null) {
@@ -111,6 +120,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            // Expose native Cast to the web UI (replaces the Web Sender SDK which
+            // won't initialise inside a WebView — only works in Chrome).
+            if (castHelper.isAvailable()) {
+                addJavascriptInterface(castHelper.Bridge(), "Android")
+            }
+
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, url: String) = false
 
@@ -125,7 +140,7 @@ class MainActivity : AppCompatActivity() {
                                display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
                                flex-direction:column;text-align:center">
                                <h2>Cannot reach server</h2>
-                               <p style="color:#5A5A6A">http://${config.ip}:${config.port}</p>
+                               <p style="color:#5A5A6A">https://${config.ip}:${config.port}</p>
                                <p style="color:#5A5A6A;font-size:14px">$msg</p>
                                <p style="color:#383848;font-size:12px;margin-top:32px">
                                Press back to exit &nbsp;·&nbsp; Hold back to reconfigure</p>
@@ -135,9 +150,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
+                override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+                    // Accept self-signed certificate from our configured server
+                    if (error.url?.contains(config.ip) == true) handler.proceed()
+                    else handler.cancel()
+                }
+
                 override fun onPageFinished(view: WebView, url: String) {
                     super.onPageFinished(view, url)
                     view.requestFocus()
+                    // Override CastMgr to use the native Android Cast bridge instead of
+                    // the Web Sender SDK (which never initialises inside a WebView).
+                    if (castHelper.isAvailable()) {
+                        view.evaluateJavascript(CAST_OVERRIDE_JS, null)
+                    }
                     val cfg = currentConfig ?: return
                     if (cfg.roomNumber.isBlank()) return
                     view.evaluateJavascript("localStorage.getItem('nv_room_token')") { value ->
@@ -230,8 +256,16 @@ class MainActivity : AppCompatActivity() {
     private fun registerAndInjectToken(view: WebView, config: ServerConfig) {
         Thread {
             try {
-                val conn = (URL("http://${config.ip}:${config.port}/api/rooms/register")
-                    .openConnection() as HttpURLConnection).apply {
+                val trustAll = arrayOf<X509TrustManager>(object : X509TrustManager {
+                    override fun checkClientTrusted(c: Array<X509Certificate>, a: String) {}
+                    override fun checkServerTrusted(c: Array<X509Certificate>, a: String) {}
+                    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+                })
+                val sslCtx = SSLContext.getInstance("TLS").apply { init(null, trustAll, SecureRandom()) }
+                val conn = (URL("https://${config.ip}:${config.port}/api/rooms/register")
+                    .openConnection() as HttpsURLConnection).apply {
+                    sslSocketFactory = sslCtx.socketFactory
+                    hostnameVerifier  = HostnameVerifier { _, _ -> true }
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json")
                     connectTimeout = 6000; readTimeout = 6000
@@ -260,6 +294,52 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    // ── Cast JS override ───────────────────────────────────────────────────────
+
+    companion object {
+        // Injected into every page load.  Replaces CastMgr's Web Sender SDK
+        // calls with Android bridge calls so the Cast buttons work inside WebView.
+        private val CAST_OVERRIDE_JS = """
+            (function() {
+              if (typeof CastMgr === 'undefined') return;
+              // Suppress any pending Web Sender SDK callback
+              window['__onGCastApiAvailable'] = function() {};
+              // Make all cast buttons visible (normally hidden until the SDK fires)
+              document.querySelectorAll('.cast-btn').forEach(function(b) {
+                b.style.display = '';
+              });
+              // requestSession: called when user taps Cast button on Live TV
+              CastMgr.requestSession = function() {
+                var ch = (typeof allChannels !== 'undefined' && typeof currentChId !== 'undefined')
+                  ? allChannels.find(function(c) { return c.id === currentChId; })
+                  : null;
+                var url   = ch ? String(ch.stream_url  || '').trim() : '';
+                var title = ch ? String(ch.name        || '')        : '';
+                var logo  = (ch && typeof usableLogo === 'function')
+                  ? (usableLogo(ch.tvg_logo_url) || '') : '';
+                Android.requestCast(url, title, logo);
+              };
+              // loadMedia: called when channel changes while already casting
+              CastMgr.loadMedia = function(ch) {
+                if (!ch) return;
+                var url   = String(ch.stream_url || '').trim();
+                var title = String(ch.name       || '');
+                var logo  = (typeof usableLogo === 'function')
+                  ? (usableLogo(ch.tvg_logo_url) || '') : '';
+                if (url) Android.loadCast(url, title, logo);
+              };
+              // loadVod: called when user casts a movie/episode
+              CastMgr.loadVod = function(url, title, poster) {
+                if (url) Android.loadVod(String(url), String(title || ''), String(poster || ''));
+              };
+              // isConnected: synchronous check used before opening local player
+              CastMgr.isConnected = function() {
+                return !!Android.isConnected();
+              };
+            })();
+        """.trimIndent()
+    }
+
     // ── System UI ──────────────────────────────────────────────────────────────
 
     private fun hideSystemUI() {
@@ -285,5 +365,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume()  { super.onResume();  webView?.onResume();  webView?.requestFocus() }
     override fun onPause()   { webView?.onPause(); super.onPause() }
-    override fun onDestroy() { webView?.stopLoading(); webView?.destroy(); webView = null; super.onDestroy() }
+    override fun onDestroy() {
+        castHelper.release()
+        webView?.stopLoading(); webView?.destroy(); webView = null
+        super.onDestroy()
+    }
 }

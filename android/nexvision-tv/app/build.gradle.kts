@@ -40,4 +40,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     // Core leanback support — required for TV launcher / D-pad accessibility
     implementation("androidx.leanback:leanback:1.0.0")
+    // Google Cast sender SDK + MediaRouter for device picker
+    implementation("com.google.android.gms:play-services-cast-framework:21.5.0")
+    implementation("androidx.mediarouter:mediarouter:1.7.0")
 }

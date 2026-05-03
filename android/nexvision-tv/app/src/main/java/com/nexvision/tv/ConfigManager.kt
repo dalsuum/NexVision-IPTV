@@ -13,7 +13,7 @@ import java.io.File
  *   adb push config.json /sdcard/Android/data/com.nexvision.tv/files/config.json
  *
  * Expected JSON format:
- *   { "server_ip": "192.168.1.100", "server_port": 80, "room_number": "101" }
+ *   { "server_ip": "192.168.1.100", "server_port": 443, "room_number": "101" }
  */
 object ConfigManager {
 
@@ -21,7 +21,7 @@ object ConfigManager {
     private const val KEY_IP       = "server_ip"
     private const val KEY_PORT     = "server_port"
     private const val KEY_ROOM     = "room_number"
-    private const val DEFAULT_PORT = 80
+    private const val DEFAULT_PORT = 443
 
     fun configFile(context: Context): File =
         File(context.getExternalFilesDir(null), FILE_NAME)
@@ -56,5 +56,5 @@ object ConfigManager {
 }
 
 data class ServerConfig(val ip: String, val port: Int, val roomNumber: String) {
-    val url: String get() = "http://$ip:$port/tv?platform=tv"
+    val url: String get() = "https://$ip:$port/tv?platform=tv"
 }
