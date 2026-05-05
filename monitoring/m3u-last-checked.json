@@ -1,7 +1,7 @@
 {
-  "checked_at": "2026-05-04T05:44:02+00:00",
+  "checked_at": "2026-05-05T05:23:03+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 12292,
+  "total_streams": 12289,
   "tested_streams": 25,
   "healthy": 23,
   "unhealthy": 2,
