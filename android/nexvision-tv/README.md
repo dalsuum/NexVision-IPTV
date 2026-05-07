@@ -1,6 +1,24 @@
-# NexVision TV — Android App
+# NexVision TV — Android App · v1.1
 
 A full-screen Android TV client for [NexVision IPTV](../../README.md). The app is a lightweight WebView wrapper around the NexVision web TV interface, optimised for D-pad navigation and hotel TV-box deployments.
+
+## Changelog
+
+### v1.1 (2026-05-07)
+- **Fix:** Added `body.tv-mode` CSS guard — the new tablet hamburger nav drawer is always suppressed in Android TV mode; D-pad–driven `#top-nav` is always kept visible regardless of screen resolution
+- **Improved:** Escape-key injection from `handleWebBack()` now also closes the tablet nav drawer (handled transparently in `tv.js`)
+- **Build:** `versionCode` 2 · `versionName` "1.1" · `compileSdk`/`targetSdk` 35
+
+### v1.0 (initial)
+- Full-screen WebView with immersive system-UI hiding
+- D-pad key routing (directional + center/enter forwarded to WebView)
+- Back-button state machine: closes modals → VOD player → exits home with double-tap guard
+- First-boot setup screen (IP octets + port + room number, auto-advances between fields)
+- ADB pre-configuration support via `config.json` push
+- Room auto-registration on load via `POST /api/rooms/register`; token injected into `localStorage`
+- Self-signed certificate acceptance for hotel LAN HTTPS
+- Google Cast native bridge — replaces Web Sender SDK (unusable inside WebView) with `Android.requestCast / loadCast / loadVod / isConnected` interface
+- Boot-completed receiver + Home/Leanback launcher for kiosk mode
 
 ---
 

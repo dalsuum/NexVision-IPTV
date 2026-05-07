@@ -226,6 +226,17 @@ Antenna / Cable Coax
 | Redis | 7.x | Cache layer (config stamps, API TTL) |
 | FFmpeg | 6.x | VOD transcoding (optional) |
 
+### 3.3 Guest Device Compatibility
+
+| Device class | Width | Guest interface behaviour |
+|---|---|---|
+| Android TV box / Smart TV | 1920px+ | Full top nav, D-pad navigation (`body.tv-mode`) |
+| iPad Pro / large tablet | 1025–1366px | Full top nav inline in header |
+| iPad Mini / Samsung Tab (portrait) | 641–1024px | Hamburger `☰` button — slide-down nav drawer |
+| Phone (landscape tablet counted if height ≤ 480px) | ≤ 640px | Bottom nav bar |
+| Admin panel — desktop | > 1024px | Sidebar pinned at 230px |
+| Admin panel — tablet | ≤ 1024px | Sidebar collapses to off-canvas drawer |
+
 ---
 
 ## 4. Step-by-Step Server Deployment

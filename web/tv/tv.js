@@ -2716,21 +2716,48 @@ function buildNav() {
 // Rebuild nav on orientation change / resize
 window.addEventListener('resize', () => {
   if (_navConfig && _navConfig.items && _navConfig.items.length) buildNav();
+  // Close drawer if resized to desktop
+  if (window.innerWidth > 1024) closeNavDrawer();
 });
 
 function buildTopNav(items, style) {
   const nav = document.getElementById('top-nav');
   if (!nav) return;
-  // Set style class
   nav.className = 'style-' + (style || 'pill');
-  nav.innerHTML = items.map(it => {
+  const btnHtml = items.map(it => {
     const label = style === 'icon' ? it.icon + ' ' + it.label : it.label;
     return `<button class="nav-btn" onclick="navItemClick('${escNav(it.key)}','${escNav(it.target_url||'')}')">${label}</button>`;
   }).join('');
+  nav.innerHTML = btnHtml;
+
+  // Also populate the tablet drawer with the same items
+  const drawer = document.getElementById('hdr-nav-drawer');
+  if (drawer) drawer.innerHTML = btnHtml;
 
   // Hide bottom nav
   const bn = document.getElementById('bottom-nav');
   if (bn) bn.classList.remove('visible');
+}
+
+/* ── Tablet hamburger nav drawer ──────────────────────────────────────────── */
+function toggleNavDrawer() {
+  const drawer = document.getElementById('hdr-nav-drawer');
+  const scrim  = document.getElementById('hdr-nav-scrim');
+  const btn    = document.getElementById('hdr-hamburger');
+  if (!drawer) return;
+  const open = drawer.classList.toggle('open');
+  if (scrim) scrim.classList.toggle('on', open);
+  if (btn) { btn.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); }
+  if (drawer) drawer.setAttribute('aria-hidden', !open);
+}
+
+function closeNavDrawer() {
+  const drawer = document.getElementById('hdr-nav-drawer');
+  const scrim  = document.getElementById('hdr-nav-scrim');
+  const btn    = document.getElementById('hdr-hamburger');
+  if (drawer) { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true'); }
+  if (scrim) scrim.classList.remove('on');
+  if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
 }
 
 function buildBottomNav(items) {
@@ -2753,6 +2780,7 @@ function escNav(s) {
 }
 
 function navItemClick(key, targetUrl) {
+  closeNavDrawer();
   if (targetUrl && targetUrl.startsWith('http')) {
     window.open(targetUrl, '_blank');
     return;
@@ -2763,9 +2791,14 @@ function navItemClick(key, targetUrl) {
 
 function setNavActive(name) {
   _activeScreen = name;
+  const enabled = (_navConfig && _navConfig.items || []).filter(it => it.enabled);
   // Top nav
   document.querySelectorAll('#top-nav .nav-btn').forEach((btn, i) => {
-    const enabled = (_navConfig.items || []).filter(it => it.enabled);
+    const it = enabled[i];
+    btn.classList.toggle('active', it && (it.key === name || (it.target_url || '') === name));
+  });
+  // Tablet drawer nav (mirrors top nav)
+  document.querySelectorAll('#hdr-nav-drawer .nav-btn').forEach((btn, i) => {
     const it = enabled[i];
     btn.classList.toggle('active', it && (it.key === name || (it.target_url || '') === name));
   });
@@ -3760,6 +3793,7 @@ document.addEventListener('fullscreenchange', () => {
 // Keyboard nav
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    closeNavDrawer();
     closeMovieDetail();
     closeInfoOverlay();
     document.querySelectorAll('div[style*="position:fixed"]').forEach(d=>{ if(d.id!=='splash') d.remove(); });

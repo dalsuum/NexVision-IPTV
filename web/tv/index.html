@@ -163,6 +163,9 @@
 <div id="root">
   <header>
     <div class="hdr-logo" id="hdr-logo">NV</div>
+    <button class="hdr-hamburger" id="hdr-hamburger" onclick="toggleNavDrawer()" aria-label="Menu" aria-expanded="false" aria-controls="hdr-nav-drawer">
+      <span></span><span></span><span></span>
+    </button>
     <nav id="top-nav"></nav>
     <div class="hdr-right">
       <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">NORMAL</button>
@@ -179,6 +182,9 @@
       <div class="hdr-time" id="hdr-time">—</div>
     </div>
   </header>
+  <!-- Tablet nav drawer -->
+  <div class="hdr-nav-drawer" id="hdr-nav-drawer" role="navigation" aria-label="Main navigation" aria-hidden="true"></div>
+  <div class="hdr-nav-scrim" id="hdr-nav-scrim" onclick="closeNavDrawer()"></div>
   <!-- Setup / registration banner -->
   <div id="setup-banner" style="display:none;position:fixed;top:64px;left:0;right:0;z-index:200;
        padding:10px 24px;font-size:13px;align-items:center;justify-content:center;gap:12px;

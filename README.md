@@ -1,4 +1,4 @@
-# NexVision IPTV Platform v8.22
+# NexVision IPTV Platform v8.23
 
 > **Hotel-grade IPTV system** delivering Live TV, Video on Demand, Radio, Guest Messaging, RSS News Ticker, and Promo Slides — to TVs, phones, tablets, and Android APK.
 
@@ -53,8 +53,8 @@ Hotel WiFi/LAN
 | 📰 **RSS Ticker** | Scrolling news ticker with custom color, background & opacity |
 | 🖼 **Promo Slides** | Full-screen promotional slides with auto-play |
 | 🖼 **Gallery** | Hotel photo gallery |
-| 📱 **Responsive** | Bottom navigation bar on mobile (≤640px) |
-| 📱 **Android APK** | Native app with embedded VLC player |
+| 📱 **Responsive** | Adaptive layouts for all screen sizes — bottom nav on phones (≤640px), hamburger drawer nav on tablets (641–1024px), full top-nav on desktop; admin panel sidebar collapses to off-canvas drawer on tablets |
+| 📱 **Android APK** | Native Android TV app (v1.1) — full-screen WebView with D-pad navigation, Google Cast, auto-registration, kiosk-mode boot launcher |
 
 ### Admin Capabilities
 | Feature | Description |
@@ -78,6 +78,12 @@ Hotel WiFi/LAN
 ---
 
 ## Changelog
+
+### v8.23 (2026-05-07)
+- **Improved:** Admin panel — sidebar now collapses to an off-canvas drawer on tablet/medium screens (≤1024px); hamburger `☰` button in topbar toggles it; auto-closes on navigation; backdrop scrim dismisses on tap
+- **Improved:** TV guest interface — tablets (641–1024px) now show a hamburger button in the header that opens a slide-down nav drawer instead of overflowing the fixed-width top nav; nav items wrap in a grid for easy tap targets
+- **Fix:** Android TV mode (`body.tv-mode`) always forces the top-nav visible and hides the hamburger/drawer, so D-pad navigation is unaffected by the new tablet styles
+- **Android:** Bumped Android app to **v1.1** (versionCode 2) to reflect the TV-mode CSS guard and tablet responsive nav improvements
 
 ### v8.22 (2026-05-03)
 - **New:** Series Favourites — heart button on every series tile and in the series detail view; favourites persisted to `localStorage` (`nv_fav_series`); state restored on page load
@@ -763,5 +769,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-*NexVision IPTV v8.22 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
+*NexVision IPTV v8.23 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
 *Last updated: 2026-05-07*

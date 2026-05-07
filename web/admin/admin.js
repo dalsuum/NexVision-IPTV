@@ -3214,10 +3214,10 @@ pages.settings = async function() {
       <div class="sec-title" style="margin:14px 0 12px;font-size:13px;color:var(--text2)">🪪 CMS Branding</div>
       <div class="tbl-wrap" style="padding:18px">
         <div class="fgrid" style="gap:12px">
-          <div class="fg"><label>Sidebar Brand Text</label><input id="s-admin-brand" value="${esc(s.admin_brand_name||'NEXVISION')}" placeholder="NEXVISION"></div>
+          <div class="fg"><label>Sidebar Brand Text</label><input id="s-admin-brand" value="${esc(s.hotel_name||s.admin_brand_name||'NEXVISION')}" placeholder="NEXVISION"></div>
           <div class="fg"><label>Sidebar Label</label><input id="s-admin-mode-label" value="${esc(s.admin_mode_label||(_isHotel?'Hotel CMS':'Admin'))}" placeholder="Hotel CMS"></div>
           <div class="fg fcol"><label>Browser Title</label><input id="s-admin-title" value="${esc(s.admin_title||'NexVision CMS v5')}" placeholder="NexVision CMS v5"></div>
-          <div class="fg fcol"><label>Sidebar Logo URL (optional)</label><div style="display:flex;gap:8px;align-items:stretch"><input id="s-admin-logo" value="${esc(s.admin_logo_url||'')}" placeholder="https://.../logo.png" style="flex:1"><label style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bd);color:var(--blue);border:1px solid rgba(74,158,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;flex-shrink:0">&#128193; Upload<input type="file" accept="image/*" style="display:none" onchange="uploadAdminLogoFile(event)"></label></div></div>
+          <div class="fg fcol"><label>Sidebar Logo URL (optional)</label><div style="display:flex;gap:8px;align-items:stretch"><input id="s-admin-logo" value="${esc(s.hotel_logo||s.admin_logo_url||'')}" placeholder="https://.../logo.png" style="flex:1"><label style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--bd);color:var(--blue);border:1px solid rgba(74,158,255,.2);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;flex-shrink:0">&#128193; Upload<input type="file" accept="image/*" style="display:none" onchange="uploadAdminLogoFile(event)"></label></div></div>
         </div>
       </div>
 
@@ -3235,8 +3235,8 @@ pages.settings = async function() {
 
 async function saveSettings() {
   const d = {
-    hotel_name:       window._settings?.hotel_name || '',
-    hotel_logo:       window._settings?.hotel_logo || '',
+    hotel_name:       document.getElementById('s-admin-brand')?.value || window._settings?.hotel_name || '',
+    hotel_logo:       document.getElementById('s-admin-logo')?.value || '',
     checkout_time:    document.getElementById('s-checkout')?.value||'12:00',
     currency:         document.getElementById('s-currency')?.value||'USD',
     language:         document.getElementById('s-lang')?.value||'en',
@@ -4797,7 +4797,7 @@ function closeSidebar(){
 (()=>{
   const origGo=window.go;
   window.go=function(page){
-    if(window.innerWidth<=768)closeSidebar();
+    if(window.innerWidth<=1024)closeSidebar();
     return origGo(page);
   };
 })();

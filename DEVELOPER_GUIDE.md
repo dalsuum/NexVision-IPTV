@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.22 — Last updated: 2026-05-07  
+> Version: v8.23 — Last updated: 2026-05-07  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -1300,6 +1300,20 @@ USE_X_ACCEL=1                  # 1 = Nginx X-Accel-Redirect for HLS .ts files
 
 Single-page application served by Nginx. Falls back to `index.html` for all
 non-file paths (client-side routing).
+
+#### Responsive Navigation Breakpoints
+
+| Width | Nav behaviour |
+|---|---|
+| > 1024px | Top nav (`#top-nav`) pinned — all items inline in header |
+| 641–1024px | Hamburger `☰` in header; `#top-nav` hidden; items rendered in `#hdr-nav-drawer` slide-down panel |
+| ≤ 640px | Bottom nav (`#bottom-nav`) bar; top nav and hamburger both hidden |
+| `body.tv-mode` | Always top nav; hamburger, drawer, and scrim forced `display:none !important` (D-pad drives the nav) |
+
+**Hamburger functions** (tv.js): `toggleNavDrawer()` · `closeNavDrawer()`  
+`buildTopNav()` populates both `#top-nav` and `#hdr-nav-drawer` from the same items array.  
+`setNavActive()` marks the active item in both containers.  
+`navItemClick()` always calls `closeNavDrawer()` before navigating.
 
 Key globals in `tv.js`:
 - `API` — base URL: `window.location.origin + '/api'`

@@ -597,6 +597,90 @@ body:has(#vod-player-modal.open) #root{padding-bottom:0 !important}
 .reg-numpad .key-0{grid-column:2}
 
 /* ─── RESPONSIVE ─────────────────────────────────────────────────────────── */
+
+/* Hamburger — hidden by default (desktop) */
+.hdr-hamburger{display:none}
+
+/* Nav drawer — off-screen by default */
+.hdr-nav-drawer{
+  position:fixed;
+  top:64px;left:0;right:0;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border2);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  z-index:95;
+  padding:16px 24px 20px;
+  display:flex;flex-wrap:wrap;gap:10px;
+  transform:translateY(-110%);
+  opacity:0;
+  pointer-events:none;
+  transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .22s;
+}
+.hdr-nav-drawer.open{
+  transform:translateY(0);
+  opacity:1;
+  pointer-events:all;
+}
+.hdr-nav-drawer .nav-btn{
+  flex:0 0 auto;
+  padding:11px 20px;
+  font-size:14px;
+  border-radius:8px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+.hdr-nav-drawer .nav-btn:hover{color:var(--white);background:var(--bg4)}
+.hdr-nav-drawer .nav-btn.active{color:var(--gold);background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.3)}
+
+/* Drawer scrim */
+.hdr-nav-scrim{
+  display:none;position:fixed;inset:0;top:64px;
+  background:rgba(0,0,0,.45);
+  z-index:94;
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+}
+.hdr-nav-scrim.on{display:block}
+
+/* Light theme overrides for drawer */
+html[data-theme='light'] .hdr-nav-drawer{background:rgba(255,255,255,.95);border-color:var(--border2)}
+html[data-theme='light'] .hdr-nav-drawer .nav-btn{background:var(--bg3);border-color:var(--border2)}
+
+/* ── Tablet: 641px–1024px — hamburger drawer ─────────────────────────────── */
+@media(min-width:641px) and (max-width:1024px){
+  /* Hamburger visible */
+  .hdr-hamburger{
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:5px;
+    width:40px;height:40px;flex-shrink:0;
+    background:var(--bg3);
+    border:1px solid var(--border2);
+    border-radius:8px;
+    cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  .hdr-hamburger:hover{background:var(--bg4)}
+  .hdr-hamburger span{
+    display:block;width:18px;height:2px;
+    background:var(--silver);border-radius:1px;
+    transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s,width .2s;
+  }
+  .hdr-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .hdr-hamburger.open span:nth-child(2){opacity:0;width:0}
+  .hdr-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+  /* Hide inline top nav — items shown in drawer */
+  #top-nav{display:none !important}
+
+  /* Tighter header padding on tablet */
+  header{padding:0 20px;gap:14px}
+
+  /* Hide weather + time to keep header clean; keep theme + room + messages */
+  .hdr-weather{display:none}
+  .hdr-time{display:none}
+}
+
 @media(max-width:900px){
   header{padding:0 20px;gap:12px}
   .nav-btn{padding:6px 12px;font-size:12px}
@@ -1283,6 +1367,12 @@ body.tv-mode,
 body.tv-mode * { cursor: none !important; }
 
 body.tv-mode { font-size: 20px; }
+
+/* Hamburger drawer: never shown in TV mode — D-pad drives the top-nav instead */
+body.tv-mode .hdr-hamburger { display: none !important; }
+body.tv-mode #top-nav       { display: flex !important; }
+body.tv-mode .hdr-nav-drawer,
+body.tv-mode .hdr-nav-scrim { display: none !important; }
 
 /* Nav bar: scrollable row so items never overflow off-screen on narrow viewports */
 body.tv-mode nav {
