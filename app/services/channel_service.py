@@ -53,7 +53,7 @@ def _parse_m3u(text: str) -> list:
 # ── Read operations ───────────────────────────────────────────────────────────
 
 def list_channels(group_id=None, active_only='1', search='',
-                  limit=500, offset=0, room_token='', envelope=False):
+                  limit=500, offset=0, room_token='', envelope=False, ids=''):
     conn = get_db()
     limit  = _safe_int(limit, 500)
     offset = _safe_int(offset, 0)
@@ -68,6 +68,14 @@ def list_channels(group_id=None, active_only='1', search='',
 
     wheres, params = [], []
 
+    if ids:
+        id_list = [int(x) for x in str(ids).split(',') if x.strip().isdigit()]
+        if id_list:
+            placeholders = ','.join('?' * len(id_list))
+            wheres.append(f'c.id IN ({placeholders})')
+            params.extend(id_list)
+            limit = len(id_list)  # return all requested channels, no pagination cut-off
+            offset = 0
     if active_only == '1':
         wheres.append('c.active = 1')
     if group_id:

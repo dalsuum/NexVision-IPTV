@@ -1102,12 +1102,22 @@ function renderChList(channels) {
   }).join('');
 }
 
-function filterByFavs(btn) {
+async function filterByFavs(btn) {
   document.querySelectorAll('.ch-group-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   _tvShowFavs = true;
   _tvGroupId  = null;
   _tvPage     = 0;
+
+  // Fetch any fav channels that aren't in the local cache yet
+  // (they may be on pages the user hasn't scrolled to)
+  const missing = [..._chFavs].filter(id => !_chFavCache.has(id));
+  if (missing.length) {
+    const data = await api('/channels?ids=' + missing.join(',') + '&active=1');
+    const fetched = Array.isArray(data) ? data : (data?.channels || []);
+    fetched.forEach(ch => { if (ch && ch.id) _chFavCache.set(ch.id, ch); });
+  }
+
   const favChannels = [..._chFavs].map(id => _chFavCache.get(id)).filter(Boolean);
   renderChList(favChannels);
   updateTvPagination();

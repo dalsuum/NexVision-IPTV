@@ -15,6 +15,7 @@ def get_channels():
         offset      = request.args.get('offset', 0),
         room_token  = request.headers.get('X-Room-Token', '').strip(),
         envelope    = request.args.get('envelope') == '1',
+        ids         = request.args.get('ids', ''),
     )
 
 
