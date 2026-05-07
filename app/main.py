@@ -6535,10 +6535,10 @@ def vod_admin_hub():
                 const data = await res.json();
                 _vod_settings = data;
                 
-                document.getElementById('s-vod-brand-text').value = data.admin_brand_name || '';
+                document.getElementById('s-vod-brand-text').value = data.hotel_name || data.admin_brand_name || '';
                 document.getElementById('s-vod-mode-label').value = data.admin_mode_label || '';
                 document.getElementById('s-vod-title').value = data.admin_title || '';
-                document.getElementById('s-vod-logo').value = data.admin_logo_url || '';
+                document.getElementById('s-vod-logo').value = data.hotel_logo || data.admin_logo_url || '';
                 
                 applyVODAminBranding(data);
             } catch(e) {
@@ -6620,9 +6620,11 @@ def vod_admin_hub():
             
             const payload = {
                 admin_brand_name: document.getElementById('s-vod-brand-text').value,
+                hotel_name:       document.getElementById('s-vod-brand-text').value,
                 admin_mode_label: document.getElementById('s-vod-mode-label').value,
                 admin_title: document.getElementById('s-vod-title').value,
-                admin_logo_url: document.getElementById('s-vod-logo').value
+                admin_logo_url: document.getElementById('s-vod-logo').value,
+                hotel_logo:    document.getElementById('s-vod-logo').value
             };
             
             try {

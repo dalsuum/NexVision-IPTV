@@ -4801,3 +4801,20 @@ function closeSidebar(){
     return origGo(page);
   };
 })();
+
+// Swipe-left-to-close sidebar on mobile
+(()=>{
+  let tx=0,ty=0,tracking=false;
+  document.addEventListener('touchstart',e=>{
+    if(window.innerWidth>1024)return;
+    const sb=document.querySelector('.sidebar');
+    if(!sb.classList.contains('open'))return;
+    tx=e.touches[0].clientX;ty=e.touches[0].clientY;tracking=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!tracking)return;tracking=false;
+    const dx=e.changedTouches[0].clientX-tx;
+    const dy=Math.abs(e.changedTouches[0].clientY-ty);
+    if(dx<-48&&dy<80)closeSidebar();
+  },{passive:true});
+})();

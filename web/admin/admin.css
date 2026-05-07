@@ -325,105 +325,173 @@ tr.sel td{background:rgba(212,168,67,.05)}
 
 /* ── 768px: Phone ─────────────────────────────────────────────────── */
 @media(max-width:768px){
-  /* Topbar tighter */
-  .topbar{padding:0 14px;height:52px;gap:10px}
-  .tb-title{font-size:14px;font-weight:700}
+  /* Sidebar: near-full width on phone, easier to reach close */
+  .sidebar{width:min(88vw,300px)}
+
+  /* Topbar */
+  .topbar{padding:0 14px;height:54px;gap:8px}
+  .tb-title{font-size:14px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tb-rooms{display:none}
   .ldot{display:none}
   .tb-ref span{display:none}
-  .tb-ref{padding:5px 10px}
+  .tb-ref{padding:0;width:40px;height:40px;justify-content:center;border-radius:10px}
+  .tb-theme{font-size:0;padding:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+  .tb-theme span{font-size:16px}
+  .tb-right{gap:8px}
 
   /* Content */
-  .content{padding:16px 14px}
+  .content{padding:14px 12px}
+
+  /* Prevent iOS font zoom on inputs (must be ≥16px) */
+  .fg input,.fg select,.fg textarea,
+  .sw input,.vip-srch,.vip-chip-inp,
+  .lc input,.cs-wrap input{font-size:16px}
 
   /* Login card */
-  .lc{width:min(380px,calc(100vw - 32px));padding:40px 24px}
+  .lc{width:min(380px,calc(100vw - 32px));padding:40px 22px}
 
   /* Stat row: 2 columns */
   .stat-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
-  .sc{padding:14px 16px}
+  .sc{padding:14px 14px}
   .sc-val{font-size:22px}
+  .sc-lbl{font-size:9px}
 
   /* Table cell padding */
-  th,td{padding:8px 12px}
+  th,td{padding:8px 10px}
 
-  /* Modal: bottom sheet */
+  /* Touch-friendly nav items in sidebar (44px min-height) */
+  .ni{min-height:44px;padding:10px 10px;font-size:13px}
+
+  /* Touch-friendly tabs */
+  .tab{min-height:40px;display:flex;align-items:center;padding:8px 14px}
+
+  /* Touch-friendly buttons */
+  .btn{min-height:40px}
+  .btn-sm{min-height:36px}
+
+  /* Modal: bottom sheet with drag handle */
   .overlay{align-items:flex-end;padding:0;padding-bottom:env(safe-area-inset-bottom,0)}
   .modal{
     width:100%;max-width:100%;
-    border-radius:20px 20px 0 0;
+    border-radius:22px 22px 0 0;
     max-height:92vh;
     animation:mobileSheet .28s cubic-bezier(.4,0,.2,1);
+    padding-bottom:env(safe-area-inset-bottom,0);
   }
   .modal-lg{width:100%;max-width:100%}
-  @keyframes mobileSheet{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes mobileSheet{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* Drag handle on bottom-sheet modals */
+  .modal::before{
+    content:'';display:block;
+    width:40px;height:4px;border-radius:2px;
+    background:var(--border2);
+    margin:12px auto 0;
+  }
+  .mhdr{padding:10px 18px 12px}
 
   /* Form grid: single column */
   .fgrid{grid-template-columns:1fr}
 
-  /* Card grid */
-  .card-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  /* Card grid: 1 column */
+  .card-grid{grid-template-columns:1fr}
 
   /* Room grid */
-  .room-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+  .room-grid{grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
+  .rtile{padding:12px 6px}
+  .rtile .rn{font-size:13px}
 
-  /* Nav position options */
+  /* Nav position options: vertical stack */
   .nav-pos-row{flex-direction:column}
   .pos-opt{min-width:unset}
 
-  /* Vod topbar padding */
-  .vod-topbar{padding:10px 12px}
+  /* VoD topbar */
+  .vod-topbar{padding:8px 12px;gap:8px}
+  .topnav{flex-wrap:wrap;gap:3px}
+  .topnav a{padding:5px 11px;font-size:12px}
 
-  /* Search input full-width */
-  .sw input{width:100%}.sw input:focus{width:100%}
+  /* Search: full-width */
+  .sw input,.sw input:focus{width:100%}
   .sw{flex:1}
+
+  /* Embed frame: shorter height on phone */
+  .embed-frame{height:calc(100vh - 160px)}
 
   /* Bulk bar */
   .bulk-bar{flex-wrap:wrap;gap:8px}
+
+  /* Toast: above phone chrome */
+  #toast{bottom:max(20px,env(safe-area-inset-bottom,20px));width:calc(100% - 32px);max-width:340px;text-align:center}
+
+  /* Sidebar user section */
+  .sb-user{padding:12px 14px}
+  .sb-out{margin-top:10px;padding:10px;font-size:13px;min-height:44px}
+
+  /* VIP list height shorter */
+  .vip-list{max-height:200px}
+
+  /* Exp bar stacks */
+  .exp-bar{flex-direction:column;align-items:flex-start;gap:6px}
+
+  /* Slide preview shorter */
+  .slide-preview{height:100px}
 }
 
 /* ── 480px: Small phones ─────────────────────────────────────────── */
 @media(max-width:480px){
+  /* Sidebar full-width minus handle area */
+  .sidebar{width:min(92vw,300px)}
+
   /* Stat row: single column */
-  .stat-row{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr;gap:8px}
 
-  /* Content padding tighter */
-  .content{padding:12px}
+  /* Content padding */
+  .content{padding:10px}
 
-  /* Topbar */
-  .topbar{padding:0 12px}
-  .tb-theme{font-size:0;padding:5px 8px}
-  .tb-theme span{font-size:14px}
+  /* Topbar compact */
+  .topbar{padding:0 10px;height:52px}
+  .tb-menu-btn{width:38px;height:38px;font-size:17px}
 
   /* Login card */
-  .lc{padding:32px 20px;border-radius:16px}
+  .lc{padding:30px 18px;border-radius:16px}
   .lc-brand{font-size:24px}
+  .lc-sub{font-size:9px;margin-bottom:28px}
 
-  /* Buttons smaller */
-  .btn{padding:7px 12px;font-size:12px}
+  /* Buttons */
+  .btn{padding:7px 11px;font-size:12px}
 
-  /* Modal header */
-  .mhdr{padding:16px 18px 12px}
-  .mbody{padding:16px 18px}
-  .mfooter{padding:12px 18px}
+  /* Modal panels */
+  .mhdr{padding:10px 14px 10px}
+  .mbody{padding:14px}
+  .mfooter{padding:10px 14px;flex-wrap:wrap;gap:7px}
+  .mfooter .btn{flex:1;justify-content:center}
 
-  /* Table cells tighter */
-  th,td{padding:7px 10px;font-size:12px}
+  /* Table cells */
+  th,td{padding:7px 9px;font-size:12px}
+  table{min-width:480px}
 
   /* Section title */
-  .sec-title{font-size:14px}
+  .sec-title{font-size:13px}
 
   /* Tab styling */
-  .tab{padding:6px 12px;font-size:12px}
+  .tab{padding:7px 10px;font-size:12px}
 
-  /* Nav editor */
-  .ni-row{padding:8px 10px}
+  /* Nav editor rows */
+  .ni-row{padding:10px;gap:8px}
+  .ni-label{font-size:12px}
 
-  /* Slide preview */
-  .slide-preview{height:100px}
+  /* Home setting row stacks */
+  .home-setting-row{flex-direction:column;align-items:flex-start;gap:8px}
 
-  /* Exp bar */
-  .exp-bar{flex-direction:column;align-items:flex-start}
+  /* VIP chip wrap full */
+  .vip-sug{width:100%}
+
+  /* ctype radio options wrap nicely */
+  .ctype-row{gap:6px}
+  .ctype-opt{padding:6px 10px;font-size:12px}
+
+  /* Room grid tighter */
+  .room-grid{grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:5px}
 }
 
 /* ── Prevent scroll on body when sidebar is open ────────────────── */
