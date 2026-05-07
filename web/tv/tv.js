@@ -47,6 +47,7 @@ let _seriesFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_series') || '[
 let _chFavs     = new Set(JSON.parse(localStorage.getItem('nv_fav_channels') || '[]'));
 let _chFavCache  = new Map();  // chId → full channel object, populated as channels render
 let _tvShowFavs  = false;      // true when Favourites genre tab is active
+let _ctrlHideTimer = null;    // auto-hide timer for player controls on mobile
 let currentChId  = -1;
 let currentStation = null;
 let _epgNowMap = {};  // channel_id → current programme title
@@ -1212,6 +1213,8 @@ async function playChannel(channelId) {
   document.getElementById('ctrl-name').textContent = ch.name;
   document.getElementById('ctrl-num').textContent  = ch.group_title || ch.group_name || 'Live';
   document.getElementById('play-btn').textContent  = '⏸';
+  showPlayerControls();
+  updateCtrlNameMarquee();
   // Update mobile now-bar
   const tnbTitle = document.getElementById('tnb-title');
   const tnbGroup = document.getElementById('tnb-group');
@@ -1415,9 +1418,50 @@ async function quickPlay(channelId) {
   }, 400);
 }
 
+// ── Player controls auto-hide (mobile tap-to-show) ────────────────────────────
+function showPlayerControls() {
+  const pw = document.getElementById('player-wrap');
+  if (!pw) return;
+  pw.classList.add('controls-show');
+  clearTimeout(_ctrlHideTimer);
+  _ctrlHideTimer = setTimeout(() => pw.classList.remove('controls-show'), 4000);
+}
+
+function _initPlayerTapHandler() {
+  const pw = document.getElementById('player-wrap');
+  if (!pw) return;
+  pw.addEventListener('click', e => {
+    // Tapping a control button: reset the hide timer but keep controls visible
+    if (e.target.closest('.player-controls')) { showPlayerControls(); return; }
+    // Tapping the video/overlay area: toggle visibility
+    if (pw.classList.contains('controls-show')) {
+      clearTimeout(_ctrlHideTimer);
+      pw.classList.remove('controls-show');
+    } else {
+      showPlayerControls();
+    }
+  });
+}
+
+// ── Channel name marquee ───────────────────────────────────────────────────────
+function updateCtrlNameMarquee() {
+  const el = document.getElementById('ctrl-name');
+  if (!el) return;
+  el.classList.remove('marquee');
+  el.style.removeProperty('--marquee-dist');
+  requestAnimationFrame(() => {
+    const overflow = el.scrollWidth - el.clientWidth;
+    if (overflow > 4) {
+      el.style.setProperty('--marquee-dist', `-${overflow}px`);
+      el.classList.add('marquee');
+    }
+  });
+}
+
 function togglePlay() {
   const v = document.getElementById('player');
   const btn = document.getElementById('play-btn');
+  showPlayerControls();
   if (v.paused) { v.play(); btn.textContent='⏸'; }
   else { v.pause(); btn.textContent='▶'; }
 }
@@ -1427,6 +1471,7 @@ function toggleMute() {
   isMuted = !isMuted;
   v.muted = isMuted;
   updateMuteIcon(isMuted);
+  showPlayerControls();
   toast(isMuted ? 'Muted' : 'Unmuted');
 }
 
@@ -1489,6 +1534,7 @@ function updateFavsChip() {
 
 function toggleFullscreen() {
   const el = document.getElementById('player-wrap');
+  showPlayerControls();
   if (!document.fullscreenElement) el.requestFullscreen?.();
   else document.exitFullscreen?.();
 }
@@ -3486,6 +3532,7 @@ async function loadApp() {
   setInterval(pollConfigChanges, 30000);
   // Show the app
   document.getElementById('root').classList.add('visible');
+  _initPlayerTapHandler();
   showScreen('home');
   // Show PMS guest welcome overlay if enabled and not yet shown this session
   showGuestWelcome();

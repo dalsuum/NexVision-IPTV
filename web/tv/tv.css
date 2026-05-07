@@ -300,15 +300,22 @@ main{flex:1;overflow:hidden;position:relative}
 .player-channel-logo{font-size:48px}
 .player-channel-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:2px}
 .player-status{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px}
-.player-controls{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,var(--overlay-darker));display:flex;align-items:center;gap:14px;opacity:0;transition:.2s}
-.player-wrap:hover .player-controls{opacity:1}
+.player-controls{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,var(--overlay-darker));display:flex;align-items:center;gap:14px;opacity:0;transition:opacity .3s;pointer-events:none}
+.player-wrap:hover .player-controls,.player-wrap.controls-show .player-controls{opacity:1;pointer-events:auto}
 .ctrl-btn{background:var(--overlay-light);border:none;color:var(--white);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.15s}
 .ctrl-btn:hover{background:var(--border2)}
 .ctrl-btn.play{background:var(--gold);color:#000;width:42px;height:42px}
 .ctrl-btn.play:hover{background:var(--gold2)}
-.ctrl-ch-info{flex:1;margin-left:8px}
-.ctrl-ch-name{font-size:14px;font-weight:500}
-.ctrl-ch-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.ctrl-ch-info{flex:1;min-width:0;overflow:hidden;margin-left:8px}
+.ctrl-ch-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden}
+.ctrl-ch-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Channel name marquee — scrolls when text is wider than container */
+@keyframes ctrl-name-marquee{
+  0%,15%  {transform:translateX(0)}
+  85%,100%{transform:translateX(var(--marquee-dist,-60px))}
+}
+.ctrl-ch-name.marquee{animation:ctrl-name-marquee 9s ease-in-out infinite}
 .ch-epg{flex:1;overflow-y:auto;padding:20px}
 .ch-epg h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;margin-bottom:14px}
 .epg-empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 0}
@@ -2252,8 +2259,9 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
     width:100%;
     border-radius:0;
   }
-  /* Controls always visible on mobile (no hover needed) */
-  .player-wrap .player-controls{opacity:1}
+  /* Mobile: controls hidden by default; tap player to reveal (auto-hides after 4s) */
+  .player-wrap:hover .player-controls{opacity:0;pointer-events:none}
+  .player-wrap.controls-show .player-controls{opacity:1;pointer-events:auto}
 
   /* Hide the desktop EPG panel — now-bar replaces it on mobile */
   .ch-epg{display:none}
