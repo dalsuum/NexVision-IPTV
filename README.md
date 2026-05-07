@@ -275,7 +275,7 @@ For a production environment serving 500+ concurrent users:
 
 ```bash
 # Full step-by-step guide
-docs/DEPLOYMENT-GUIDE.md
+MULTICLOUD_DEPLOYMENT.md
 ```
 
 **Quick summary:**
@@ -296,8 +296,8 @@ sudo cp nginx/nexvision.conf /etc/nginx/sites-available/nexvision
 sudo ln -s /etc/nginx/sites-available/nexvision /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
-# 5. Start services
-sudo systemctl enable --now nexvision redis mysql nginx
+# 5. Start services (DB is initialised automatically on first start)
+sudo systemctl enable --now nexvision redis-server mysql nginx
 ```
 
 **Production stack:**
@@ -739,11 +739,11 @@ python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
 
-pip install -r requirements.txt
+pip install -r requirements_prod.txt
 
 # 4. Run the application
-python app.py
-# Visit: http://localhost
+python run.py
+# Visit: http://localhost:5000
 ```
 
 ### Important Security Notes
@@ -764,4 +764,4 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 ---
 
 *NexVision IPTV v8.22 — Built with Flask · Nginx · FFmpeg · hls.js · Node.js EPG*
-*Last updated: 2026-05-03*
+*Last updated: 2026-05-07*

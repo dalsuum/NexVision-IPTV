@@ -50,14 +50,13 @@ source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
 
 # Install requirements
-pip install -r requirements.txt
-pip install -r requirements_prod.txt  # For production
+pip install -r requirements_prod.txt
 ```
 
 ### 5. Database Setup
 ```bash
 # Initialize SQLite database (auto-created on first run)
-python app.py
+python run.py
 
 # Or restore from backup
 sqlite3 nexvision.db < backup.sql
@@ -233,7 +232,7 @@ For security issues:
 
 ---
 
-## Application Security Architecture (v8.21+)
+## Application Security Architecture (v8.22+)
 
 ### Authentication & Authorisation
 - JWT tokens validated on every admin/protected endpoint via `@admin_required` / `@token_required` decorators
@@ -269,6 +268,6 @@ ls -la /opt/nexvision/nexvision.db    # should be 660 (or 640)
 
 ---
 
-**Last Updated:** 2026-05-01 (v8.21)
+**Last Updated:** 2026-05-07 (v8.22)
 **Repository:** NexVision  
 **Maintainer:** [dalsuum/nexvision]

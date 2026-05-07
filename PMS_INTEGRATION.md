@@ -1,6 +1,6 @@
 # NexVision — PMS Integration Guide
 
-> Version: v8.21 — Last updated: 2026-05-02  
+> Version: v8.22 — Last updated: 2026-05-07  
 > Covers: Oracle FIAS · GRMS · Third-party PMS
 
 ---
@@ -32,7 +32,7 @@ NexVision supports connecting to a hotel Property Management System (PMS) to aut
 
 ---
 
-## 2. Current State (v8.21)
+## 2. Current State (v8.22)
 
 | Component | Status |
 |---|---|

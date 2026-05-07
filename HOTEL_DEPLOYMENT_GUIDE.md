@@ -4,7 +4,7 @@
 >
 > **Deployment Mode**: `hotel` (set via `settings` table key `deployment_mode`)
 >
-> **Last updated**: 2026-05-02
+> **Last updated**: 2026-05-07
 
 ---
 
@@ -220,7 +220,7 @@ Antenna / Cable Coax
 |-----------|---------|------|
 | Python | 3.10+ | Application runtime |
 | Flask | 3.x | Web framework |
-| Gunicorn | 21.x | WSGI server (gevent workers) |
+| Gunicorn | 23.x | WSGI server (gevent workers) |
 | Nginx | 1.24+ | Reverse proxy, static files, HLS |
 | MySQL | 8.0+ | Primary database |
 | Redis | 7.x | Cache layer (config stamps, API TTL) |
@@ -331,11 +331,22 @@ SQL
 
 ### Step 6 — Initialize Database
 
+The database is initialised automatically when Gunicorn starts (handled by `app/wsgi.py`).
+To pre-initialise before the first start, run:
+
 ```bash
 cd /opt/nexvision
-sudo -u nexvision venv/bin/python run.py --init-db
-# or via Flask CLI:
-sudo -u nexvision venv/bin/flask --app app.main init-db
+sudo -u nexvision venv/bin/python - <<'EOF'
+from dotenv import load_dotenv; load_dotenv('.env')
+from app import create_app
+from app.main import init_db, migrate_db, get_db, vod_init_db
+app = create_app()
+with app.app_context():
+    init_db()
+    conn = get_db(); migrate_db(conn); conn.close()
+    vod_init_db()
+    print("DB initialised successfully")
+EOF
 ```
 
 ### Step 7 — Configure Socket Persistence (systemd-tmpfiles)

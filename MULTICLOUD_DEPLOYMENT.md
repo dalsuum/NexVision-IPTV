@@ -1,6 +1,6 @@
 # NexVision IPTV — Multicloud Deployment Guide
 
-**Version**: 8.21  
+**Version**: 8.22  
 **Stack**: Flask + Gunicorn (gevent) + Nginx + MySQL + Redis  
 **Supports**: 500+ concurrent HLS streams via Nginx X-Accel-Redirect
 

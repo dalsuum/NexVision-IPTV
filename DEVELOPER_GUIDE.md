@@ -1,6 +1,6 @@
 # NexVision IPTV — Developer Guide
 
-> Version: v8.22 — Last updated: 2026-05-03  
+> Version: v8.22 — Last updated: 2026-05-07  
 > Flask + Gunicorn + Nginx · Blueprint / Service architecture
 
 ---
@@ -1599,5 +1599,5 @@ sqlite3 /opt/nexvision/nexvision.db \
 
 ---
 
-*NexVision IPTV Developer Guide — v8.21*  
+*NexVision IPTV Developer Guide — v8.22*  
 *Architecture: Flask Blueprints + Service Layer + Redis + SQLite/MySQL + Nginx/Gunicorn*
