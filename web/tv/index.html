@@ -238,7 +238,11 @@
               <div class="ctrl-ch-name" id="ctrl-name">—</div>
               <div class="ctrl-ch-num" id="ctrl-num">—</div>
             </div>
-            <button class="ctrl-btn" onclick="toggleMute()">🔊</button>
+            <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute / Unmute" aria-label="Mute">
+              <svg id="mute-icon" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+              </svg>
+            </button>
             <button class="ctrl-btn" onclick="toggleFullscreen()">⛶</button>
             <button class="cast-btn" id="cast-btn-player" style="display:none"
                 onclick="CastMgr.requestSession()" title="Cast to TV" aria-label="Cast to TV">
@@ -267,6 +271,14 @@
             <div class="fs-osd-bar-wrap">
               <div class="fs-osd-bar" id="fs-osd-bar"></div>
             </div>
+          </div>
+        </div>
+        <!-- Mobile YouTube-style now-playing info bar -->
+        <div class="tv-now-bar" id="tv-now-bar">
+          <div class="tnb-title" id="tnb-title">Select a Channel</div>
+          <div class="tnb-meta">
+            <span class="ch-row-live">LIVE</span>
+            <span class="tnb-group" id="tnb-group"></span>
           </div>
         </div>
         <div class="ch-epg">

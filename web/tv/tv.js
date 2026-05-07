@@ -44,6 +44,7 @@ let _vodSearchQ = '', _vodActiveGenre = null, _vodShowFavs = false;
 let _vodTab = 'all', _vodGenreActive = null;
 let _vodFavs    = new Set(JSON.parse(localStorage.getItem('nv_fav_movies')  || '[]'));
 let _seriesFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_series') || '[]'));
+let _chFavs     = new Set(JSON.parse(localStorage.getItem('nv_fav_channels') || '[]'));
 let currentChId  = -1;
 let currentStation = null;
 let _epgNowMap = {};  // channel_id → current programme title
@@ -1034,10 +1035,17 @@ function renderChList(channels) {
                onerror="markLogoFailed(this)">
            <span class="ch-mono-lbl" style="display:none">${mono}</span>`
         : `<span class="ch-mono-lbl">${mono}</span>`;
+      const isFav = _chFavs.has(c.id);
       return `
       <div class="ch-card${c.id===currentChId?' playing':''}" id="card-${c.id}"
            tabindex="0" onclick="playChannel(${c.id})">
         <div class="ch-img">${logoHTML}</div>
+        <button class="ch-fav-btn${isFav?' active':''}" id="chfav-${c.id}"
+          onclick="toggleChFav(${c.id},event)" aria-label="Favourite" style="position:absolute;top:6px;right:6px">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="${isFav?'rgb(220,80,100)':'none'}" stroke="${isFav?'rgb(220,80,100)':'currentColor'}" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
         <div class="ch-info">
           <div class="ch-name">${escHtml(c.name||'')}${c._is_vip?'<span class="vip-badge">VIP</span>':''}</div>
           <div class="ch-num">${escHtml(c.group_title||c.group_name||'Live')}</div>
@@ -1055,9 +1063,16 @@ function renderChList(channels) {
     const logoUrl = usableLogo(c.tvg_logo_url);
     const logoHTML = logoUrl
       ? `<img src="${logoUrl}" data-logo-src="${logoUrl}"
-             style="width:36px;height:36px;object-fit:contain;border-radius:4px;display:block"
+             style="width:100%;height:100%;object-fit:contain;border-radius:4px;display:block"
              onerror="markLogoFailed(this)"><span class="ch-mono-lbl" style="display:none">${mono}</span>`
       : `<span class="ch-mono-lbl">${mono}</span>`;
+    const isFav = _chFavs.has(c.id);
+    const favBtn = `<button class="ch-fav-btn${isFav?' active':''}" id="chfav-${c.id}"
+      onclick="toggleChFav(${c.id},event)" aria-label="Favourite" title="${isFav?'Remove from favourites':'Add to favourites'}">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="${isFav?'rgb(220,80,100)':'none'}" stroke="${isFav?'rgb(220,80,100)':'currentColor'}" stroke-width="2">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </button>`;
     return `
     <div class="ch-row ${c.id===currentChId?'playing':''}" id="row-${c.id}" onclick="playChannel(${c.id})">
       <div class="ch-row-logo">${logoHTML}</div>
@@ -1066,7 +1081,10 @@ function renderChList(channels) {
         <div class="ch-row-num">${escHtml(c.group_title||c.group_name||'Live')}</div>
         ${_epgNowMap[c.id]?`<div class="ch-row-epg">▶ ${escHtml(_epgNowMap[c.id])}</div>`:''}
       </div>
-      <span class="ch-row-live">LIVE</span>
+      <div class="ch-row-right">
+        <span class="ch-row-live">LIVE</span>
+        ${favBtn}
+      </div>
     </div>`;
   }).join('');
 }
@@ -1151,6 +1169,11 @@ async function playChannel(channelId) {
   document.getElementById('ctrl-name').textContent = ch.name;
   document.getElementById('ctrl-num').textContent  = ch.group_title || ch.group_name || 'Live';
   document.getElementById('play-btn').textContent  = '⏸';
+  // Update mobile now-bar
+  const tnbTitle = document.getElementById('tnb-title');
+  const tnbGroup = document.getElementById('tnb-group');
+  if (tnbTitle) tnbTitle.textContent = ch.name;
+  if (tnbGroup) tnbGroup.textContent = ch.group_title || ch.group_name || 'Live';
   document.querySelectorAll('.ch-row,.ch-card').forEach(r=>r.classList.remove('playing'));
   document.getElementById('row-'+ch.id)?.classList.add('playing');
   document.getElementById('card-'+ch.id)?.classList.add('playing');
@@ -1360,7 +1383,29 @@ function toggleMute() {
   const v = document.getElementById('player');
   isMuted = !isMuted;
   v.muted = isMuted;
-  toast(isMuted ? '🔇 Muted' : '🔊 Unmuted');
+  updateMuteIcon(isMuted);
+  toast(isMuted ? 'Muted' : 'Unmuted');
+}
+
+function updateMuteIcon(muted) {
+  const icon = document.getElementById('mute-icon');
+  if (!icon) return;
+  icon.innerHTML = muted
+    ? '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+    : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>';
+}
+
+function toggleChFav(chId, evt) {
+  evt.stopPropagation();
+  if (_chFavs.has(chId)) { _chFavs.delete(chId); toast('Removed from favourites'); }
+  else                    { _chFavs.add(chId);    toast('Added to favourites ♥'); }
+  localStorage.setItem('nv_fav_channels', JSON.stringify([..._chFavs]));
+  const btn = document.getElementById('chfav-' + chId);
+  if (btn) {
+    btn.classList.toggle('active', _chFavs.has(chId));
+    const path = btn.querySelector('path');
+    if (path) path.setAttribute('fill', _chFavs.has(chId) ? 'rgb(220,80,100)' : 'none');
+  }
 }
 
 function toggleFullscreen() {
