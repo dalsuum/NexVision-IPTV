@@ -1187,7 +1187,7 @@ function updateTvPagination() {
 }
 
 async function playChannel(channelId) {
-  const ch = allChannels.find(c=>c.id===channelId);
+  const ch = allChannels.find(c=>c.id===channelId) || _chFavCache.get(channelId);
   if (!ch) return;
   const playSeq = ++_tvPlaySeq;
   currentChId = ch.id;
