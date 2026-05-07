@@ -833,7 +833,7 @@ async function loadHome() {
   if (!heroHTML) {
     heroHTML = `<div style="padding:48px 32px;text-align:center">
       <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--gold);margin-bottom:8px">${escHtml(hotelName)}</div>
-      <div style="color:var(--dimmed);font-size:15px">${escHtml(welcomeText || 'Enjoy your stay!')}</div>
+      <div style="color:var(--dimmed);font-size:15px">${welcomeText || 'Enjoy your stay!'}</div>
     </div>`;
   }
 
