@@ -2225,30 +2225,39 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .vod-genre-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
   .vod-genre-card{padding:14px 12px}
 
-  /* ── TV screen: YouTube-style (player on top, vertical channel list below) ── */
-  #screen-tv{flex-direction:column;overflow-y:auto;height:100%}
-
-  /* Player area comes first (order -1) */
-  .tv-player-area{
-    order:-1;
-    flex-shrink:0;
-    min-height:0;
+  /* ── TV screen: YouTube-style (player on top, channel list below) ── */
+  /* Let main handle page scrolling — remove height:100% so content is taller than screen */
+  #screen-tv{
+    flex-direction:column;
+    height:auto;
+    min-height:100%;
     overflow:visible;
   }
-  /* Player is full width, 16:9, no max-height cap */
+
+  /* Player area: first in visual order, takes its natural height only */
+  .tv-player-area{
+    order:-1;
+    flex:none;            /* override base flex:1 — don't stretch */
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  /* Player: full width 16:9 */
   .player-wrap{
     aspect-ratio:16/9;
     max-height:none;
     width:100%;
     border-radius:0;
   }
-  /* Show player controls on touch/tap (always visible on mobile) */
+  /* Controls always visible on mobile (no hover needed) */
   .player-wrap .player-controls{opacity:1}
 
-  /* Show the now-playing bar on mobile */
+  /* Hide the desktop EPG panel — now-bar replaces it on mobile */
+  .ch-epg{display:none}
+
+  /* Show the mobile now-playing bar */
   .tv-now-bar{display:block}
 
-  /* Channel sidebar: YouTube playlist below player */
+  /* Channel sidebar: below player, full natural height */
   .ch-sidebar{
     order:1;
     width:100%;
@@ -2260,18 +2269,23 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
     flex-shrink:0;
     display:flex;
     flex-direction:column;
-    overflow:hidden;
+    overflow:visible;   /* don't clip the header */
     background:var(--bg2);
   }
-  /* Compact sidebar header */
-  .ch-sidebar-hdr{padding:10px 12px 8px;overflow:hidden}
+  /* Sidebar header: always fully visible, never shrink */
+  .ch-sidebar-hdr{
+    padding:10px 12px 8px;
+    flex-shrink:0;
+    overflow:visible;
+  }
   .ch-sidebar-hdr h2{font-size:14px;margin-bottom:6px}
   .ch-search{padding:7px 10px;font-size:12px}
-  .ch-groups-wrap{overflow:hidden}
+  /* Genre tabs: always visible */
+  .ch-groups-wrap{flex-shrink:0;overflow:hidden}
   .ch-groups{padding:6px 4px 4px}
   .ch-group-btn{padding:4px 10px;font-size:10px}
 
-  /* Channel list: vertical YouTube-style list */
+  /* Channel list: vertical YouTube-style, scrolls within itself */
   .ch-list{
     display:flex;
     flex-direction:column;
@@ -2280,7 +2294,7 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
     overflow-y:auto;
     padding:0;
     scrollbar-width:none;
-    max-height:52vh;
+    max-height:55vh;    /* caps the list so pagination stays visible */
   }
   .ch-list::-webkit-scrollbar{display:none}
 
@@ -2323,7 +2337,7 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .ch-row-right{flex-direction:row;gap:4px;align-items:center}
 
   /* Pagination bar */
-  .ch-sidebar > div[style*="border-top"]{padding:4px 10px}
+  .ch-sidebar > div[style*="border-top"]{padding:4px 10px;flex-shrink:0}
 
   /* ── Radio screen ── */
   .radio-player{padding:20px 16px}
