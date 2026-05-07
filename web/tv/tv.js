@@ -2806,6 +2806,9 @@ function setNavActive(name) {
   document.querySelectorAll('#bottom-nav .bn-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.key === name);
   });
+  // Scroll active item into view on phone's scrollable bottom nav
+  const activebn = document.querySelector('#bottom-nav .bn-item.active');
+  if (activebn) activebn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
 }
 
 

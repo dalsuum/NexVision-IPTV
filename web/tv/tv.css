@@ -2102,21 +2102,26 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   }
   .hdr-logo{font-size:16px;letter-spacing:3px}
 
-  /* ── Bottom nav — Apple iOS tab bar quality ── */
+  /* ── Bottom nav — scrollable strip (handles any number of items) ── */
   #bottom-nav{
     height:calc(64px + env(safe-area-inset-bottom,0px));
-    padding:0 4px env(safe-area-inset-bottom,0px);
+    padding:0 0 env(safe-area-inset-bottom,0px);
     background:rgba(11,11,20,0.95);
     backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-    -webkit-saturate:180%;
     border-top:1px solid rgba(255,255,255,0.08);
+    /* Scrollable so all items are reachable regardless of count */
+    overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;-ms-overflow-style:none;
+    justify-content:flex-start;
     gap:0;
   }
+  #bottom-nav::-webkit-scrollbar{display:none}
   .bn-item{
-    flex:1;min-width:0;
+    flex:0 0 72px;min-width:72px;
     display:flex;flex-direction:column;
     align-items:center;justify-content:center;
-    gap:4px;padding:8px 2px 4px;
+    gap:4px;padding:8px 4px 4px;
     border:none;background:transparent;
     cursor:pointer;color:var(--muted);
     transition:color .18s, transform .12s;
@@ -2127,9 +2132,9 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   /* Active indicator: pill above the icon */
   .bn-item.active::before{
     content:'';
-    position:absolute;top:4px;
+    position:absolute;top:0;
     left:50%;transform:translateX(-50%);
-    width:28px;height:3px;
+    width:32px;height:3px;
     background:var(--gold);
     border-radius:0 0 3px 3px;
     box-shadow:0 0 8px rgba(201,168,76,0.5);
@@ -2139,8 +2144,10 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .bn-item.active .bn-icon{transform:scale(1.08)}
   .bn-label{
     font-size:9px;font-family:'DM Mono',monospace;
-    letter-spacing:.4px;text-transform:uppercase;
+    letter-spacing:.3px;text-transform:uppercase;
     line-height:1;display:block;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:68px;text-align:center;
     transition:opacity .18s;
   }
   .bn-item:not(.active) .bn-label{opacity:0.5}
@@ -2402,7 +2409,7 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
     gap:0;
   }
   .bn-item{
-    flex:1;min-width:0;
+    flex:0 0 64px;min-width:64px;
     flex-direction:column;align-items:center;justify-content:center;
     gap:2px;padding:4px 2px;min-height:44px;
     border:none;background:transparent;cursor:pointer;
@@ -2417,7 +2424,7 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
     background:var(--gold);border-radius:0 0 2px 2px;
   }
   .bn-icon{font-size:17px;line-height:1}
-  .bn-label{font-size:8px;letter-spacing:0;text-transform:uppercase;line-height:1}
+  .bn-label{font-size:8px;letter-spacing:0;text-transform:uppercase;line-height:1;max-width:60px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bn-item:not(.active) .bn-label{opacity:0.5}
   .bn-top-bar{display:none}
 
@@ -2590,8 +2597,9 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .home-section{padding:12px 10px 0}
   .h-scroll{padding:4px 8px 10px;gap:8px}
 
+  .bn-item{flex:0 0 64px;min-width:64px}
   .bn-icon{font-size:18px}
-  .bn-label{font-size:8px}
+  .bn-label{font-size:8px;max-width:60px}
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
