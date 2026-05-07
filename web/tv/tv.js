@@ -45,6 +45,8 @@ let _vodTab = 'all', _vodGenreActive = null;
 let _vodFavs    = new Set(JSON.parse(localStorage.getItem('nv_fav_movies')  || '[]'));
 let _seriesFavs = new Set(JSON.parse(localStorage.getItem('nv_fav_series') || '[]'));
 let _chFavs     = new Set(JSON.parse(localStorage.getItem('nv_fav_channels') || '[]'));
+let _chFavCache  = new Map();  // chId → full channel object, populated as channels render
+let _tvShowFavs  = false;      // true when Favourites genre tab is active
 let currentChId  = -1;
 let currentStation = null;
 let _epgNowMap = {};  // channel_id → current programme title
@@ -123,6 +125,11 @@ function isRegistered() {
 function clearRegistration() {
   localStorage.removeItem(ROOM_TOKEN_KEY);
   localStorage.removeItem(ROOM_INFO_KEY);
+  // Clear channel favourites on checkout/device reset
+  _chFavs.clear();
+  _chFavCache.clear();
+  _tvShowFavs = false;
+  localStorage.removeItem('nv_fav_channels');
 }
 
 // ── On-screen numpad helpers ──────────────────────────────────────────────────
@@ -997,8 +1004,12 @@ async function loadEpgNow() {
 function renderChGroups() {
   const el = document.getElementById('ch-groups');
   if (!el) return;
-  el.innerHTML = `<button class="ch-group-btn active" onclick="filterByGroup(null,this)">All</button>`
-    + allGroups.map(g=>`<button class="ch-group-btn" onclick="filterByGroup(${g.id},this)">${g.name}</button>`).join('');
+  const favCount = _chFavs.size;
+  const favBadge = favCount ? `<span class="ch-favs-badge">${favCount}</span>` : '';
+  el.innerHTML =
+    `<button class="ch-group-btn ch-group-favs${_tvShowFavs?' active':''}" id="ch-favs-btn" onclick="filterByFavs(this)">♥ Favourites${favBadge}</button>`
+    + `<button class="ch-group-btn${!_tvShowFavs&&!_tvGroupId?' active':''}" onclick="filterByGroup(null,this)">All</button>`
+    + allGroups.map(g=>`<button class="ch-group-btn${!_tvShowFavs&&_tvGroupId===g.id?' active':''}" onclick="filterByGroup(${g.id},this)">${g.name}</button>`).join('');
   updateChGroupArrows();
   el.addEventListener('scroll', updateChGroupArrows, { passive: true });
 }
@@ -1023,6 +1034,8 @@ function updateChGroupArrows() {
 function renderChList(channels) {
   const el = document.getElementById('ch-list');
   if (!el) return;
+  // Cache every rendered channel so Favourites tab can show them later
+  channels.forEach(c => _chFavCache.set(c.id, c));
 
   if (document.body.classList.contains('tv-mode')) {
     // ── TV mode: 3×4 grid of channel cards ──────────────────────────────────
@@ -1089,10 +1102,22 @@ function renderChList(channels) {
   }).join('');
 }
 
+function filterByFavs(btn) {
+  document.querySelectorAll('.ch-group-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _tvShowFavs = true;
+  _tvGroupId  = null;
+  _tvPage     = 0;
+  const favChannels = [..._chFavs].map(id => _chFavCache.get(id)).filter(Boolean);
+  renderChList(favChannels);
+  updateTvPagination();
+}
+
 async function filterByGroup(groupId, btn) {
   document.querySelectorAll('.ch-group-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  _tvGroupId = groupId;
+  _tvGroupId  = groupId;
+  _tvShowFavs = false;
   _tvPage = 0;
   await apiChannels();
   renderChList(allChannels);
@@ -1138,6 +1163,13 @@ function updateTvPagination() {
   const pageEl  = document.getElementById('tv-page-info');
   const prevBtn = document.getElementById('tv-prev-btn');
   const nextBtn = document.getElementById('tv-next-btn');
+  if (_tvShowFavs) {
+    if (totalEl) totalEl.textContent = '';
+    if (pageEl)  pageEl.textContent  = `${_chFavs.size} saved`;
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    return;
+  }
   if (totalEl) totalEl.textContent = `(${_tvTotal.toLocaleString()})`;
   if (pageEl)  pageEl.textContent  = `${offset+1}–${shown}`;
   if (prevBtn) prevBtn.disabled = _tvPage === 0;
@@ -1149,6 +1181,7 @@ async function playChannel(channelId) {
   if (!ch) return;
   const playSeq = ++_tvPlaySeq;
   currentChId = ch.id;
+  _chFavCache.set(ch.id, ch); // ensure played channels can appear in Favourites tab
 
   // Mirror to Cast receiver if a session is active.
   CastMgr.loadMedia(ch);
@@ -1397,14 +1430,50 @@ function updateMuteIcon(muted) {
 
 function toggleChFav(chId, evt) {
   evt.stopPropagation();
-  if (_chFavs.has(chId)) { _chFavs.delete(chId); toast('Removed from favourites'); }
-  else                    { _chFavs.add(chId);    toast('Added to favourites ♥'); }
+  if (_chFavs.has(chId)) {
+    _chFavs.delete(chId);
+    toast('Removed from favourites');
+    // If viewing Favourites tab, remove the row from the list immediately
+    if (_tvShowFavs) {
+      const row = document.getElementById('row-' + chId) || document.getElementById('card-' + chId);
+      if (row) row.remove();
+    }
+  } else {
+    _chFavs.add(chId);
+    toast('Added to favourites ♥');
+    // Ensure channel is cached for the Favourites tab
+    if (!_chFavCache.has(chId)) {
+      const ch = allChannels.find(c => c.id === chId);
+      if (ch) _chFavCache.set(chId, ch);
+    }
+  }
   localStorage.setItem('nv_fav_channels', JSON.stringify([..._chFavs]));
+
+  // Update heart button appearance
   const btn = document.getElementById('chfav-' + chId);
   if (btn) {
-    btn.classList.toggle('active', _chFavs.has(chId));
+    const active = _chFavs.has(chId);
+    btn.classList.toggle('active', active);
     const path = btn.querySelector('path');
-    if (path) path.setAttribute('fill', _chFavs.has(chId) ? 'rgb(220,80,100)' : 'none');
+    if (path) path.setAttribute('fill', active ? 'rgb(220,80,100)' : 'none');
+    const svg  = btn.querySelector('svg');
+    if (svg)  svg.setAttribute('stroke', active ? 'rgb(220,80,100)' : 'currentColor');
+  }
+
+  // Keep the Favourites chip count in sync
+  updateFavsChip();
+}
+
+function updateFavsChip() {
+  const chip = document.getElementById('ch-favs-btn');
+  if (!chip) return;
+  const count = _chFavs.size;
+  let badge = chip.querySelector('.ch-favs-badge');
+  if (count) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'ch-favs-badge'; chip.appendChild(badge); }
+    badge.textContent = count;
+  } else if (badge) {
+    badge.remove();
   }
 }
 
