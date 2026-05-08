@@ -1,6 +1,6 @@
 # NexVision IPTV — Production Dependencies
 # Install: pip install -r requirements_prod.txt
-# Updated: 2026-05-07 - pinned to versions verified on Oracle Cloud Ubuntu 22.04 (Python 3.8)
+# Updated: 2026-05-08 - security bump for Dependabot alerts #27 #31-#44
 # Entry points: app/wsgi.py (gunicorn) or run.py (dev)
 
 # ── Core Flask ────────────────────────────────────────────────────────────────
@@ -11,8 +11,8 @@ MarkupSafe==2.1.5
 itsdangerous==2.2.0
 blinker==1.8.2
 click==8.1.8
-flask-cors==6.0.0
-PyJWT==2.9.0
+flask-cors==6.0.2
+PyJWT==2.10.1
 
 # ── Production WSGI server ────────────────────────────────────────────────────
 gunicorn==23.0.0

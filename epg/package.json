@@ -22,6 +22,9 @@
   },
   "private": true,
   "license": "UNLICENSED",
+  "overrides": {
+    "socks": "^2.8.8"
+  },
   "jest": {
     "setupFiles": [
       "<rootDir>/node_modules/jest-offline"
