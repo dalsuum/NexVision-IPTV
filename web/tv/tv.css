@@ -2457,15 +2457,18 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .vlc-title{max-width:none;flex:1;font-size:11px}
 }
 
-/* ── Landscape phones (rotated, height ≤ 480px) ───────────────────── */
-@media (orientation:landscape) and (max-height:480px){
+/* ── Landscape phones (rotated, height ≤ 560px, width ≤ 1024px) ──── */
+@media (orientation:landscape) and (max-height:560px) and (max-width:1024px){
   /* Switch to compact bottom nav — frees vertical space */
   #top-nav{display:none !important}
   #bottom-nav{display:flex !important}
-  body #root{padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
+  /* Landscape phone width (≥641px) triggers the tablet hamburger rule — override it */
+  .hdr-hamburger{display:none !important}
+  .hdr-nav-drawer,.hdr-nav-scrim{display:none !important}
+  body #root{padding-bottom:calc(52px + env(safe-area-inset-bottom,0px))}
 
-  /* Slim header */
-  header{height:40px;padding:0 12px;gap:8px}
+  /* Slim header — account for notch safe areas */
+  header{height:40px;padding:0 calc(12px + env(safe-area-inset-right,0px)) 0 calc(12px + env(safe-area-inset-left,0px));gap:8px}
   .hdr-logo{font-size:13px;letter-spacing:2px}
   .hdr-weather,.hdr-time{display:none}
   .theme-toggle,#hdr-room,.hdr-msg-btn{padding:2px 6px;height:22px;font-size:9px}
@@ -2473,43 +2476,45 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 
   /* Compact bottom nav strip */
   #bottom-nav{
-    height:calc(48px + env(safe-area-inset-bottom,0px));
-    padding:0 4px env(safe-area-inset-bottom,0px);
+    height:calc(52px + env(safe-area-inset-bottom,0px));
+    padding:0 calc(env(safe-area-inset-right,0px) + 4px) env(safe-area-inset-bottom,0px) calc(env(safe-area-inset-left,0px) + 4px);
     min-height:0;
-    background:rgba(11,11,20,0.95);
-    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-    border-top:1px solid rgba(255,255,255,0.08);
+    background:rgba(8,8,16,0.98);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border-top:1px solid rgba(255,255,255,0.12);
     gap:0;
   }
   .bn-item{
-    flex:0 0 64px;min-width:64px;
+    flex:0 0 68px;min-width:68px;
     flex-direction:column;align-items:center;justify-content:center;
-    gap:2px;padding:4px 2px;min-height:44px;
+    gap:3px;padding:5px 3px;min-height:48px;
     border:none;background:transparent;cursor:pointer;
     color:var(--muted);transition:color .18s;
     -webkit-tap-highlight-color:transparent;
+    transform:translateZ(0);-webkit-font-smoothing:antialiased;
   }
   .bn-item.active{color:var(--gold)}
   .bn-item.active::before{
-    content:'';position:absolute;top:2px;
+    content:'';position:absolute;top:0;
     left:50%;transform:translateX(-50%);
-    width:22px;height:2px;
-    background:var(--gold);border-radius:0 0 2px 2px;
+    width:28px;height:2px;
+    background:var(--gold);border-radius:0 0 3px 3px;
+    box-shadow:0 0 6px rgba(201,168,76,0.5);
   }
-  .bn-icon{font-size:17px;line-height:1}
-  .bn-label{font-size:8px;letter-spacing:0;text-transform:uppercase;line-height:1;max-width:60px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bn-item:not(.active) .bn-label{opacity:0.5}
+  .bn-icon{font-size:20px;line-height:1}
+  .bn-label{font-size:10px;font-weight:500;letter-spacing:.3px;text-transform:uppercase;line-height:1;max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bn-item:not(.active) .bn-label{opacity:0.65}
   .bn-top-bar{display:none}
 
   /* News ticker: sits above bottom nav */
   #news-ticker{
-    bottom:calc(48px + env(safe-area-inset-bottom,0px));
+    bottom:calc(52px + env(safe-area-inset-bottom,0px));
     border-radius:0;
     border-top:1px solid rgba(255,255,255,0.1);
     border-bottom:none;
   }
   body.news-ticker-active #root{
-    padding-bottom:calc(48px + 34px + env(safe-area-inset-bottom,0px)) !important;
+    padding-bottom:calc(52px + 34px + env(safe-area-inset-bottom,0px)) !important;
   }
 
   /* Hide hero — takes 36vh (~130px) which is too much at 360px height */
@@ -2527,15 +2532,24 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   .ch-info{padding:6px 8px 8px}
 
   /* ── Live TV: side-by-side layout ── */
-  #screen-tv{flex-direction:row}
+  /* Explicitly reset height/overflow in case portrait media query also applies */
+  #screen-tv{
+    flex-direction:row;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+  }
 
   /* Sidebar: narrow, full-height flex column */
   .ch-sidebar{
-    width:190px;height:100%;
+    width:220px;height:100%;
     max-height:none;min-height:0;
     border-right:1px solid var(--border);border-bottom:none;
     display:flex;flex-direction:column;
     overflow:hidden;
+    flex-shrink:0;
+    /* Respect notch on landscape-left phones */
+    padding-left:env(safe-area-inset-left,0px);
   }
   .ch-sidebar-hdr{padding:7px 10px 5px;flex-shrink:0;border-bottom:1px solid var(--border)}
   .ch-sidebar-hdr h2{font-size:12px;margin-bottom:4px}
@@ -2558,12 +2572,12 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   /* Compact channel rows for narrow sidebar */
   .ch-row{
     padding:5px 6px;gap:7px;
-    border-radius:6px;min-height:36px;
+    border-radius:6px;min-height:40px;
     width:100% !important;flex-shrink:0;
     flex-direction:row !important;
     align-items:center;text-align:left;
   }
-  .ch-row-logo{width:30px;height:30px;font-size:12px;border-radius:4px;flex-shrink:0}
+  .ch-row-logo{width:34px;height:34px;font-size:13px;border-radius:4px;flex-shrink:0}
   .ch-row-info{flex:1;min-width:0}
   .ch-row-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     display:block !important;-webkit-line-clamp:unset;line-clamp:unset}
@@ -2573,7 +2587,7 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
 
   /* Prev / Next pagination: touch-friendly buttons */
   #tv-prev-btn,#tv-next-btn{
-    min-height:30px !important;
+    min-height:32px !important;
     padding:4px 6px !important;
     font-size:10px !important;
     background:var(--bg3) !important;
@@ -2585,16 +2599,36 @@ body.tv-mode #top-nav.style-icon .nav-btn:focus   { background:rgba(255,255,255,
   #tv-prev-btn:active,#tv-next-btn:active{background:var(--bg4) !important}
 
   /* ── Player: fill all available height ── */
-  .tv-player-area{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+  .tv-player-area{
+    flex:1;min-width:0;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    /* Respect notch on landscape-right phones */
+    padding-right:env(safe-area-inset-right,0px);
+  }
   .player-wrap{
     flex:1;min-height:0;
-    aspect-ratio:auto;     /* let flex:1 control height, not ratio */
+    aspect-ratio:auto;
     max-height:none;
     width:100%;
+    border-radius:0;
   }
   .player-wrap video{width:100%;height:100%;object-fit:contain}
+  /* Player controls always visible in landscape — no hover to trigger on touch */
+  .player-wrap .player-controls{
+    opacity:1 !important;pointer-events:auto !important;
+    padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));
+    gap:10px;
+    background:linear-gradient(transparent,rgba(0,0,0,0.88));
+  }
+  .ctrl-btn{width:36px;height:36px;font-size:14px}
+  .ctrl-btn.play{width:42px;height:42px;font-size:16px}
+  .ctrl-ch-name{font-size:12px}
+  .ctrl-ch-num{font-size:10px}
   /* Hide EPG program list — no room in landscape */
   .ch-epg{display:none}
+  /* Also hide now-playing bar — sidebar already shows channel info */
+  .tv-now-bar{display:none !important}
 
   /* ── Registration screen: two-column layout in landscape ── */
   #register-screen{overflow-y:auto;padding:8px}
