@@ -37,7 +37,7 @@ python-dotenv==1.2.2
 
 # ── HTTP client ───────────────────────────────────────────────────────────────
 requests==2.33.0
-urllib3==2.6.3
+urllib3==2.7.0
 certifi==2026.4.22
 charset-normalizer==3.4.7
 idna==3.13
