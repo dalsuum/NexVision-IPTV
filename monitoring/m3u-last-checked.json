@@ -1,24 +1,14 @@
 {
-  "checked_at": "2026-06-15T07:37:10+00:00",
+  "checked_at": "2026-06-16T07:41:53+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 12008,
+  "total_streams": 12029,
   "tested_streams": 25,
-  "healthy": 22,
-  "unhealthy": 3,
-  "success_rate": 88.0,
+  "healthy": 24,
+  "unhealthy": 1,
+  "success_rate": 96.0,
   "status": "ok",
   "message": "Health check completed",
   "sample_failures": [
-    {
-      "url": "https://stream-lb.livemediama.com/2m-tnt/hls/master.m3u8",
-      "status_code": null,
-      "error": "HTTPSConnectionPool(host='stream-lb.livemediama.com', port=443): Max retries exceeded with url: /2m-tnt/hls/master.m3u8 (Caused by NameResolutionError(\"HTTPSConnection(host='stream-lb.livemediama.com', port=443): Failed to resolve 'stream-lb.livemediama.com' ([Errno -2] Name or service not known)\"))"
-    },
-    {
-      "url": "https://stream-lb.livemediama.com/2m/hls/master.m3u8",
-      "status_code": null,
-      "error": "HTTPSConnectionPool(host='stream-lb.livemediama.com', port=443): Max retries exceeded with url: /2m/hls/master.m3u8 (Caused by NameResolutionError(\"HTTPSConnection(host='stream-lb.livemediama.com', port=443): Failed to resolve 'stream-lb.livemediama.com' ([Errno -2] Name or service not known)\"))"
-    },
     {
       "url": "https://cdn-globecast.akamaized.net/live/eds/2m_monde/hls_video_ts_tuhawxpiemz257adfc/2m_monde.m3u8",
       "status_code": 403,
