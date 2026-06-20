@@ -1,28 +1,18 @@
 {
-  "checked_at": "2026-06-19T07:25:55+00:00",
+  "checked_at": "2026-06-20T06:39:54+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 12306,
+  "total_streams": 12391,
   "tested_streams": 25,
-  "healthy": 22,
-  "unhealthy": 3,
-  "success_rate": 88.0,
+  "healthy": 24,
+  "unhealthy": 1,
+  "success_rate": 96.0,
   "status": "ok",
   "message": "Health check completed",
   "sample_failures": [
     {
-      "url": "https://jmp2.uk/plu-62ba60f059624e000781c436.m3u8",
-      "status_code": 403,
-      "error": null
-    },
-    {
       "url": "https://cdn-globecast.akamaized.net/live/eds/2m_monde/hls_video_ts_tuhawxpiemz257adfc/2m_monde.m3u8",
       "status_code": 403,
       "error": null
-    },
-    {
-      "url": "https://3abn.bozztv.com/3abn1/PraiseHim/smil:PraiseHim.smil/playlist.m3u8",
-      "status_code": null,
-      "error": "HTTPSConnectionPool(host='3abn.bozztv.com', port=443): Read timed out. (read timeout=8)"
     }
   ]
 }
