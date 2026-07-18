@@ -1,14 +1,19 @@
 {
-  "checked_at": "2026-07-17T03:22:19+00:00",
+  "checked_at": "2026-07-18T03:20:40+00:00",
   "m3u_url": "https://iptv-org.github.io/iptv/index.m3u",
-  "total_streams": 13271,
+  "total_streams": 13316,
   "tested_streams": 25,
-  "healthy": 23,
-  "unhealthy": 2,
-  "success_rate": 92.0,
+  "healthy": 22,
+  "unhealthy": 3,
+  "success_rate": 88.0,
   "status": "ok",
   "message": "Health check completed",
   "sample_failures": [
+    {
+      "url": "http://158.101.222.193:88/georgia_play.php?id=1plus1international",
+      "status_code": null,
+      "error": "HTTPConnectionPool(host='158.101.222.193', port=88): Max retries exceeded with url: /georgia_play.php?id=1plus1international (Caused by ConnectTimeoutError(<HTTPConnection(host='158.101.222.193', port=88) at 0x7f5acad625a0>, 'Connection to 158.101.222.193 timed out. (connect timeout=8)'))"
+    },
     {
       "url": "https://cdn-globecast.akamaized.net/live/eds/2m_monde/hls_video_ts_tuhawxpiemz257adfc/2m_monde.m3u8",
       "status_code": 403,
