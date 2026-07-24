@@ -12,7 +12,7 @@ itsdangerous==2.2.0
 blinker==1.8.2
 click==8.1.8
 flask-cors==6.0.2
-PyJWT==2.10.1
+PyJWT==2.13.0
 
 # ── Production WSGI server ────────────────────────────────────────────────────
 gunicorn==23.0.0
@@ -40,7 +40,7 @@ requests==2.33.0
 urllib3==2.7.0
 certifi==2026.4.22
 charset-normalizer==3.4.7
-idna==3.13
+idna==3.15
 
 # ── packaging ─────────────────────────────────────────────────────────────────
 packaging==26.2
