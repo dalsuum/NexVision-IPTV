@@ -984,22 +984,29 @@ sudo systemctl restart fail2ban
 
 ```nginx
 # Add to http {} block in nginx.conf
-limit_req_zone $binary_remote_addr zone=api:10m rate=30r/m;
+limit_req_zone $binary_remote_addr zone=api:10m rate=600r/m;
 limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
 
 # In server {} block
 location /api/ {
-    limit_req zone=api burst=10 nodelay;
+    limit_req zone=api burst=50 nodelay;
     limit_req_status 429;
     proxy_pass http://nexvision_app;
 }
 
-location /login {
+# NOTE: the login route is /api/auth/login, not /login — a plain
+# `location /login` never matches real traffic and silently applies no
+# rate limiting at all. Use `location = /api/auth/login` so it actually protects the route.
+location = /api/auth/login {
     limit_req zone=login burst=3 nodelay;
     limit_req_status 429;
     proxy_pass http://nexvision_app;
 }
 ```
+
+> `api` zone burst must comfortably cover a single admin dashboard load (~10-20 parallel
+> requests) plus every TV client polling from behind the same NAT'd IP — `rate=30r/m
+> burst=10` (an earlier version of this guide) throttles normal usage, not just abuse.
 
 ### 8.5 Automated certificate renewal
 

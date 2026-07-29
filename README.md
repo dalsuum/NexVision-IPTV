@@ -79,6 +79,13 @@ Hotel WiFi/LAN
 
 ## Changelog
 
+### v8.24 (2026-07-29)
+- **Fix:** Redis-backed cache calls (`settings`, `weather`, `RSS ticker`, `prayer times`) crashed with `AuthenticationError` on every request when Redis had `requirepass` set but `REDIS_URL` in `.env` didn't include the password — see the Configuration section below for the correct format
+- **Fix:** `/api/messages*` endpoints (`list`, `active`, `inbox`) threw `sqlite3.OperationalError` — queries referenced `created_at` / `message_type` / `start_time` / `end_time` / `message_dismissals`, none of which exist in the actual `messages` schema (`sent_at`, `type`, `scheduled_at`, `expires_at`); dismissal tracking now uses the existing `message_reads` table instead of a nonexistent junction table
+- **Fix:** `/api/skin` room-specific lookup joined a nonexistent `room_skins` table; now uses the existing `rooms.skin_id` foreign key
+- **Fix:** Nginx `/api/` rate limit was far too restrictive for real usage (`30r/m burst=10`) — a single admin dashboard load alone fires ~10-20 requests, and TV clients behind a shared hotel NAT IP all draw from the same bucket, causing constant `429`s and broken admin panel pages; raised to `600r/m burst=50` in `nginx/nexvision.conf`, `SECURITY_HARDENING.md`, and `MULTICLOUD_DEPLOYMENT.md`
+- **Fix:** The login endpoint's stricter rate-limit zone was bound to `location /login`, which never matches the real route (`/api/auth/login`) — brute-force protection was silently inactive; now bound to `location = /api/auth/login`
+
 ### v8.23 (2026-05-07)
 - **Improved:** Admin panel — sidebar now collapses to an off-canvas drawer on tablet/medium screens (≤1024px); hamburger `☰` button in topbar toggles it; auto-closes on navigation; backdrop scrim dismisses on tap
 - **Improved:** TV guest interface — tablets (641–1024px) now show a hamburger button in the header that opens a slide-down nav drawer instead of overflowing the fixed-width top nav; nav items wrap in a grid for easy tap targets
@@ -358,6 +365,7 @@ MYSQL_VOD_DB=nexvision_vod
 REDIS_URL=redis://localhost:6379/0   # Redis connection URL
 
 # ── Nginx HLS ─────────────────────────────
+
 USE_X_ACCEL=1                        # 0 = Flask serves .ts, 1 = Nginx kernel sendfile
 
 # ── Gunicorn ──────────────────────────────
@@ -366,6 +374,11 @@ GUNICORN_WORKERS=5                   # Recommended: 2×CPU_cores + 1
 # ── Flask ─────────────────────────────────
 SECRET_KEY=generate_with_secrets.token_hex_32
 ```
+
+> **Redis + password:** if Redis has `requirepass` set (see [SECURITY_HARDENING.md](SECURITY_HARDENING.md)),
+> `REDIS_URL` must include it: `redis://:<password>@localhost:6379/0`. A mismatch here doesn't
+> fail startup — it silently breaks every cache-backed endpoint (settings, weather, RSS ticker,
+> prayer times) with an `AuthenticationError` on each request.
 
 ### Key Settings (Admin Panel → Settings)
 | Setting | Description |

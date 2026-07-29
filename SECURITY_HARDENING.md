@@ -361,8 +361,10 @@ http {
     # Login endpoint — prevent brute force
     limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
 
-    # General API
-    limit_req_zone $binary_remote_addr zone=api:10m rate=60r/m;
+    # General API — sized to absorb a full admin dashboard load (~10-20 requests
+    # per navigation) and many TV clients sharing one NAT'd hotel IP, not just
+    # single trickle requests
+    limit_req_zone $binary_remote_addr zone=api:10m rate=600r/m;
 
     # Registration (room token requests)
     limit_req_zone $binary_remote_addr zone=register:10m rate=10r/m;
@@ -381,7 +383,7 @@ location = /api/auth/login {
 
 # General API rate limit
 location /api/ {
-    limit_req zone=api burst=20 nodelay;
+    limit_req zone=api burst=50 nodelay;
     limit_req_status 429;
     proxy_pass http://nexvision_backend;
 }
