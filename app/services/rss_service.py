@@ -7,7 +7,7 @@ from ..extensions import get_db, cache, TTL_RSS, invalidate_rss, bump_config_sta
 
 def list_feeds():
     conn = get_db()
-    rows = conn.execute("SELECT * FROM rss_feeds ORDER BY sort_order, id").fetchall()
+    rows = conn.execute("SELECT * FROM rss_feeds ORDER BY id").fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -19,7 +19,7 @@ def get_public_feeds():
 
     conn = get_db()
     feeds = conn.execute(
-        "SELECT * FROM rss_feeds WHERE active=1 ORDER BY sort_order, id"
+        "SELECT * FROM rss_feeds WHERE active=1 ORDER BY id"
     ).fetchall()
     conn.close()
 
