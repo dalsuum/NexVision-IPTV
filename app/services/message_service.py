@@ -5,7 +5,7 @@ from ..extensions import get_db
 def list_messages():
     conn = get_db()
     rows = conn.execute(
-        "SELECT * FROM messages ORDER BY created_at DESC"
+        "SELECT * FROM messages ORDER BY sent_at DESC"
     ).fetchall()
     conn.close()
     return jsonify([dict(r) for r in rows])
@@ -24,14 +24,14 @@ def get_active(room_token: str):
     rows = conn.execute(
         "SELECT m.* FROM messages m "
         "WHERE m.active=1 "
-        "AND (m.start_time IS NULL OR m.start_time <= CURRENT_TIMESTAMP) "
-        "AND (m.end_time IS NULL OR m.end_time >= CURRENT_TIMESTAMP) "
-        "ORDER BY m.created_at DESC"
+        "AND (m.scheduled_at IS NULL OR m.scheduled_at <= CURRENT_TIMESTAMP) "
+        "AND (m.expires_at IS NULL OR m.expires_at >= CURRENT_TIMESTAMP) "
+        "ORDER BY m.sent_at DESC"
     ).fetchall()
 
     if room_id:
         dismissed_ids = {r['message_id'] for r in conn.execute(
-            "SELECT message_id FROM message_dismissals WHERE room_id=?", (room_id,)
+            "SELECT message_id FROM message_reads WHERE room_id=?", (room_id,)
         ).fetchall()}
         rows = [r for r in rows if r['id'] not in dismissed_ids]
 
@@ -62,13 +62,13 @@ def get_inbox(room_token: str, limit=50, offset=0):
             "FROM messages m "
             "LEFT JOIN message_reads mr ON mr.message_id=m.id AND mr.room_id=? "
             "WHERE m.active=1 "
-            "ORDER BY m.created_at DESC LIMIT ? OFFSET ?",
+            "ORDER BY m.sent_at DESC LIMIT ? OFFSET ?",
             (room_id, limit, offset),
         ).fetchall()
     else:
         rows = conn.execute(
             "SELECT *, 0 as is_read FROM messages WHERE active=1 "
-            "ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            "ORDER BY sent_at DESC LIMIT ? OFFSET ?",
             (limit, offset),
         ).fetchall()
     conn.close()
@@ -104,8 +104,8 @@ def get_unread_count(room_token: str):
 def create_message(d: dict):
     conn = get_db()
     cur = conn.execute(
-        "INSERT INTO messages (title, body, message_type, active, "
-        "start_time, end_time) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO messages (title, body, type, active, "
+        "scheduled_at, expires_at) VALUES (?,?,?,?,?,?)",
         (d.get('title', ''), d.get('body', ''), d.get('message_type', 'info'),
          d.get('active', 1), d.get('start_time'), d.get('end_time')),
     )
@@ -120,8 +120,8 @@ def create_message(d: dict):
 def update_message(mid: int, d: dict):
     conn = get_db()
     conn.execute(
-        "UPDATE messages SET title=?, body=?, message_type=?, active=?, "
-        "start_time=?, end_time=? WHERE id=?",
+        "UPDATE messages SET title=?, body=?, type=?, active=?, "
+        "scheduled_at=?, expires_at=? WHERE id=?",
         (d.get('title', ''), d.get('body', ''), d.get('message_type', 'info'),
          d.get('active', 1), d.get('start_time'), d.get('end_time'), mid),
     )
@@ -152,7 +152,7 @@ def dismiss_message(mid: int, room_token: str):
             room_id = row['id']
     if room_id:
         conn.execute(
-            "INSERT OR IGNORE INTO message_dismissals (message_id, room_id) VALUES (?,?)",
+            "INSERT OR IGNORE INTO message_reads (message_id, room_id) VALUES (?,?)",
             (mid, room_id),
         )
         conn.commit()

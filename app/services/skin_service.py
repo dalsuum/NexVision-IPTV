@@ -41,8 +41,8 @@ def get_room_skin(room_token: str):
     if room_id:
         skin = conn.execute(
             "SELECT s.* FROM skins s "
-            "JOIN room_skins rs ON rs.skin_id=s.id "
-            "WHERE rs.room_id=? LIMIT 1",
+            "JOIN rooms r ON r.skin_id=s.id "
+            "WHERE r.id=? LIMIT 1",
             (room_id,),
         ).fetchone()
     if not skin:
